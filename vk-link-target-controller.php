@@ -70,12 +70,13 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			$value = get_post_meta( $post->ID, 'vk-ltc-url', true );
 
 			//display form
+			echo '<p>' . __( 'Enter here the URL you want the title of this post to redirect to.', 'vk-link-target-controller' ) . '</p>';
 			echo '<label class="hidden" for="vk-ltc-link-field">';
 			_e( 'URL to redirect to', 'vk-link-target-controller' );
 			echo '</label> ';
 			echo '<input type="text" id="vk-ltc-link-field" name="vk-ltc-link-field"';
 			echo ' value="' . esc_attr( $value ) . '" size="50" />';
-			echo '<p>' . __( 'Enter here the URL you want the title of this post to redirect to.', 'vk-link-target-controller' ) . '</p>';
+			echo '<p>' . __( 'URL must have the http:// before.', 'vk-link-target-controller' ) . ' ' . __( 'Make sure the URL is correct.', 'vk-link-target-controller' ) . '</p>';
 		}
 
 
@@ -88,7 +89,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		*/
 		function save_link( $post_id ) {
 
-			//kill unauthorized user
+			//kill unauthorized user (double verification)
 			if ( ! current_user_can( $this->user_capability ) ) { 
 				wp_die( 'You do not have sufficient permissions to access this page.', 'vk-link-target-controller' );
 			} else {
@@ -98,10 +99,11 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 					//sanitize the user input
 					$link = sanitize_text_field( $_POST['vk-ltc-link-field'] );
 
-					//verify it is an URL
-					if ( $this->is_url( $link ) ) {
+					//check is link is allowed content
+					if ( $this->is_url( $link ) || empty( $link ) ) {
 						//update the meta field
 						update_post_meta( $post_id, 'vk-ltc-url', $link );
+						return $post_id;
 					} else {
 						return $post_id;	
 					}
@@ -126,24 +128,49 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		* is_url function
 		* Utility function to check if given string is an URL
 		* @access public		
-		* @param string $str The string to test
-		* credit: http://php.net/manual/en/function.preg-match.php#93824 URLs checking regex
+		* @param string $url The string to test
 		* @return bool
 		*/
-		function is_url( $str ) {
-			$regex = '((https?|ftp)\:\/\/)?'; // SCHEME
-			$regex .= '([a-z0-9+!*(),;?&=\$_.-]+(\:[a-z0-9+!*(),;?&=\$_.-]+)?@)?'; // User and Pass
-			$regex .= '([a-z0-9-.]*)\.([a-z]{2,3})'; // Host or IP
-			$regex .= '(\:[0-9]{2,5})?'; // Port
-			$regex .= '(\/([a-z0-9+\$_-]\.?)+)*\/?'; // Path
-			$regex .= '(\?[a-z+&\$_.-][a-z0-9;:@&%=+\/\$_.-]*)?'; // GET Query
-			$regex .= '(#[a-z_.-][a-z0-9+\$_.-]*)?'; // Anchor 
+		function is_url( $url ) {
 
-			if( preg_match( '/^$regex$/', $str ) ) {
+			//prevent parse_url to block the script on warning error
+			/*
+			set_error_handler( function($errno, $errstr, $errfile, $errline, array $errcontext) {
+				// error was suppressed with the @-operator
+				if (0 === error_reporting()) {
+					return false;
+				}
+
+				throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+			} );
+
+			try {
+				parse_url( $url );
+			} catch ( ErrorException $e ) {
+				echo 'toto';
+			}
+
+			die();
+			*/
+
+			$components = parse_url( $url );
+			if ( false != $components && isset( $components->scheme ) )
+			{
 				return true;
 			} else {
 				return false;
 			}
+			//restore_error_handler();
+		}
+
+		/**
+		* parse_url_error_handler function
+		* Changes PHP default behavior for parse_url() function errors
+		* @return 
+		*/
+		function toto() {
+			echo 'tptp';
+			return;
 		}
 
 	}
