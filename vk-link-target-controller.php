@@ -16,20 +16,106 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 	class VK_Link_Target_Controller {
 
-		private $user_capability = 'manage_links'; //can save a link for a redirection
+		public $user_capability_link 	 = 'edit_posts'; //can save a link for a redirection
+		public $user_capability_settings = 'manage_options'; //can access to the settings page
 
 		/**
 		* initialize_admin function
-		* Activates plugin features on WordPress administration
+		* Activate plugin features on edit screen
 		* @access public
 		* @return void
 		*/
 		function initialize_admin() {
+
 			//allow meta box for user with permission
-			if ( current_user_can( $this->user_capability ) ) {
+			if ( current_user_can( $this->user_capability_link ) ) {
 				add_action( 'add_meta_boxes', array( $this, 'add_link_meta_box' ) ); //add a meta box for the link to the post edit screen
 				add_action( 'save_post', array( $this, 'save_link' ) ); //save meta box data
 			}
+		}
+		
+		/**
+		* create_settings_page function
+		* Build the settings page
+		* @access public
+		* @return void
+		*/
+		function create_settings_page() {
+			
+			//create page for user with permission
+			if ( current_user_can( $this->user_capability_settings ) ) {
+				
+				add_options_page( 
+					__( 'VK Link Target Controller', 'vk-link-target-controller' ), 
+					__( 'Link Target Controller', 'vk-link-target-controller' ), 
+					$this->user_capability_settings, 
+					'vk-ltc', 
+					array( $this, 'settings_page_html' )
+				); 	//menu and page
+				
+				register_setting( 
+					'vk-ltc-options', 
+					'custom-post-types'
+					//array( $this, 'sanitize_settings' )
+				); //settings options (use WordPress Settings API)
+			}	
+		}
+		
+		/**
+		* settings_page_html function
+		* Display HTML for the settings page on WordPress admin
+		* @access public
+		* @return void
+		*/
+		function settings_page_html() { ?>
+
+			<div class="wrap" id="vk-link-target-controller">
+				<h2><?php esc_html_e( 'VK Link Target Controller', 'vk-link-target-controller' ); ?></h2>
+
+				<div style="width:68%;display:inline-block;vertical-align:top;">
+					<form method="post" action="options.php">
+						<?php settings_fields( 'vk-ltc-options' ); //display nonce and other control hidden fields ?>
+						<table class="form-table">
+							<tr valign="top">
+								<th scope="row">
+									<?php esc_html_e( 'Display on the following post types', 'vk-link-target-controller' );  ?>
+								</th>
+								<td>
+									<?php $post_types = $this->get_public_post_types(); //array of post types
+									foreach ( $post_types as $slug => $label ) { 
+										$options_exist = get_option( 'custom-post-types' );
+										var_dump($options_exist);
+										$checked = ( isset( $options_exist ) && 1 != $options_exist  && in_array( $slug, $options_exist ) ) ? 'checked="checked"' : '' ; ?>
+										<input type="checkbox" name="custom-post-types[]" id="custom-post-types-<?php echo $slug; ?>" value="<?php echo $slug; ?>" <?php echo $checked; ?> />
+										<label for="custom-post-types-<?php echo $slug; ?>"><?php echo $label; ?></label><br /><?php 
+									} ?>
+								</td>
+							</tr>
+						</table>
+						<?php submit_button(); ?>
+					</form>
+				</div>
+		
+				<div style="width:29%;display:block; overflow:hidden;float:right;">';
+				</div>
+			
+			</div>
+		<?php
+		}
+
+		/**
+		* sanitize_settings function
+		* Callback function that sanitizes the option's value
+		* @access public
+		* @return void
+		*/
+		function sanitize_settings() {
+			/*
+			if ( isset( $_POST['custom-post-types'] ) ) {
+				var_dump($_POST['custom-post-types']);
+				die();
+			}
+			return true;*/
 		}
 
 		/**
@@ -57,7 +143,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 		/**
 		* render_link_meta_box function
-		* Display HTML form on post/custom post edit screen
+		* Display HTML form for link insertion
 		* @param WP_Post $post The object for the current post/custom post
 		* @return void
 		*/
@@ -90,7 +176,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		function save_link( $post_id ) {
 
 			//kill unauthorized user (double verification)
-			if ( ! current_user_can( $this->user_capability ) ) { 
+			if ( ! current_user_can( $this->user_capability_link ) ) { 
 				wp_die( 'You do not have sufficient permissions to access this page.', 'vk-link-target-controller' );
 			} else {
 				//check form
@@ -157,6 +243,35 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			}
 			return $is_url;
 		}
+
+		/**
+		* get_public_post_types function
+		* Utility function to get post types and custom post types slugs and labels
+		* @access public		
+		* @return array( slug => label )
+		*/
+		function get_public_post_types() {
+
+			$public_post_types = array();
+
+			//default post type
+			$post_obj = get_post_type_object( 'post' );
+
+			$public_post_types[ $post_obj->name ] = $post_obj->label;
+
+			//gets all custom post types set PUBLIC
+			$args = array(
+				'public'   => true,
+				'_builtin' => false,
+			);
+			$custom_types_obj = get_post_types( $args, 'objects' ); 
+
+			foreach ( $custom_types_obj as $custom_type_obj ) {
+				$public_post_types[ $custom_type_obj->name ] = $custom_type_obj->label;
+			}
+
+			return $public_post_types;
+		}
 	}
 
 }
@@ -165,8 +280,10 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 $vk_link_target_controller = new VK_Link_Target_Controller();
 
 if ( isset( $vk_link_target_controller ) ) {
+	//front
 	//add_action( 'init', array( $vk_link_target_controller, 'redirect' ), 1 ); // add the redirect action, high priority
 
 	//set up admin
 	add_action( 'admin_init', array( $vk_link_target_controller, 'initialize_admin' ) );
+	add_action( 'admin_menu', array( $vk_link_target_controller, 'create_settings_page' ) );
 }
