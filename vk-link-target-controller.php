@@ -133,46 +133,30 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		*/
 		function is_url( $url ) {
 
-			//prevent parse_url to block the script on warning error
-			/*
-			set_error_handler( function($errno, $errstr, $errfile, $errline, array $errcontext) {
-				// error was suppressed with the @-operator
-				if (0 === error_reporting()) {
-					return false;
+			$is_url 	= false;
+			$no_failure = true;
+
+			//prevent parse_url from causing warning error
+			$parse_url_fails_on = array(
+				'http:///' => 8,
+				'http://:' => 8,
+				);
+
+			foreach ( $parse_url_fails_on as $fail_on_this => $length ) {
+				$check_on = substr( $url, 0, $length );
+				if ( $check_on == $fail_on_this ) {
+					$no_failure = false;
 				}
-
-				throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
-			} );
-
-			try {
-				parse_url( $url );
-			} catch ( ErrorException $e ) {
-				echo 'toto';
 			}
 
-			die();
-			*/
-
-			$components = parse_url( $url );
-			if ( false != $components && isset( $components->scheme ) )
-			{
-				return true;
-			} else {
-				return false;
+			if ( 'http://' != $url && $no_failure ) {
+				$components = parse_url( $url );
+				if ( false != $components && isset( $components->scheme ) ) {
+					$is_url = true;
+				}
 			}
-			//restore_error_handler();
+			return $is_url;
 		}
-
-		/**
-		* parse_url_error_handler function
-		* Changes PHP default behavior for parse_url() function errors
-		* @return 
-		*/
-		function toto() {
-			echo 'tptp';
-			return;
-		}
-
 	}
 
 }
