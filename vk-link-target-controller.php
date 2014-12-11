@@ -55,8 +55,8 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 				
 				register_setting( 
 					'vk-ltc-options', 
-					'custom-post-types'
-					//array( $this, 'sanitize_settings' )
+					'custom-post-types',
+					array( $this, 'sanitize_settings' )
 				); //settings options (use WordPress Settings API)
 			}	
 		}
@@ -83,9 +83,8 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 								<td>
 									<?php $post_types = $this->get_public_post_types(); //array of post types
 									foreach ( $post_types as $slug => $label ) { 
-										$options_exist = get_option( 'custom-post-types' );
-										var_dump($options_exist);
-										$checked = ( isset( $options_exist ) && 1 != $options_exist  && in_array( $slug, $options_exist ) ) ? 'checked="checked"' : '' ; ?>
+										$options_exist = get_option( 'custom-post-types', 0 );
+										$checked = ( 0 != $options_exist  && in_array( $slug, $options_exist ) ) ? 'checked="checked"' : '' ; ?>
 										<input type="checkbox" name="custom-post-types[]" id="custom-post-types-<?php echo $slug; ?>" value="<?php echo $slug; ?>" <?php echo $checked; ?> />
 										<label for="custom-post-types-<?php echo $slug; ?>"><?php echo $label; ?></label><br /><?php 
 									} ?>
@@ -107,15 +106,22 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		* sanitize_settings function
 		* Callback function that sanitizes the option's value
 		* @access public
+		* @param $input array of data sent by the form
 		* @return void
 		*/
-		function sanitize_settings() {
-			/*
-			if ( isset( $_POST['custom-post-types'] ) ) {
-				var_dump($_POST['custom-post-types']);
-				die();
+		function sanitize_settings( $input ) {	
+			if ( isset( $input ) ) {
+				//post types the meta box can be applied to
+				$post_types 	 = $this->get_public_post_types();
+				$post_type_slugs = array_keys( $post_types );
+
+				foreach( $input as $slug_to_test ) {
+					if ( ! in_array( sanitize_title( $slug_to_test ), $post_type_slugs )  ) {
+						empty( $input );
+					}
+				}
 			}
-			return true;*/
+			return $input;
 		}
 
 		/**
@@ -127,9 +133,10 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		*/
 		function add_link_meta_box() {
 
-			//load meta box only for post and custom post types based on post
-			$current_screen = get_current_screen();
-			if ( 'post' == $current_screen->base ) {
+			$candidates   = get_option( 'custom-post-types' ); //post types where the meta box shows
+			$current_post = get_post(); //object of the post being modified
+
+			if ( in_array( $current_post->post_type, $candidates ) ) {
 				add_meta_box( 
 					'vk-ltc-url', //meta value key
 					__( 'URL to redirect to', 'vk-link-target-controller' ),
@@ -144,6 +151,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		/**
 		* render_link_meta_box function
 		* Display HTML form for link insertion
+		* @access public
 		* @param WP_Post $post The object for the current post/custom post
 		* @return void
 		*/
