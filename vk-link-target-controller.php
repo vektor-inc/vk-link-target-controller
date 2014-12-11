@@ -20,8 +20,31 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		public $user_capability_settings = 'manage_options'; //can access to the settings page
 
 		/**
+		* initialize_front function
+		* Activate plugin features on front-end
+		* @access public
+		* @return void
+		*/
+		function initialize_front() {
+			
+			Global $post;
+			if ( isset( $post ) ) {
+
+				$link   = get_post_meta( $post->ID, 'vk-ltc-link', true );
+
+				//activate link rewriting only for concerned posts
+				if ( ! empty( $link ) ) {
+					add_filter( 'the_permalink', array( $this, 'rewrite_link' ) );		
+				} else {
+					//remove the filter to re-establish default the_permalink behaviour
+					remove_filter( 'the_permalink', array( $this, 'rewrite_link' ) );
+				}
+			}
+		}
+
+		/**
 		* initialize_admin function
-		* Activate plugin features on edit screen
+		* Activate plugin features on WordPress admin
 		* @access public
 		* @return void
 		*/
@@ -172,9 +195,9 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 				<?php _e( 'If you enter an URL here your visitors will access that URL directly when they click on the title of this post in Recent Posts list.', 'vk-link-target-controller' ); ?>
 			</p>
 			<p>
-				<label style="display:inline-block;width:220px;" for="vk-ltc-link-field"><?php _e( 'URL (must have the http:// before)', 'vk-link-target-controller' ); ?></label>
-				<input type="text" id="vk-ltc-link-field" name="vk-ltc-link-field" value="<?php echo esc_url( $link ); ?>" size="50" />
-				<?php _e( 'Make sure the URL is correct.', 'vk-link-target-controller' ); ?>
+				<label style="display:inline-block;width:220px;" for="vk-ltc-link-field"><?php _e( 'URL', 'vk-link-target-controller' ); ?></label>
+				<input type="text" id="vk-ltc-link-field" name="vk-ltc-link-field" value="<?php echo esc_html( $link ); ?>" size="50" />
+				<?php //_e( 'Make sure the URL is correct.', 'vk-link-target-controller' ); ?>
 			</p>
 			<p>
 				<label style="display:inline-block;width:220px;" for="vk-ltc-target-check"><?php _e( 'Open the link in a separate window', 'vk-link-target-controller' ); ?></label>
@@ -206,11 +229,15 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 						//sanitize the user input
 						$link = sanitize_text_field( $_POST['vk-ltc-link-field'] );
 
+						update_post_meta( $post_id, 'vk-ltc-link', $link ); 
+
+						/*
 						//check is link is allowed content
 						if ( $this->is_url( $link ) || empty( $link ) ) {
 							//update the meta field
 							update_post_meta( $post_id, 'vk-ltc-link', $link );
 						}
+						*/
 					}
 
 					//target blank option
@@ -225,14 +252,26 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		}
 
 		/**
-		* redirect function
-		* Check if the requested URL has to be redirected,
-		* if yes redirect the user to the right URL
-		* @access public		
-		* @return void
+		* rewrite_link function
+		* Filter function for the_permalink filter
+		* Rewrite the link that the the_permalink() function prints out
+ 		* @access public		
+		* @return string
 		*/
-		function redirect() {
+		function rewrite_link() {
 
+			Global $post; //we want to use $post object
+			$modified_url = '';
+
+			$link   = get_post_meta( $post->ID, 'vk-ltc-link', true );
+			$target = get_post_meta( $post->ID, 'vk-ltc-target', true );
+
+			if ( strpos( $link, '.' ) ) {
+				$modified_url = esc_url( $link ); //complete url
+			} else {
+				$modified_url = esc_url( home_url( '/' ) ) . $link; //partial url (internal url)
+			}
+			return $modified_url;
 		}
 
 		/**
@@ -305,8 +344,8 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 $vk_link_target_controller = new VK_Link_Target_Controller();
 
 if ( isset( $vk_link_target_controller ) ) {
-	//front
-	//add_action( 'init', array( $vk_link_target_controller, 'redirect' ), 1 ); // add the redirect action, high priority
+	//active on front
+	add_action( 'the_post', array( $vk_link_target_controller, 'initialize_front' ), 1 );
 
 	//set up admin
 	add_action( 'admin_init', array( $vk_link_target_controller, 'initialize_admin' ) );
