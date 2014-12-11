@@ -95,6 +95,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 					</form>
 				</div>
 		
+				<!-- div for banner -->
 				<div style="width:29%;display:block; overflow:hidden;float:right;">';
 				</div>
 			
