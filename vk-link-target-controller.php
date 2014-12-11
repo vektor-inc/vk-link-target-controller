@@ -138,7 +138,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 			if ( in_array( $current_post->post_type, $candidates ) ) {
 				add_meta_box( 
-					'vk-ltc-url', //meta value key
+					'vk-ltc-url', //meta box html id
 					__( 'URL to redirect to', 'vk-link-target-controller' ),
 					array( $this, 'render_link_meta_box' ),
 					null,
@@ -160,17 +160,26 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			//nonce field
 			wp_nonce_field( 'vk-ltc-link', 'vk-ltc-link-nonce' );
 
-			//retrieve existing string value from BD (empty if doesn't exist)
-			$value = get_post_meta( $post->ID, 'vk-ltc-url', true );
+			//retrieve existing values from BD (empty if doesn't exist)
+			$link   = get_post_meta( $post->ID, 'vk-ltc-link', true );
+			$target = get_post_meta( $post->ID, 'vk-ltc-target', true );
 
-			//display form
-			echo '<p>' . __( 'Enter here the URL you want the title of this post to redirect to.', 'vk-link-target-controller' ) . '</p>';
-			echo '<label class="hidden" for="vk-ltc-link-field">';
-			_e( 'URL to redirect to', 'vk-link-target-controller' );
-			echo '</label> ';
-			echo '<input type="text" id="vk-ltc-link-field" name="vk-ltc-link-field"';
-			echo ' value="' . esc_attr( $value ) . '" size="50" />';
-			echo '<p>' . __( 'URL must have the http:// before.', 'vk-link-target-controller' ) . ' ' . __( 'Make sure the URL is correct.', 'vk-link-target-controller' ) . '</p>';
+			$checked = $target > 0 ? 'checked="checked"' : '';
+
+			//display form ?>
+			<p>
+				<?php _e( 'If you enter an URL here your visitors will access that URL directly when they click on the title of this post in Recent Posts list.', 'vk-link-target-controller' ); ?>
+			</p>
+			<p>
+				<label style="display:inline-block;width:220px;" for="vk-ltc-link-field"><?php _e( 'URL (must have the http:// before)', 'vk-link-target-controller' ); ?></label>
+				<input type="text" id="vk-ltc-link-field" name="vk-ltc-link-field" value="<?php echo esc_url( $link ); ?>" size="50" />
+				<?php _e( 'Make sure the URL is correct.', 'vk-link-target-controller' ); ?>
+			</p>
+			<p>
+				<label style="display:inline-block;width:220px;" for="vk-ltc-target-check"><?php _e( 'Open the link in a separate window', 'vk-link-target-controller' ); ?></label>
+				<input type="checkbox" id="vk-ltc-target-check" name="vk-ltc-target-check" <?php echo $checked; ?>/>
+			</p>
+			<?php
 		}
 
 
@@ -188,22 +197,29 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 				wp_die( 'You do not have sufficient permissions to access this page.', 'vk-link-target-controller' );
 			} else {
 				//check form
-				if ( isset( $_POST['vk-ltc-link-field'] ) && wp_verify_nonce( $_POST['vk-ltc-link-nonce'], 'vk-ltc-link' ) ) {
+				if ( isset( $_POST['vk-ltc-link-field'] ) 
+					&& wp_verify_nonce( $_POST['vk-ltc-link-nonce'], 'vk-ltc-link' ) ) {
 					
-					//sanitize the user input
-					$link = sanitize_text_field( $_POST['vk-ltc-link-field'] );
+					//link field
+					if ( isset( $_POST['vk-ltc-link-field'] ) ) {
+						//sanitize the user input
+						$link = sanitize_text_field( $_POST['vk-ltc-link-field'] );
 
-					//check is link is allowed content
-					if ( $this->is_url( $link ) || empty( $link ) ) {
-						//update the meta field
-						update_post_meta( $post_id, 'vk-ltc-url', $link );
-						return $post_id;
-					} else {
-						return $post_id;	
+						//check is link is allowed content
+						if ( $this->is_url( $link ) || empty( $link ) ) {
+							//update the meta field
+							update_post_meta( $post_id, 'vk-ltc-link', $link );
+						}
 					}
-				} else {
-					return $post_id;
+
+					//target blank option
+					if ( isset( $_POST['vk-ltc-target-check'] ) ) {
+						update_post_meta( $post_id, 'vk-ltc-target', 1 );
+					} else {
+						update_post_meta( $post_id, 'vk-ltc-target', 0 );
+					}
 				}
+				return $post_id;
 			}
 		}
 
