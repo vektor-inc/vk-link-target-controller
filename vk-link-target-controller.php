@@ -276,18 +276,25 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		* rewrite_link function
 		* Filter function for the_permalink filter
 		* Rewrite the link that the the_permalink() function prints out
- 		* @access public		
+ 		* @access public
+ 		* @param $id int Id of the post		
 		* @return string
 		*/
-		function rewrite_link() {
+		function rewrite_link( $id = 0 ) {
 
-			Global $post; //we want to use $post object
+			if ( 0 == $id ) {
+				Global $post; //use $post object
+				$id = $post->ID; //id of current post
+			} 
+
 			$modified_url = '';
 
-			$link   = get_post_meta( $post->ID, 'vk-ltc-link', true );
-			$target = get_post_meta( $post->ID, 'vk-ltc-target', true );
+			$link   = get_post_meta( $id, 'vk-ltc-link', true );
+			$target = get_post_meta( $id, 'vk-ltc-target', true );
 
-			if ( strpos( $link, '.' ) ) {
+			if ( empty( $link ) ) {
+				$modified_url = get_permalink( $id );
+			} elseif ( strpos( $link, '.' ) ) {
 				$modified_url = esc_url( $link ); //complete url
 			} else {
 				$modified_url = esc_url( home_url( '/' ) ) . $link; //partial url (internal url)
@@ -379,12 +386,12 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 				'meta_key'  	 => 'vk-ltc-link',
  			);
 			$query = new WP_Query( $args );
-			
+
 			//create an array of Ids of the posts found by the query
 			if ( $query->found_posts > 0 ) {
 				$matching_posts = $query->posts;
 				foreach ( $matching_posts as $post ) {
-					$ids[] = $post->ID;
+					$ids[ $post->ID ] = $this->rewrite_link($post->ID);
 				}
 			}
 

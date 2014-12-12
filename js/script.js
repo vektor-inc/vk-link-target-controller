@@ -7,16 +7,14 @@ jQuery(document).ready(function(){
 			action : 'ids',
 		},
 		function( ids ) {
-			console.log(ids);
-			/*
-			if( ids.length > 0 ){
-				jQuery( ids ).each(function(){
-					var id = jQuery( this + 0 );
-					console.log(typeof id);
-					//jQuery('#post-' + id).css( "border", "3px solid red" );
+			if(!jQuery.isEmptyObject(ids)){
+				jQuery.each(ids, function(id, link) {
+					 var candidate = jQuery('#post-'+id+' a[href="'+link+'"]');
+					 if(candidate.length){
+					 	jQuery(candidate).attr('target','_blank');
+					 };
 				});
 			}
-			*/
 		}
 	);
 
