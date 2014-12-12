@@ -77,6 +77,22 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 				add_action( 'save_post', array( $this, 'save_link' ) ); //save meta box data
 			}
 		}
+
+		/**
+		* redirection function
+		* Redirect to the homepage url when an user tries to access directly a post that has a link to redirect to
+		* @access public
+		* @return void
+		*/
+		function redirection() {
+			Global $post;
+			$link = get_post_meta( $post->ID, 'vk-ltc-link', true );
+			//redirect to home
+			if ( ! empty( $link ) ) {
+				wp_redirect( home_url() );
+				exit;
+			}
+		}
 		
 		/**
 		* create_settings_page function
@@ -369,7 +385,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		* ajax_rewrite_ids function
 		* Give a list of IDs of the posts that have the vk-ltc-link post meta
 		* @access public		
-		* @return 
+		* @return $json_ids string JSON array with posts id as keys and link as values
 		*/
 		function ajax_rewrite_ids() {
 
@@ -414,7 +430,7 @@ if ( isset( $vk_link_target_controller ) ) {
 	//active on front
 	add_action( 'the_post', array( $vk_link_target_controller, 'initialize_front' ), 1 );
 	add_action( 'init', array( $vk_link_target_controller, 'initialize_front_script' ) );
-
+	add_action( 'wp' , array( $vk_link_target_controller, 'redirection' ) );
 
 	//set up admin
 	add_action( 'admin_init', array( $vk_link_target_controller, 'initialize_admin' ) );
