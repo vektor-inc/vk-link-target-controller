@@ -27,6 +27,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		*/
 		function initialize_front() {
 			
+			//rewrite link
 			Global $post;
 			if ( isset( $post ) ) {
 
@@ -40,6 +41,26 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 					remove_filter( 'the_permalink', array( $this, 'rewrite_link' ) );
 				}
 			}
+		}
+
+		/**
+		* initialize_front_script function
+		* Load plugin script on front-end
+		* @access public
+		* @return void
+		*/
+		function initialize_front_script() {
+
+			//add script for target bank support
+			$path_to_script = plugins_url() . '/vk-link-target-controller/js/script.js';
+			
+			wp_register_script( 'vk-ltc-js', $path_to_script, array( 'jquery' ), null, true );
+			wp_enqueue_script( 'vk-ltc-js' );
+
+			//Ajax
+			wp_localize_script( 'vk-ltc-js', 'vkLtc', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
+			add_action( 'wp_ajax_ids', array( $this, 'ajax_rewrite_ids' ) );
+			add_action( 'wp_ajax_nopriv_ids', array( $this, 'ajax_rewrite_ids' ) );
 		}
 
 		/**
@@ -336,6 +357,45 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 			return $public_post_types;
 		}
+
+		/**
+		* ajax_rewrite_ids function
+		* Give a list of IDs of the posts that have the vk-ltc-link post meta
+		* @access public		
+		* @return 
+		*/
+		function ajax_rewrite_ids() {
+
+			$ids = array();
+
+			$post_types 	  = $this->get_public_post_types();
+			$post_types_slugs = array_keys( $post_types );
+
+			//get posts with specific post meta
+			$args = array( 
+				'posts_per_page' => -1,
+				'paged' 		 => 0,
+				'post_type' 	 => $post_types_slugs,
+				'meta_key'  	 => 'vk-ltc-link',
+ 			);
+			$query = new WP_Query( $args );
+			
+			//create an array of Ids of the posts found by the query
+			if ( $query->found_posts > 0 ) {
+				$matching_posts = $query->posts;
+				foreach ( $matching_posts as $post ) {
+					$ids[] = $post->ID;
+				}
+			}
+
+			//convert php array to json format for use in js
+			$json_ids = json_encode( $ids );
+			
+			//send data to the front
+			header( 'Content-Type: application/json' );
+			echo $json_ids;
+			exit;
+		}
 	}
 
 }
@@ -346,6 +406,8 @@ $vk_link_target_controller = new VK_Link_Target_Controller();
 if ( isset( $vk_link_target_controller ) ) {
 	//active on front
 	add_action( 'the_post', array( $vk_link_target_controller, 'initialize_front' ), 1 );
+	add_action( 'init', array( $vk_link_target_controller, 'initialize_front_script' ) );
+
 
 	//set up admin
 	add_action( 'admin_init', array( $vk_link_target_controller, 'initialize_admin' ) );
