@@ -158,7 +158,10 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 				</div>
 		
 				<!-- div for banner -->
-				<div style="width:29%;display:block; overflow:hidden;float:right;">';
+				<div style="width:29%;display:block; overflow:hidden;float:right;">
+					<a href="http://bizvektor.com/en/" target="_blank" title="<?php esc_html_e( 'Free Wordpress theme for businesses', 'vk-link-target-controller' ); ?>">
+						<img style="max-width:100%;" src="<?php echo plugins_url( 'img/bizVektor-ad-banner-vert.jpg', __FILE__ ) ?>" alt="<?php esc_html_e( 'Download Biz Vektor free Wordpress theme for businesses', 'vk-link-target-controller' ); ?>" />
+					</a>
 				</div>
 			
 			</div>
