@@ -81,17 +81,26 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		/**
 		* redirection function
 		* Redirect to the homepage url when an user tries to access directly a post that has a link to redirect to
+		* Allows user to preview the post from the administration panel 
 		* @access public
 		* @return void
 		*/
 		function redirection() {
-			Global $post;
-			if ( isset ( $post ) ) {
-				$link = get_post_meta( $post->ID, 'vk-ltc-link', true );
-				//redirect to home
-				if ( ! empty( $link ) ) {
-					wp_redirect( home_url() );
-					exit;
+
+			//get referer url
+			$referer_url_components = parse_url( $_SERVER['HTTP_REFERER'] );
+			$path_elements 			= explode( '/', $referer_url_components['path'] );
+
+			//redirect user who does not come from administration panel
+			if ( ! in_array( 'wp-admin', $path_elements ) ) {
+				Global $post;
+				if ( isset ( $post ) ) {
+					$link = get_post_meta( $post->ID, 'vk-ltc-link', true );
+					//redirect to home
+					if ( ! empty( $link ) ) {
+						wp_redirect( home_url() );
+						exit;
+					}
 				}
 			}
 		}
