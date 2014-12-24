@@ -1,6 +1,6 @@
 jQuery(document).ready(function(){
 
-	//get a list of posts with ajax
+	//get a list of posts that need target _blank with ajax
 	jQuery.post(
 		vkLtc.ajaxurl,
 		{

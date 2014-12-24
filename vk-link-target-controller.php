@@ -400,7 +400,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 		/**
 		* ajax_rewrite_ids function
-		* Give a list of IDs of the posts that have the vk-ltc-link post meta AND target _blank option
+		* Used by jQuery script to dynamically add target="_blank" on the corresponding posts
 		* @access public		
 		* @return $json_ids string JSON array with posts id as keys and link as values
 		*/
@@ -411,16 +411,17 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			$post_types 	  = $this->get_public_post_types();
 			$post_types_slugs = array_keys( $post_types );
 
-			//get posts with specific post meta
+			//get posts with specific post meta and post meta value
 			$args = array( 
 				'posts_per_page' => -1,
 				'paged' 		 => 0,
 				'post_type' 	 => $post_types_slugs,
-				'meta_key'  	 => 'vk-ltc-link',
+				'meta_key'  	 => 'vk-ltc-target',
+				'meta_value'	 => 1,
  			);
 			$query = new WP_Query( $args );
 
-			//create an array of Ids of the posts found by the query
+			//create an array of ids of the posts found by the query
 			if ( $query->found_posts > 0 ) {
 				$matching_posts = $query->posts;
 				foreach ( $matching_posts as $post ) {
