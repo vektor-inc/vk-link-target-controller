@@ -86,11 +86,13 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		*/
 		function redirection() {
 			Global $post;
-			$link = get_post_meta( $post->ID, 'vk-ltc-link', true );
-			//redirect to home
-			if ( ! empty( $link ) ) {
-				wp_redirect( home_url() );
-				exit;
+			if ( isset ( $post ) ) {
+				$link = get_post_meta( $post->ID, 'vk-ltc-link', true );
+				//redirect to home
+				if ( ! empty( $link ) ) {
+					wp_redirect( home_url() );
+					exit;
+				}
 			}
 		}
 		
