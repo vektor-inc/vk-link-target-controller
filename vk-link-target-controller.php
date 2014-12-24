@@ -96,7 +96,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		*/
 		function redirection() {
 			Global $post;
-			if ( isset ( $post ) ) {
+			if ( isset ( $post ) && ! is_admin() ) {
 				$link = get_post_meta( $post->ID, 'vk-ltc-link', true );
 				//redirect to the associated link
 				if ( ! empty( $link ) ) {
