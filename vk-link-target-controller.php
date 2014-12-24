@@ -281,7 +281,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 						//sanitize the user input
 						$link = sanitize_text_field( $_POST['vk-ltc-link-field'] );
 
-						update_post_meta( $post_id, 'vk-ltc-link', $link ); 
+						update_post_meta( $post_id, 'vk-ltc-link', esc_url( $link ) ); 
 
 						/*
 						//check is link is allowed content
@@ -328,7 +328,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			} elseif ( strpos( $link, '.' ) ) {
 				$modified_url = esc_url( $link ); //complete url
 			} else {
-				$modified_url = esc_url( home_url( '/' ) ) . $link; //partial url (internal url)
+				$modified_url = esc_url( home_url() . $link ); //partial url (internal url)
 			}
 			return $modified_url;
 		}
