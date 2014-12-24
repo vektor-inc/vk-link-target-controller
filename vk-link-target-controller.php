@@ -86,15 +86,21 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		* @return void
 		*/
 		function redirection() {
+			$not_from_admin = true;
 
 			//get referer url
-			$referer_url_components = parse_url( $_SERVER['HTTP_REFERER'] );
-			$path_elements 			= explode( '/', $referer_url_components['path'] );
+			if ( wp_get_referer() )
+			{
+				$referer_url_components = parse_url( wp_get_referer() );
+				$path_elements 			= explode( '/', $referer_url_components['path'] );
 
-			//redirect user who does not come from administration panel
-			if ( ! in_array( 'wp-admin', $path_elements ) ) {
+				if ( in_array( 'wp-admin', $path_elements ) ) {
+					//let user coming from administration panel to see the post preview
+					$not_from_admin = false;
+				}
+			} else {
 				Global $post;
-				if ( isset ( $post ) ) {
+				if ( isset ( $post ) && true == $not_from_admin ) {
 					$link = get_post_meta( $post->ID, 'vk-ltc-link', true );
 					//redirect to home
 					if ( ! empty( $link ) ) {
@@ -394,7 +400,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 		/**
 		* ajax_rewrite_ids function
-		* Give a list of IDs of the posts that have the vk-ltc-link post meta
+		* Give a list of IDs of the posts that have the vk-ltc-link post meta AND target _blank option
 		* @access public		
 		* @return $json_ids string JSON array with posts id as keys and link as values
 		*/
