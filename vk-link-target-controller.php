@@ -51,7 +51,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		*/
 		function initialize_front_script() {
 
-			//add script for target bank support
+			//add script for target blank support
 			$path_to_script = plugins_url() . '/vk-link-target-controller/js/script.js';
 			
 			wp_register_script( 'vk-ltc-js', $path_to_script, array( 'jquery' ), null, true );
@@ -76,6 +76,16 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 				add_action( 'add_meta_boxes', array( $this, 'add_link_meta_box' ) ); //add a meta box for the link to the post edit screen
 				add_action( 'save_post', array( $this, 'save_link' ) ); //save meta box data
 			}
+		}
+
+		/**
+		* translation function
+		* Load WordPress text domain
+		* @access public
+		* @return void
+		*/
+		function translation() {
+			load_plugin_textdomain( 'vk-link-target-controller', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 		}
 
 		/**
@@ -433,10 +443,11 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 $vk_link_target_controller = new VK_Link_Target_Controller();
 
 if ( isset( $vk_link_target_controller ) ) {
-	//active on front
+	//activate on front
 	add_action( 'the_post', array( $vk_link_target_controller, 'initialize_front' ), 1 );
 	add_action( 'init', array( $vk_link_target_controller, 'initialize_front_script' ) );
 	add_action( 'wp' , array( $vk_link_target_controller, 'redirection' ) );
+	add_action( 'plugins_loaded', array( $vk_link_target_controller, 'translation' ) );
 
 	//set up admin
 	add_action( 'admin_init', array( $vk_link_target_controller, 'initialize_admin' ) );
