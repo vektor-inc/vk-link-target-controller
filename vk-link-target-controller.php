@@ -80,7 +80,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 		/**
 		* translation function
-		* Load WordPress text domain to show translations
+		* Load WordPress text domain in order to show translations
 		* @access public
 		* @return void
 		*/
@@ -90,16 +90,18 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 		/**
 		* redirection function
-		* Redirect to the associated link when an user tries to access a post that has a link to redirect to
+		* Redirect to the associated link when an user tries to access directly a post that has a link to redirect to
 		* @access public
 		* @return void
 		*/
 		function redirection() {
+			
 			Global $post;
+			//block redirection for WordPress admin
 			if ( isset ( $post ) && ! is_admin() ) {
 				$redirect = $this->has_redirection( $post->ID );
 				//redirect to the associated link
-				if ( false != $redirect ) {
+				if ( false != $redirect && $this->candidate_post_type() ) {
 					wp_redirect( esc_url( $redirect ) );
 					exit;
 				}
@@ -108,7 +110,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 		/**
 		* robots function
-		* Add a specific meta robot on a post that link to another content
+		* Add a specific robots meta for posts that link to another content
 		* @access public
 		* @return void
 		*/
@@ -116,23 +118,23 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			Global $post;
 
 			if ( isset( $post ) ) {
-				if ( false != $this->has_redirection( $post->ID ) ) {
-					//remove WordPress default actions for the meta robots
+				if ( false != $this->has_redirection( $post->ID ) && $this->candidate_post_type() ) {
+					//remove WordPress default actions for the robots meta
 					remove_action( 'wp_head', 'noindex', 1 );
 					remove_action( 'wp_head', 'wp_no_robots' );
 					//add specific meta robots
-					add_action( 'wp_head', array( $this, 'robots_output' ), 2 );
+					add_action( 'wp_head', array( $this, 'robots_html' ), 2 );
 				}
 			}
 		}
 		
 		/**
 		* robots_output function
-		* Display the meta robots on the front end
+		* Display HTML for the meta robots on the front end
 		* @access public
 		* @return void
 		*/		
-		function robots_output() {
+		function robots_html() {
 			echo '<meta name="robots" content="noindex,nofollow,noarchive,noodp,noydir" />' . "\n";
 		}
 
@@ -140,6 +142,8 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		* create_settings_page function
 		* Build the settings page
 		* @access public
+		* @link http://codex.wordpress.org/Settings_API WordPress documentation
+		* @link http://codex.wordpress.org/Function_Reference/add_options_page WordPress documentation
 		* @return void
 		*/
 		function create_settings_page() {
@@ -153,13 +157,13 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 					$this->user_capability_settings, 
 					'vk-ltc', 
 					array( $this, 'settings_page_html' )
-				); 	//menu and page
+				); 	//add link inside options menu and related settings page
 				
 				register_setting( 
 					'vk-ltc-options', 
 					'custom-post-types',
 					array( $this, 'sanitize_settings' )
-				); //settings options (use WordPress Settings API)
+				); //create settings options in DB (use WordPress Settings API)
 			}	
 		}
 		
@@ -183,7 +187,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 									<?php esc_html_e( 'Display on the following post types', 'vk-link-target-controller' );  ?>
 								</th>
 								<td>
-									<?php $post_types = $this->get_public_post_types(); //array of post types
+									<?php $post_types = $this->get_public_post_types(); //array of post types to create a checkbox list
 									foreach ( $post_types as $slug => $label ) { 
 										$options_exist = get_option( 'custom-post-types', 0 );
 										$checked = ( 0 != $options_exist  && in_array( $slug, $options_exist ) ) ? 'checked="checked"' : '' ; ?>
@@ -232,7 +236,8 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 		/**
 		* add_link_meta_box function
-		* Add a meta box for the link to the post edit screen
+		* Add the plugin meta box to the post edit screen
+		* Note: named that way to avoid conflicts with WordPress add_meta_box function
 		* @access public
 		* @link http://codex.wordpress.org/Function_Reference/add_meta_box WordPress documentation
 		* @return void
@@ -242,7 +247,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 				add_meta_box( 
 					'vk-ltc-url', //meta box html id
 					esc_html__( 'URL to redirect to', 'vk-link-target-controller' ),
-					array( $this, 'render_link_meta_box' ),
+					array( $this, 'render_meta_box' ),
 					null,
 					'normal',
 					'high'
@@ -251,18 +256,18 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		}
 
 		/**
-		* render_link_meta_box function
+		* render_meta_box function
 		* Display HTML form for link insertion
 		* @access public
 		* @param WP_Post $post The object for the current post/custom post
 		* @return void
 		*/
-		function render_link_meta_box( $post ) {
+		function render_meta_box( $post ) {
 
 			//nonce field
 			wp_nonce_field( 'vk-ltc-link', 'vk-ltc-link-nonce' );
 
-			//retrieve existing values from BD (empty if doesn't exist)
+			//retrieve existing values from DB (empty if doesn't exist)
 			$link   = get_post_meta( $post->ID, 'vk-ltc-link', true );
 			$target = get_post_meta( $post->ID, 'vk-ltc-target', true );
 
@@ -289,8 +294,8 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		* save_link function
 		* Save the link when the post is saved
 		* @access public		
-		* @param int $post_id The ID of the post being saved
-		* @return int $post_id|void The ID of the post or nothing if saved in DB
+		* @param int $post_id The ID of the post being saved.
+		* @return int $post_id|void The ID of the post or nothing if saved in DB.
 		*/
 		function save_link( $post_id ) {
 
@@ -334,7 +339,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		* Filter function for the_permalink filter
 		* Rewrite the link that the the_permalink() function prints out
  		* @access public
- 		* @param $id int Id of the post		
+ 		* @param int $id The ID of the post.	
 		* @return string
 		*/
 		function rewrite_link( $id = 0 ) {
@@ -352,7 +357,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			if ( empty( $link ) ) {
 				$modified_url = get_permalink( $id );
 			} elseif ( strpos( $link, '.' ) ) {
-				$modified_url = esc_url( $link ); //complete url
+				$modified_url = esc_url( $link ); //complete url (extern url)
 			} else {
 				$modified_url = esc_url( home_url() . $link ); //partial url (internal url)
 			}
@@ -426,8 +431,8 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		* has_redirection function
 		* Utility function to check if a post has a redirection link
 		* @access public
-		* @param $post_id The ID of the post we want to check.
-		* @return string|bool The link of the URL to redirect to or false is none.
+		* @param int $post_id The ID of the post we want to check.
+		* @return string|bool The URL to redirect to or false is none.
 		*/
 		function has_redirection( $post_id ) {
 			$link = get_post_meta( $post_id, 'vk-ltc-link', true );
@@ -440,7 +445,8 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 		/**
 		* candidate_post_type function
-		* Utility function that checks if the plugin features should be activate for the current post type 
+		* Utility function that checks if the plugin features should be activated for the current post type 
+		* Used on both front and back end
 		* @access public
 		* @return bool
 		*/
@@ -449,10 +455,12 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			$candidates   = get_option( 'custom-post-types' ); //post types where the meta box shows
 			$current_post = get_post(); //object of the post being modified
 
-			if ( in_array( $current_post->post_type, $candidates ) ) {
-				return true;			
-			} else {
-				return false;
+			if ( ! empty( $candidates ) ) {
+				if ( in_array( $current_post->post_type, $candidates ) ) {
+					return true;			
+				} else {
+					return false;
+				}
 			}
 		}		
 
@@ -460,7 +468,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		* ajax_rewrite_ids function
 		* Used by jQuery script to dynamically add target="_blank" on the corresponding posts
 		* @access public		
-		* @return $json_ids string JSON array with posts id as keys and link as values
+		* @return void
 		*/
 		function ajax_rewrite_ids() {
 
@@ -479,15 +487,15 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
  			);
 			$query = new WP_Query( $args );
 
-			//create an array of ids of the posts found by the query
+			//create an array( 'id' => 'link' ) of ids from the posts found in the query
 			if ( $query->found_posts > 0 ) {
 				$matching_posts = $query->posts;
 				foreach ( $matching_posts as $post ) {
-					$ids[ $post->ID ] = $this->rewrite_link($post->ID);
+					$ids[ $post->ID ] = $this->rewrite_link( $post->ID );
 				}
 			}
 
-			//convert php array to json format for use in js
+			//convert php array to json format for use in jQuery
 			$json_ids = json_encode( $ids );
 			
 			//send data to the front
