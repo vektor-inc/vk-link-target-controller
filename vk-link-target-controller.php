@@ -34,7 +34,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 				$link   = get_post_meta( $post->ID, 'vk-ltc-link', true );
 
 				//activate link rewriting only for concerned posts
-				if ( ! empty( $link ) ) {
+				if ( ! empty( $link ) && $this->candidate_post_type() ) {
 					add_filter( 'the_permalink', array( $this, 'rewrite_link' ) );		
 				} else {
 					//remove the filter to re-establish default the_permalink behaviour
@@ -134,22 +134,6 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		*/		
 		function robots_output() {
 			echo '<meta name="robots" content="noindex,nofollow,noarchive,noodp,noydir" />' . "\n";
-		}
-
-		/**
-		* has_redirection function
-		* Utility function to check if a post has a redirection link
-		* @access public
-		* @param $post_id The ID of the post we want to check.
-		* @return string|bool The link of the URL to redirect to or false is none.
-		*/
-		function has_redirection( $post_id ) {
-			$link = get_post_meta( $post_id, 'vk-ltc-link', true );
-			if ( empty( $link ) ) {
-				return false;
-			} else {
-				return $link;
-			}
 		}
 
 		/**
@@ -254,11 +238,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		* @return void
 		*/
 		function add_link_meta_box() {
-
-			$candidates   = get_option( 'custom-post-types' ); //post types where the meta box shows
-			$current_post = get_post(); //object of the post being modified
-
-			if ( in_array( $current_post->post_type, $candidates ) ) {
+			if ( $this->candidate_post_type() ) {
 				add_meta_box( 
 					'vk-ltc-url', //meta box html id
 					__( 'URL to redirect to', 'vk-link-target-controller' ),
@@ -441,6 +421,40 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 			return $public_post_types;
 		}
+
+		/**
+		* has_redirection function
+		* Utility function to check if a post has a redirection link
+		* @access public
+		* @param $post_id The ID of the post we want to check.
+		* @return string|bool The link of the URL to redirect to or false is none.
+		*/
+		function has_redirection( $post_id ) {
+			$link = get_post_meta( $post_id, 'vk-ltc-link', true );
+			if ( empty( $link ) ) {
+				return false;
+			} else {
+				return $link;
+			}
+		}
+
+		/**
+		* candidate_post_type function
+		* Utility function that checks if the plugin features should be activate for the current post type 
+		* @access public
+		* @return bool
+		*/
+		function candidate_post_type() {
+
+			$candidates   = get_option( 'custom-post-types' ); //post types where the meta box shows
+			$current_post = get_post(); //object of the post being modified
+
+			if ( in_array( $current_post->post_type, $candidates ) ) {
+				return true;			
+			} else {
+				return false;
+			}
+		}		
 
 		/**
 		* ajax_rewrite_ids function
