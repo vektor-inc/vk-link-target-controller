@@ -80,7 +80,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 		/**
 		* translation function
-		* Load WordPress text domain
+		* Load WordPress text domain to show translations
 		* @access public
 		* @return void
 		*/
@@ -97,15 +97,61 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		function redirection() {
 			Global $post;
 			if ( isset ( $post ) && ! is_admin() ) {
-				$link = get_post_meta( $post->ID, 'vk-ltc-link', true );
+				$redirect = $this->has_redirection( $post->ID );
 				//redirect to the associated link
-				if ( ! empty( $link ) ) {
-					wp_redirect( esc_url( $link ) );
+				if ( false != $redirect ) {
+					wp_redirect( esc_url( $redirect ) );
 					exit;
 				}
 			}
 		}
+
+		/**
+		* robots function
+		* Add a specific meta robot on a post that link to another content
+		* @access public
+		* @return void
+		*/
+		function robots() {
+			Global $post;
+
+			if ( isset( $post ) ) {
+				if ( false != $this->has_redirection( $post->ID ) ) {
+					//remove WordPress default actions for the meta robots
+					remove_action( 'wp_head', 'noindex', 1 );
+					remove_action( 'wp_head', 'wp_no_robots' );
+					//add specific meta robots
+					add_action( 'wp_head', array( $this, 'robots_output' ), 2 );
+				}
+			}
+		}
 		
+		/**
+		* robots_output function
+		* Display the meta robots on the front end
+		* @access public
+		* @return void
+		*/		
+		function robots_output() {
+			echo '<meta name="robots" content="noindex,nofollow,noarchive,noodp,noydir" />' . "\n";
+		}
+
+		/**
+		* has_redirection function
+		* Utility function to check if a post has a redirection link
+		* @access public
+		* @param $post_id The ID of the post we want to check.
+		* @return string|bool The link of the URL to redirect to or false is none.
+		*/
+		function has_redirection( $post_id ) {
+			$link = get_post_meta( $post_id, 'vk-ltc-link', true );
+			if ( empty( $link ) ) {
+				return false;
+			} else {
+				return $link;
+			}
+		}
+
 		/**
 		* create_settings_page function
 		* Build the settings page
@@ -447,9 +493,10 @@ if ( isset( $vk_link_target_controller ) ) {
 	add_action( 'the_post', array( $vk_link_target_controller, 'initialize_front' ), 1 );
 	add_action( 'init', array( $vk_link_target_controller, 'initialize_front_script' ) );
 	add_action( 'wp' , array( $vk_link_target_controller, 'redirection' ) );
-	add_action( 'plugins_loaded', array( $vk_link_target_controller, 'translation' ) );
+	add_action( 'get_header', array( $vk_link_target_controller, 'robots' ) );
 
 	//set up admin
 	add_action( 'admin_init', array( $vk_link_target_controller, 'initialize_admin' ) );
 	add_action( 'admin_menu', array( $vk_link_target_controller, 'create_settings_page' ) );
+	add_action( 'plugins_loaded', array( $vk_link_target_controller, 'translation' ) );
 }
