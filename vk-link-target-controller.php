@@ -148,8 +148,8 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			if ( current_user_can( $this->user_capability_settings ) ) {
 				
 				add_options_page( 
-					__( 'VK Link Target Controller', 'vk-link-target-controller' ), 
-					__( 'Link Target Controller', 'vk-link-target-controller' ), 
+					esc_html__( 'VK Link Target Controller', 'vk-link-target-controller' ), 
+					esc_html__( 'Link Target Controller', 'vk-link-target-controller' ), 
 					$this->user_capability_settings, 
 					'vk-ltc', 
 					array( $this, 'settings_page_html' )
@@ -241,7 +241,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			if ( $this->candidate_post_type() ) {
 				add_meta_box( 
 					'vk-ltc-url', //meta box html id
-					__( 'URL to redirect to', 'vk-link-target-controller' ),
+					esc_html__( 'URL to redirect to', 'vk-link-target-controller' ),
 					array( $this, 'render_link_meta_box' ),
 					null,
 					'normal',
@@ -270,15 +270,15 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 			//display form ?>
 			<p>
-				<?php _e( 'If you enter an URL here your visitors will access that URL directly when they click on the title of this post in Recent Posts list.', 'vk-link-target-controller' ); ?>
+				<?php esc_html_e( 'If you enter an URL here your visitors will access that URL directly when they click on the title of this post in Recent Posts list.', 'vk-link-target-controller' ); ?>
 			</p>
 			<p>
-				<label style="display:inline-block;width:220px;" for="vk-ltc-link-field"><?php _e( 'URL', 'vk-link-target-controller' ); ?></label>
+				<label style="display:inline-block;width:220px;" for="vk-ltc-link-field"><?php esc_html_e( 'URL', 'vk-link-target-controller' ); ?></label>
 				<input type="text" id="vk-ltc-link-field" name="vk-ltc-link-field" value="<?php echo esc_html( $link ); ?>" size="50" />
 				<?php //_e( 'Make sure the URL is correct.', 'vk-link-target-controller' ); ?>
 			</p>
 			<p>
-				<label style="display:inline-block;width:220px;" for="vk-ltc-target-check"><?php _e( 'Open the link in a separate window', 'vk-link-target-controller' ); ?></label>
+				<label style="display:inline-block;width:220px;" for="vk-ltc-target-check"><?php esc_html_e( 'Open the link in a separate window', 'vk-link-target-controller' ); ?></label>
 				<input type="checkbox" id="vk-ltc-target-check" name="vk-ltc-target-check" <?php echo $checked; ?>/>
 			</p>
 			<?php
