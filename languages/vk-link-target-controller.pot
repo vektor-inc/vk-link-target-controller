@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VK Link Target Controller\n"
 "Report-Msgid-Bugs-To: Translator Name <translations@example.com>\n"
-"POT-Creation-Date: 2014-12-24 13:59+0900\n"
+"POT-Creation-Date: 2014-12-25 16:09+0900\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: Vektor,Inc. <info@vektor-inc.co.jp>\n"
@@ -18,45 +18,47 @@ msgstr ""
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-KeywordsList: __;_e;_x;esc_html_e;esc_html__;esc_attr_e;esc_attr__;"
 "_ex:1,2c;_nx:4c,1,2;_nx_noop:4c,1,2;_x:1,2c;_n:1,2;_n_noop:1,2;"
-"__ngettext_noop:1,2;_c,_nc:4c,1,2\n"
+"__ngettext_noop:1,2;_c,_nc:4c,1,2;esc_html_x\n"
 "X-Poedit-Basepath: ../\n"
 "X-Generator: Poedit 1.5.7\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: vk-link-target-controller.php:121 vk-link-target-controller.php:145
+# settings page title
+#: vk-link-target-controller.php:151 vk-link-target-controller.php:175
 msgid "VK Link Target Controller"
 msgstr ""
 
-#: vk-link-target-controller.php:122
+# admin menu link label
+#: vk-link-target-controller.php:152
 msgid "Link Target Controller"
 msgstr ""
 
-#: vk-link-target-controller.php:153
+#: vk-link-target-controller.php:183
 msgid "Display on the following post types"
 msgstr ""
 
-#: vk-link-target-controller.php:172
+#: vk-link-target-controller.php:202
 msgid "Free Wordpress theme for businesses"
 msgstr ""
 
-#: vk-link-target-controller.php:173
+#: vk-link-target-controller.php:203
 msgid "Download Biz Vektor free Wordpress theme for businesses"
 msgstr ""
 
-#: vk-link-target-controller.php:218
+#: vk-link-target-controller.php:244
 msgid "URL to redirect to"
 msgstr ""
 
-#: vk-link-target-controller.php:247
+#: vk-link-target-controller.php:273
 msgid ""
 "If you enter an URL here your visitors will access that URL directly when "
 "they click on the title of this post in Recent Posts list."
 msgstr ""
 
-#: vk-link-target-controller.php:250
+#: vk-link-target-controller.php:276
 msgid "URL"
 msgstr ""
 
-#: vk-link-target-controller.php:255
+#: vk-link-target-controller.php:281
 msgid "Open the link in a separate window"
 msgstr ""
