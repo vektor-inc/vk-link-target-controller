@@ -514,7 +514,7 @@ if ( isset( $vk_link_target_controller ) ) {
 	//activate on front
 	add_action( 'the_post', array( $vk_link_target_controller, 'initialize_front' ), 1 );
 	add_action( 'init', array( $vk_link_target_controller, 'initialize_front_script' ) );
-	add_action( 'wp' , array( $vk_link_target_controller, 'redirection' ) );
+	// add_action( 'wp' , array( $vk_link_target_controller, 'redirection' ) );
 	add_action( 'get_header', array( $vk_link_target_controller, 'robots' ) );
 
 	//set up admin
