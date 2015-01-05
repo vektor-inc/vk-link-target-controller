@@ -279,7 +279,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			</p>
 			<p>
 				<label style="display:inline-block;width:220px;" for="vk-ltc-link-field"><?php esc_html_e( 'URL', 'vk-link-target-controller' ); ?></label>
-				<input type="text" id="vk-ltc-link-field" name="vk-ltc-link-field" value="<?php echo esc_html( $link ); ?>" size="50" />
+				<input type="text" id="vk-ltc-link-field" name="vk-ltc-link-field" value="<?php echo esc_url( urldecode( $link ) ); ?>" size="50" />
 				<?php //esc_html_e( 'Make sure the URL is correct.', 'vk-link-target-controller' ); ?>
 			</p>
 			<p>
@@ -310,7 +310,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 					//link field
 					if ( isset( $_POST['vk-ltc-link-field'] ) ) {
 						//sanitize the user input
-						$link = sanitize_text_field( $_POST['vk-ltc-link-field'] );
+						$link = esc_url( $_POST['vk-ltc-link-field'] );
 
 						update_post_meta( $post_id, 'vk-ltc-link', esc_url( $link ) ); 
 
