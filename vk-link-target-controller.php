@@ -102,7 +102,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 				$redirect = $this->has_redirection( $post->ID );
 				//redirect to the associated link
 				if ( false != $redirect && $this->candidate_post_type() ) {
-					wp_redirect( esc_url( $redirect ) );
+					wp_redirect( html_entity_decode( esc_url( $redirect ) ) );
 					exit;
 				}
 			}
