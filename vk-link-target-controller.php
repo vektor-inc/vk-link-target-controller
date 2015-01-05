@@ -97,8 +97,8 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		function redirection() {
 			
 			Global $post;
-			//block redirection for WordPress admin
-			if ( isset ( $post ) && ! is_admin() ) {
+			//prevent unwanted redirection on admin or archive page
+			if ( isset ( $post ) && is_single() ) {
 				$redirect = $this->has_redirection( $post->ID );
 				//redirect to the associated link
 				if ( false != $redirect && $this->candidate_post_type() ) {
