@@ -26,7 +26,7 @@ Fast redirection to the product you want to sell!
 2. Go to VK Link Target Controller settings screen (Settings > Link Target Controller).
 3. Select the post types where you want to use VK Link Target Controller.
 
-By default **none** of your post types are selected.
+By default **none of your post types are selected**.
 
 VK Link Target Controller supports custom post types.
 
