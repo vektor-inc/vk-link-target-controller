@@ -4,7 +4,7 @@ Donate link:
 Tags: redirection,link,recent posts,list,page,post
 Requires at least: 3.8
 Tested up to: 4.1
-Stable tag: 1.0
+Stable tag: 1.0.1
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -115,5 +115,5 @@ But we have a .pot file available so feel free to translate it in your language 
 
 == Upgrade Notice ==
 
-= 1.0 =
+= 1.0.1 =
 * [ bug fix ] Remove robots noindex,nofollow from front-page header.
