@@ -98,7 +98,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			
 			Global $post;
 			//prevent unwanted redirection on admin or archive page
-			if ( isset ( $post ) && is_single() ) {
+			if ( isset ( $post ) && ( is_single() || is_page() ) ) {
 				$redirect = $this->has_redirection( $post->ID );
 				//redirect to the associated link
 				if ( false != $redirect && $this->candidate_post_type() ) {
@@ -188,6 +188,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 								</th>
 								<td>
 									<?php $post_types = $this->get_public_post_types(); //array of post types to create a checkbox list
+									$post_types['page'] = __('Pages');
 									foreach ( $post_types as $slug => $label ) { 
 										$options_exist = get_option( 'custom-post-types', 0 );
 										$checked = ( 0 != $options_exist  && in_array( $slug, $options_exist ) ) ? 'checked="checked"' : '' ; ?>
