@@ -276,15 +276,60 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 			//display form ?>
 			<p>
-				<?php esc_html_e( 'If you enter an URL here your visitors will access that URL directly when they click on the title of this post in Recent Posts list.', 'vk-link-target-controller' ); ?>
+				<?php esc_html_e( 'If you enter an URL here your visitors will access that URL directly when they click on the title of this post in Recent Posts list.', 'vk-link-target-controller' ); ?><br>
+				<?php esc_html_e( 'If you want to link to the file, please upload select the file from the "File Link" button.', 'vk-link-target-controller' ); ?>
 			</p>
 			<p>
-				<label style="display:inline-block;width:220px;" for="vk-ltc-link-field"><?php esc_html_e( 'URL', 'vk-link-target-controller' ); ?></label>
-				<input type="text" id="vk-ltc-link-field" name="vk-ltc-link-field" value="<?php echo esc_url( urldecode( $link ) ); ?>" size="50" />
-				<?php //esc_html_e( 'Make sure the URL is correct.', 'vk-link-target-controller' ); ?>
+				<label style="display:inline-block;width:150px;" for="vk-ltc-link-field"><?php esc_html_e( 'URL', 'vk-link-target-controller' ); ?></label>
+				<input type="text" id="vk-ltc-link-field" name="vk-ltc-link-field" value="<?php echo esc_url( urldecode( $link ) ); ?>" size="35" />
+				<button id="media_vk-ltc-link-field" class="media_btn button button-default"><?php _e('File Link', 'vk-link-target-controller') ;?></button>
 			</p>
+
+<script type="text/javascript">
+jQuery(document).ready(function($){
+    var custom_uploader;
+// var media_id = new Array(2);　//配列の宣言
+// media_id[0] = "head_logo";
+// media_id[1] = "foot_logo";
+
+//for (i = 0; i < media_id.length; i++) {　//iという変数に0をいれループ一回ごとに加算する
+
+        // var media_btn = '#media_' + media_id[i];
+        // var media_target = '#' + media_id[i];
+        jQuery('.media_btn').click(function(e) {
+            media_target = jQuery(this).attr('id').replace(/media_/g,'#');
+            e.preventDefault();
+            if (custom_uploader) {
+                custom_uploader.open();
+                return;
+            }
+            custom_uploader = wp.media({
+                title: 'Choose File',
+                // 以下のコメントアウトを解除すると画像のみに限定される。
+                // library: {
+                //     type: 'image'
+                // },
+                button: {
+                    text: 'Choose File'
+                },
+                multiple: false, // falseにすると画像を1つしか選択できなくなる
+            });
+            custom_uploader.on('select', function() {
+                var images = custom_uploader.state().get('selection');
+                images.each(function(file){
+                    //$('#head_logo').append('<img src="'+file.toJSON().url+'" />');
+                    jQuery(media_target).attr('value', file.toJSON().url );
+                });
+            });
+            custom_uploader.open();
+        });
+//}
+
+});
+</script>
+
 			<p>
-				<label style="display:inline-block;width:220px;" for="vk-ltc-target-check"><?php esc_html_e( 'Open the link in a separate window', 'vk-link-target-controller' ); ?></label>
+				<label style="display:inline-block;width:150px;" for="vk-ltc-target-check"><?php esc_html_e( 'Open the link in a separate window', 'vk-link-target-controller' ); ?></label>
 				<input type="checkbox" id="vk-ltc-target-check" name="vk-ltc-target-check" <?php echo $checked; ?>/>
 			</p>
 			<?php

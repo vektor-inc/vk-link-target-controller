@@ -5,9 +5,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VK Link Target Controller\n"
 "Report-Msgid-Bugs-To: Translator Name <translations@example.com>\n"
-"POT-Creation-Date: 2014-12-25 16:11+0900\n"
+"POT-Creation-Date: 2015-11-25 04:48+0900\n"
 "PO-Revision-Date: \n"
-"Last-Translator: \n"
+"Last-Translator: Kurudrive <kurudrive@gmail.com>\n"
 "Language-Team: Vektor,Inc. <info@vektor-inc.co.jp>\n"
 "Language: en_US\n"
 "MIME-Version: 1.0\n"
@@ -24,43 +24,58 @@ msgstr ""
 "X-Poedit-SearchPath-0: .\n"
 
 # settings page title
-#: vk-link-target-controller.php:151 vk-link-target-controller.php:175
+#: vk-link-target-controller.php:155 vk-link-target-controller.php:179
 msgid "VK Link Target Controller"
 msgstr ""
 
 # admin menu link label
-#: vk-link-target-controller.php:152
+#: vk-link-target-controller.php:156
 msgid "Link Target Controller"
 msgstr ""
 
-#: vk-link-target-controller.php:183
+#: vk-link-target-controller.php:187
 msgid "Display on the following post types"
 msgstr "次の投稿タイプの編集画面で表示する"
 
-#: vk-link-target-controller.php:202
+#: vk-link-target-controller.php:191
+msgid "Pages"
+msgstr ""
+
+#: vk-link-target-controller.php:207
 msgid "Free Wordpress theme for businesses"
 msgstr "ビジネス用の無料ワードプレステーマ"
 
-#: vk-link-target-controller.php:203
+#: vk-link-target-controller.php:208
 msgid "Download Biz Vektor free Wordpress theme for businesses"
 msgstr "WordPress無料テーマ「BizVektor」をダウンロードする"
 
-#: vk-link-target-controller.php:244
+#: vk-link-target-controller.php:250
 msgid "URL to redirect to"
 msgstr "リダイレクト用URL"
 
-#: vk-link-target-controller.php:273
+#: vk-link-target-controller.php:279
 msgid ""
 "If you enter an URL here your visitors will access that URL directly when "
 "they click on the title of this post in Recent Posts list."
 msgstr ""
-"URLを入力すると最新記事リストなどに投稿のタイトルにクリックするとそのURLに移"
-"動します。"
+"URLを入力すると、このページは表示されずに入力されたURLのページを表示します。"
 
-#: vk-link-target-controller.php:276
+#: vk-link-target-controller.php:280
+msgid ""
+"If you want to link to the file, please upload select the file from the "
+"\"File Link\" button."
+msgstr ""
+"ファイルにリンクさせたい場合は「File Link」ボタンからファイルをアップロード・"
+"選択してください。"
+
+#: vk-link-target-controller.php:283
 msgid "URL"
 msgstr "URL"
 
-#: vk-link-target-controller.php:281
+#: vk-link-target-controller.php:285
+msgid "File Link"
+msgstr ""
+
+#: vk-link-target-controller.php:332
 msgid "Open the link in a separate window"
 msgstr "別ウィンドウで開く"
