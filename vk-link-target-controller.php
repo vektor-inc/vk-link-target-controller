@@ -3,7 +3,7 @@
 Plugin Name: VK Link Target Controller
 Plugin URI: https://github.com/kurudrive/vk-link-target-controller
 Description: Allow you to link a post title from the recent posts list to another page (internal or external link) rather than link to the actual post page
-Version: 1.1.0
+Version: 1.2.0
 Author: Vektor,Inc.
 Author URI: http://www.vektor-inc.co.jp/
 License: GPL2
@@ -204,9 +204,22 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		
 				<!-- div for banner -->
 				<div style="width:29%;display:block; overflow:hidden;float:right;">
+				<?php if ( strtoupper( get_locale() ) == 'JA' ) : ?>
+					<a href="http://lightning.vektor-inc.co.jp/ja/" target="_blank">
+						<img style="max-width:100%;" src="<?php echo plugins_url( 'img/336_280_lightning.png', __FILE__ ) ?>" alt="WordPress Theme Lightning" />
+					</a>
+					<a href="http://ex-unit.vektor-inc.co.jp/ja/" target="_blank">
+						<img style="max-width:100%;" src="<?php echo plugins_url( 'img/336_280_ExUnit.png', __FILE__ ) ?>" alt="VK All in One Expansion Unit" />
+					</a>
+				<?php else : ?>
+
+					<a href="http://lightning.vektor-inc.co.jp/" target="_blank">
+						<img style="max-width:100%;" src="<?php echo plugins_url( 'img/lightning_bnr_en.jpg', __FILE__ ) ?>" alt="lightning_bnr_en" />
+					</a>
 					<a href="http://bizvektor.com/en/" target="_blank" title="<?php esc_html_e( 'Free Wordpress theme for businesses', 'vk-link-target-controller' ); ?>">
 						<img style="max-width:100%;" src="<?php echo plugins_url( 'img/bizVektor-ad-banner-vert.jpg', __FILE__ ) ?>" alt="<?php esc_html_e( 'Download Biz Vektor free Wordpress theme for businesses', 'vk-link-target-controller' ); ?>" />
 					</a>
+				<?php endif; ?>
 				</div>
 			
 			</div>
