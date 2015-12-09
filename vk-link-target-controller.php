@@ -535,7 +535,8 @@ jQuery(document).ready(function($){
 
 			$post_types 	  = $this->get_public_post_types();
 			$post_types_slugs = array_keys( $post_types );
-
+			$post_types_slugs[] = 'page';
+			
 			//get posts with specific post meta and post meta value
 			$args = array( 
 				'posts_per_page' => -1,
