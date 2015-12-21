@@ -4,7 +4,7 @@ jQuery(document).ready(function(){
 	jQuery.post(
 		vkLtc.ajaxurl,
 		{
-			action : 'ids',
+			action : 'ids'
 		},
 		function( posts ) {
 			if(!jQuery.isEmptyObject(posts)){
