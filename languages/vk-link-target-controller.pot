@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VK Link Target Controller\n"
 "Report-Msgid-Bugs-To: Translator Name <translations@example.com>\n"
-"POT-Creation-Date: 2015-11-25 04:46+0900\n"
+"POT-Creation-Date: 2015-12-18 13:01+0900\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Kurudrive <kurudrive@gmail.com>\n"
 "Language-Team: Vektor,Inc. <info@vektor-inc.co.jp>\n"
@@ -41,38 +41,38 @@ msgstr ""
 msgid "Pages"
 msgstr ""
 
-#: vk-link-target-controller.php:207
+#: vk-link-target-controller.php:219
 msgid "Free Wordpress theme for businesses"
 msgstr ""
 
-#: vk-link-target-controller.php:208
+#: vk-link-target-controller.php:220
 msgid "Download Biz Vektor free Wordpress theme for businesses"
 msgstr ""
 
-#: vk-link-target-controller.php:250
+#: vk-link-target-controller.php:263
 msgid "URL to redirect to"
 msgstr ""
 
-#: vk-link-target-controller.php:279
+#: vk-link-target-controller.php:292
 msgid ""
 "If you enter an URL here your visitors will access that URL directly when "
 "they click on the title of this post in Recent Posts list."
 msgstr ""
 
-#: vk-link-target-controller.php:280
+#: vk-link-target-controller.php:293
 msgid ""
-"If you want to link to the uploaded file, please upload select the file from "
-"the \"File Link\" button."
+"If you want to link to the file, please upload select the file from the "
+"\"File Link\" button."
 msgstr ""
 
-#: vk-link-target-controller.php:283
+#: vk-link-target-controller.php:296
 msgid "URL"
 msgstr ""
 
-#: vk-link-target-controller.php:285
+#: vk-link-target-controller.php:298
 msgid "File Link"
 msgstr ""
 
-#: vk-link-target-controller.php:332
+#: vk-link-target-controller.php:345
 msgid "Open the link in a separate window"
 msgstr ""
