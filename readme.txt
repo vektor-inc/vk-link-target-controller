@@ -1,10 +1,10 @@
 === VK Link Target Controller ===
-Contributors: kurudrive,dswebstudio,bizvektor
+Contributors: vektor-inc,kurudrive,dswebstudio,bizvektor
 Donate link:
 Tags: redirection,link,recent posts,list,page,post
 Requires at least: 3.8
 Tested up to: 4.3.1
-Stable tag: 1.2.0
+Stable tag: 1.2.2
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
