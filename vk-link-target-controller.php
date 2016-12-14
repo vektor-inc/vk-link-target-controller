@@ -26,7 +26,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		* @return void
 		*/
 		function initialize_front() {
-			
+
 			//rewrite link
 			Global $post;
 			if ( isset( $post ) ) {
@@ -35,7 +35,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 				//activate link rewriting only for concerned posts
 				if ( ! empty( $link ) && $this->candidate_post_type() ) {
-					add_filter( 'the_permalink', array( $this, 'rewrite_link' ) );		
+					add_filter( 'the_permalink', array( $this, 'rewrite_link' ) );
 				} else {
 					//remove the filter to re-establish default the_permalink behaviour
 					remove_filter( 'the_permalink', array( $this, 'rewrite_link' ) );
@@ -53,7 +53,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 			//add script for target blank support
 			$path_to_script = plugins_url() . '/vk-link-target-controller/js/script.js';
-			
+
 			wp_register_script( 'vk-ltc-js', $path_to_script, array( 'jquery' ), null, true );
 			wp_enqueue_script( 'vk-ltc-js' );
 
@@ -95,7 +95,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		* @return void
 		*/
 		function redirection() {
-			
+
 			Global $post;
 			//prevent unwanted redirection on admin or archive page
 			if ( isset ( $post ) && ( is_single() || is_page() ) ) {
@@ -127,13 +127,13 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 				}
 			}
 		}
-		
+
 		/**
 		* robots_output function
 		* Display HTML for the meta robots on the front end
 		* @access public
 		* @return void
-		*/		
+		*/
 		function robots_html() {
 			echo '<meta name="robots" content="noindex,nofollow,noarchive,noodp,noydir" />' . "\n";
 		}
@@ -147,26 +147,26 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		* @return void
 		*/
 		function create_settings_page() {
-			
+
 			//create page for user with permission
 			if ( current_user_can( $this->user_capability_settings ) ) {
-				
-				add_options_page( 
+
+				add_options_page(
 					esc_html_x( 'VK Link Target Controller', 'settings page title', 'vk-link-target-controller' ), 
 					esc_html_x( 'Link Target Controller', 'admin menu link label', 'vk-link-target-controller' ), 
-					$this->user_capability_settings, 
-					'vk-ltc', 
+					$this->user_capability_settings,
+					'vk-ltc',
 					array( $this, 'settings_page_html' )
 				); 	//add link inside options menu and related settings page
-				
-				register_setting( 
-					'vk-ltc-options', 
+
+				register_setting(
+					'vk-ltc-options',
 					'custom-post-types',
 					array( $this, 'sanitize_settings' )
 				); //create settings options in DB (use WordPress Settings API)
-			}	
+			}
 		}
-		
+
 		/**
 		* settings_page_html function
 		* Display HTML for the settings page on WordPress admin
@@ -189,7 +189,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 								<td>
 									<?php $post_types = $this->get_public_post_types(); //array of post types to create a checkbox list
 									$post_types['page'] = __('Pages');
-									foreach ( $post_types as $slug => $label ) { 
+									foreach ( $post_types as $slug => $label ) {
 										$options_exist = get_option( 'custom-post-types', 0 );
 										$checked = ( 0 != $options_exist  && in_array( $slug, $options_exist ) ) ? 'checked="checked"' : '' ; ?>
 										<input type="checkbox" name="custom-post-types[]" id="custom-post-types-<?php echo $slug; ?>" value="<?php echo $slug; ?>" <?php echo $checked; ?> />
@@ -201,7 +201,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 						<?php submit_button(); ?>
 					</form>
 				</div>
-		
+
 				<!-- div for banner -->
 				<div style="width:29%;display:block; overflow:hidden;float:right;">
 				<?php if ( strtoupper( get_locale() ) == 'JA' ) : ?>
@@ -221,7 +221,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 					</a>
 				<?php endif; ?>
 				</div>
-			
+
 			</div>
 		<?php
 		}
@@ -233,7 +233,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		* @param $input array of data sent by the form
 		* @return void
 		*/
-		function sanitize_settings( $input ) {	
+		function sanitize_settings( $input ) {
 			if ( isset( $input ) ) {
 				//post types the meta box can be applied to
 				$post_types 	 = $this->get_public_post_types();
@@ -258,14 +258,14 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		*/
 		function add_link_meta_box() {
 			if ( $this->candidate_post_type() ) {
-				add_meta_box( 
+				add_meta_box(
 					'vk-ltc-url', //meta box html id
 					esc_html__( 'URL to redirect to', 'vk-link-target-controller' ),
 					array( $this, 'render_meta_box' ),
 					null,
 					'normal',
 					'high'
-				);				
+				);
 			}
 		}
 
@@ -352,7 +352,7 @@ jQuery(document).ready(function($){
 		/**
 		* save_link function
 		* Save the link when the post is saved
-		* @access public		
+		* @access public
 		* @param int $post_id The ID of the post being saved.
 		* @return int $post_id|void The ID of the post or nothing if saved in DB.
 		*/
@@ -365,7 +365,7 @@ jQuery(document).ready(function($){
 				//check form
 				if ( isset( $_POST['vk-ltc-link-field'] ) 
 					&& wp_verify_nonce( $_POST['vk-ltc-link-nonce'], 'vk-ltc-link' ) ) {
-					
+
 					//link field
 					if ( isset( $_POST['vk-ltc-link-field'] ) ) {
 						//sanitize the user input
@@ -398,7 +398,7 @@ jQuery(document).ready(function($){
 		* Filter function for the_permalink filter
 		* Rewrite the link that the the_permalink() function prints out
  		* @access public
- 		* @param int $id The ID of the post.	
+ 		* @param int $id The ID of the post.
 		* @return string
 		*/
 		function rewrite_link( $id = 0 ) {
@@ -406,7 +406,7 @@ jQuery(document).ready(function($){
 			if ( 0 == $id ) {
 				Global $post; //use $post object
 				$id = $post->ID; //id of current post
-			} 
+			}
 
 			$modified_url = '';
 
@@ -426,7 +426,7 @@ jQuery(document).ready(function($){
 		/**
 		* is_url function
 		* Utility function to check if given string is an URL
-		* @access public		
+		* @access public
 		* @param string $url The string to test
 		* @return bool
 		*/
@@ -460,7 +460,7 @@ jQuery(document).ready(function($){
 		/**
 		* get_public_post_types function
 		* Utility function to get post types and custom post types slugs and labels
-		* @access public		
+		* @access public
 		* @return array( slug => label )
 		*/
 		function get_public_post_types() {
@@ -477,7 +477,7 @@ jQuery(document).ready(function($){
 				'public'   => true,
 				'_builtin' => false,
 			);
-			$custom_types_obj = get_post_types( $args, 'objects' ); 
+			$custom_types_obj = get_post_types( $args, 'objects' );
 
 			foreach ( $custom_types_obj as $custom_type_obj ) {
 				$public_post_types[ $custom_type_obj->name ] = $custom_type_obj->label;
@@ -504,7 +504,7 @@ jQuery(document).ready(function($){
 
 		/**
 		* candidate_post_type function
-		* Utility function that checks if the plugin features should be activated for the current post type 
+		* Utility function that checks if the plugin features should be activated for the current post type
 		* Used on both front and back end
 		* @access public
 		* @return bool
@@ -516,17 +516,17 @@ jQuery(document).ready(function($){
 
 			if ( ! empty( $candidates ) ) {
 				if ( in_array( $current_post->post_type, $candidates ) ) {
-					return true;			
+					return true;
 				} else {
 					return false;
 				}
 			}
-		}		
+		}
 
 		/**
 		* ajax_rewrite_ids function
 		* Used by jQuery script to dynamically add target="_blank" on the corresponding posts
-		* @access public		
+		* @access public
 		* @return void
 		*/
 		function ajax_rewrite_ids() {
@@ -536,9 +536,9 @@ jQuery(document).ready(function($){
 			$post_types 	  = $this->get_public_post_types();
 			$post_types_slugs = array_keys( $post_types );
 			$post_types_slugs[] = 'page';
-			
+
 			//get posts with specific post meta and post meta value
-			$args = array( 
+			$args = array(
 				'posts_per_page' => -1,
 				'paged' 		 => 0,
 				'post_type' 	 => $post_types_slugs,
@@ -551,13 +551,15 @@ jQuery(document).ready(function($){
 			if ( $query->found_posts > 0 ) {
 				$matching_posts = $query->posts;
 				foreach ( $matching_posts as $post ) {
-					$ids[ $post->ID ] = html_entity_decode( $this->rewrite_link( $post->ID ) );
+					$ids[ $post->ID ][] = html_entity_decode( $this->rewrite_link( $post->ID ) );
+					$ids[ $post->ID ][] = get_permalink( $post->ID );
+					$ids[ $post->ID ] = array_unique($ids[ $post->ID ]);
 				}
 			}
 
 			//convert php array to json format for use in jQuery
 			$json_ids = json_encode( $ids );
-			
+
 			//send data to the front
 			header( 'Content-Type: application/json' );
 			echo $json_ids;
