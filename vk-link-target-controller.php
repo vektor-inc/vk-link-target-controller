@@ -14,6 +14,10 @@ Text Domain: vk-link-target-controller
 
 if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
+	// Get Plugin version
+	$data = get_file_data( __FILE__, array( 'version' => 'Version','textdomain' => 'Text Domain' ) );
+	define( 'LTC_VERSION', $data['version'] );
+
 	class VK_Link_Target_Controller {
 
 		public $user_capability_link 	 = 'edit_posts'; //can save a link for a redirection
@@ -54,7 +58,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			//add script for target blank support
 			$path_to_script = plugins_url() . '/vk-link-target-controller/js/script.js';
 
-			wp_register_script( 'vk-ltc-js', $path_to_script, array( 'jquery' ), null, true );
+			wp_register_script( 'vk-ltc-js', $path_to_script, array( 'jquery' ), LTC_VERSION, true );
 			wp_enqueue_script( 'vk-ltc-js' );
 
 			//Ajax
