@@ -12,6 +12,9 @@ Domain Path: /languages
 Text Domain: vk-link-target-controller
 */
 
+
+require_once( plugin_dir_path( __FILE__ ) . 'inc/vk-admin-config.php' );
+
 if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 	// Get Plugin version
@@ -156,8 +159,8 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			if ( current_user_can( $this->user_capability_settings ) ) {
 
 				add_options_page(
-					esc_html_x( 'VK Link Target Controller', 'settings page title', 'vk-link-target-controller' ), 
-					esc_html_x( 'Link Target Controller', 'admin menu link label', 'vk-link-target-controller' ), 
+					esc_html_x( 'VK Link Target Controller', 'settings page title', 'vk-link-target-controller' ),
+					esc_html_x( 'Link Target Controller', 'admin menu link label', 'vk-link-target-controller' ),
 					$this->user_capability_settings,
 					'vk-ltc',
 					array( $this, 'settings_page_html' )
@@ -197,7 +200,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 										$options_exist = get_option( 'custom-post-types', 0 );
 										$checked = ( 0 != $options_exist  && in_array( $slug, $options_exist ) ) ? 'checked="checked"' : '' ; ?>
 										<input type="checkbox" name="custom-post-types[]" id="custom-post-types-<?php echo $slug; ?>" value="<?php echo $slug; ?>" <?php echo $checked; ?> />
-										<label for="custom-post-types-<?php echo $slug; ?>"><?php echo $label; ?></label><br /><?php 
+										<label for="custom-post-types-<?php echo $slug; ?>"><?php echo $label; ?></label><br /><?php
 									} ?>
 								</td>
 							</tr>
@@ -363,11 +366,11 @@ jQuery(document).ready(function($){
 		function save_link( $post_id ) {
 
 			//kill unauthorized user (double verification)
-			if ( ! current_user_can( $this->user_capability_link ) ) { 
+			if ( ! current_user_can( $this->user_capability_link ) ) {
 				wp_die( 'You do not have sufficient permissions to access this page.', 'vk-link-target-controller' );
 			} else {
 				//check form
-				if ( isset( $_POST['vk-ltc-link-field'] ) 
+				if ( isset( $_POST['vk-ltc-link-field'] )
 					&& wp_verify_nonce( $_POST['vk-ltc-link-nonce'], 'vk-ltc-link' ) ) {
 
 					//link field
@@ -375,7 +378,7 @@ jQuery(document).ready(function($){
 						//sanitize the user input
 						$link = esc_url( $_POST['vk-ltc-link-field'] );
 
-						update_post_meta( $post_id, 'vk-ltc-link', esc_url( $link ) ); 
+						update_post_meta( $post_id, 'vk-ltc-link', esc_url( $link ) );
 
 						/*
 						//check is link is allowed content
