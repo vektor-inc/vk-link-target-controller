@@ -3,8 +3,8 @@ Contributors: vektor-inc,kurudrive,dswebstudio,bizvektor
 Donate link:
 Tags: redirection,link,recent posts,list,page,post
 Requires at least: 4.0
-Tested up to: 4.7.0
-Stable tag: 1.2.4
+Tested up to: 4.7.1
+Stable tag: 1.3.0
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -18,7 +18,7 @@ VK Link Target Controller enables to redirect your visitors to another page than
 
 = Example of use =
 
-Let's say you have a new product for sale on eBay or Etsy. 
+Let's say you have a new product for sale on eBay or Etsy.
 You find it annoying to write a complete post entry on your blog (or WordPress powered website) to explain you have a new product to sell there and would like your visitors to access directly the product page.
 
 With VK Link Target Controller your visitors will access directly that product page when clicking on the post title.
@@ -75,7 +75,7 @@ The plugin supports both external and internal links.
 You can choose to open the links in a new window if you need.
 Please refer to the Installation tab or the Screenshots tab for more information.
 
-= Can I add URLs with non-Latin characters? = 
+= Can I add URLs with non-Latin characters? =
 
 VK Link Target Controller supports Japanese in URLs so probably you can add other non-Latin characters too.
 
@@ -102,9 +102,9 @@ But we have a .pot file available so feel free to translate it in your language 
 
 == Screenshots ==
 
-1. Localisation for VK Link Target Controller settings page. 
+1. Localisation for VK Link Target Controller settings page.
 2. VK Link Target Controller settings page. Choose the post types where the plugin should be activated.
-3. An absolute url to an external link with open the link in a separate window option selected (both http:// and trailing slash are optional). 
+3. An absolute url to an external link with open the link in a separate window option selected (both http:// and trailing slash are optional).
 4. A relative url that refer to a page of your website: **note slash "/" at the beginning**.
 
 == Changelog ==
