@@ -1,5 +1,5 @@
 === VK Link Target Controller ===
-Contributors: vektor-inc,kurudrive,dswebstudio,bizvektor
+Contributors: vektor-inc,kurudrive,dswebstudio,bizvektor,nc30,catherine8007
 Donate link:
 Tags: redirection,link,recent posts,list,page,post
 Requires at least: 4.0
