@@ -66,7 +66,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		function initialize_front_script() {
 
 			// add script for target blank support
-			$path_to_script = plugins_url() . '/vk-link-target-controller/js/script.js';
+			$path_to_script = plugins_url() . '/vk-link-target-controller/js/script.min.js';
 
 			wp_register_script( 'vk-ltc-js', $path_to_script, array( 'jquery' ), LTC_VERSION, true );
 			wp_enqueue_script( 'vk-ltc-js' );
