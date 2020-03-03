@@ -21,10 +21,11 @@ before_script:
       "7" ) composer require --dev phpunit/phpunit ^6;;
       *) composer require --dev phpunit/phpunit ^4
     esac
-  - cat js/script.js|md5sum|cut -d ' ' -f 1 > _script_sum
+  - cat js/script.js|md5sum|cut -d ' ' -f 1 > _script_sum.before
 
 script:
 - npm run build
 - npm run test
 - ./vendor/bin/phpunit
-- diff $(js/script.min.js|md5sum|cut -d ' ' -f 1) _script_sum
+- cat js/script.js|md5sum|cut -d ' ' -f 1 > _script_sum.after
+- diff _script_sum.before _script_sum.after
