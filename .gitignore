@@ -4,4 +4,4 @@ node_modules/*
 .LSOverride
 *.lnk
 Thumbs.db
-
+sftp-config.json
