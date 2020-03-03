@@ -24,8 +24,8 @@ before_script:
   - cat js/script.js|md5sum|cut -d ' ' -f 1 > _script_sum.before
 
 script:
-- npm run build
+- npm run jsmin
 - npm run test
-- ./vendor/bin/phpunit
 - cat js/script.js|md5sum|cut -d ' ' -f 1 > _script_sum.after
 - diff _script_sum.before _script_sum.after
+- ./vendor/bin/phpunit
