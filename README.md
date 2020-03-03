@@ -1,4 +1,7 @@
 # VK Link Target Controller
+
+[![Build Status](https://travis-ci.org/vektor-inc/vk-link-target-controller.svg?branch=master)](https://travis-ci.org/vektor-inc/vk-link-target-controller)
+
 =========================
 
 新着情報一覧などのリストで、タイトルのリンクをクリックした際に詳細ページにリンクするのではなく、特定のページや外部のページにリンク出来るようにするWordPress用プラグインです。
