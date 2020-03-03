@@ -24,6 +24,7 @@ before_script:
   - cat js/script.js|md5sum|cut -d ' ' -f 1 > _script_sum
 
 script:
+- npm run build
 - npm run test
 - ./vendor/bin/phpunit
-- diff js/script.min.js _script_sum
+- diff $(js/script.min.js|md5sum|cut -d ' ' -f 1) _script_sum
