@@ -4,7 +4,7 @@ Donate link:
 Tags: redirection,link,recent posts,list,page,post
 Requires at least: 4.0
 Tested up to: 4.9.8
-Stable tag: 1.3.1
+Stable tag: 1.4.1
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
