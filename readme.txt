@@ -2,7 +2,7 @@
 Contributors: vektor-inc,kurudrive,dswebstudio,bizvektor,nc30,catherine8007
 Donate link:
 Tags: redirection,link,recent posts,list,page,post
-Requires at least: 4.0
+Requires at least: 5.3
 Tested up to: 4.9.8
 Stable tag: 1.5.0
 License: GPL2
