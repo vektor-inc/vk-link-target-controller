@@ -13,7 +13,7 @@ Text Domain: vk-link-target-controller
 */
 
 
-require_once( plugin_dir_path( __FILE__ ) . 'inc/vk-admin-config.php' );
+require_once plugin_dir_path( __FILE__ ) . 'inc/vk-admin/vk-admin-config.php';
 
 if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
