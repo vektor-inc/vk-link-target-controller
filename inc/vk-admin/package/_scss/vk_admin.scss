@@ -1,5 +1,9 @@
 @charset "utf-8";
 // @import "compass";
+
+$text-size : 14px;
+$line-height : 1.7;
+
 body{margin:0;}
 .text-left {
 	text-align: left;
@@ -156,6 +160,11 @@ body{margin:0;}
 
 .vk_admin_page {
 	padding-top: 1em;
+
+	p,li,td {
+		line-height: $line-height;
+		font-size: $text-size;
+	}
 	h2.page_title {
 		font-size: 16px;
 		text-align: center;
@@ -175,6 +184,15 @@ body{margin:0;}
 		font-size:16px;
 		margin-bottom:1em;
 	}
+	.form-table td p,
+	p {
+		margin-bottom:1em;
+		font-size: $text-size;
+		line-height: $line-height;
+		&:last-child {
+			margin-bottom:0;
+		}
+	}
 	input[type="text"] {
 		width: 50%;
 	}
@@ -182,6 +200,7 @@ body{margin:0;}
 		width: 50%;
 	}
 	dl {
+		line-height: 1.5;
 		dt {
 			font-weight: bold;
 			margin-bottom: 5px;
@@ -247,8 +266,20 @@ body{margin:0;}
 			li ol {
 				margin-top:0.5em;
 			}
+			ul.no-style {
+				margin-left:0;
+				ul {
+					margin-left:1.5em;
+				}
+				li {
+					list-style: none;
+				}
+			}
 			&_content {
 				margin-bottom:3em;
+			}
+			input[type=text] {
+				margin-bottom:5px;
 			}
 		}
 	}
@@ -344,6 +375,9 @@ body{margin:0;}
 	// background: #EDEDED;
 	font-size: 1em;
 }
+.admin-custom-discription{
+	margin-top:0.5em;
+}
 input[type="text"],
 input[type="search"],
 input[type="radio"],
@@ -406,5 +440,49 @@ textarea {
 	// & & にしないと指定が負けるため特別
 	& &_input {
 		margin-top: 0;
+	}
+}
+
+/*トグル風ラジオボタン*/
+.vk-admin-inline-radio {
+	display: flex;
+	border-radius: 3px;
+	overflow: hidden;
+	border: 1px solid #b6b6b6;
+
+
+	div {
+	  position: relative;
+	  flex: 1;
+	}
+
+	input {
+	  width: 100%;
+	  height: 60px;
+	  opacity: 0;
+	}
+
+	label {
+	  position: absolute;
+	  top: 0; left: 0;
+	  color: #b6b6b6;
+	  width: 100%;
+	  height: 100%;
+	  background: #fff;
+	  display: flex;
+	  align-items: center;
+	  justify-content: center;
+	  pointer-events: none;
+	  border-right: 1px solid #b6b6b6;
+	}
+
+	div:last-child label {
+	  border-right: 0;
+	}
+
+	input:checked + label {
+	  background: #d81b60;
+	  font-weight: 500;
+	  color: #fff;
 	}
 }
