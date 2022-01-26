@@ -8,7 +8,6 @@ $.post(
 	sendData,
 	function(ps) {
 		// ps : 対象の投稿データっぽい
-		// console.log(ps);
 		if(!$.isEmptyObject(ps)){
 			$.each(ps, function(id, ls) {
 				// ls
