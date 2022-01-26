@@ -18,7 +18,7 @@ require_once plugin_dir_path( __FILE__ ) . 'inc/vk-admin/vk-admin-config.php';
 
 if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
-	// Get Plugin version
+	// Get Plugin version.
 	$data = get_file_data(
 		__FILE__,
 		array(
@@ -28,13 +28,27 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 	);
 	define( 'LTC_VERSION', $data['version'] );
 
+	/**
+	 * Link TArget Control class
+	 */
 	class VK_Link_Target_Controller {
 
-		public $user_capability_link     = 'edit_posts'; // can save a link for a redirection
-		public $user_capability_settings = 'manage_options'; // can access to the settings page
+		/**
+		 * User capability of set link target
+		 *
+		 * @var string
+		 */
+		public $user_capability_link = 'edit_posts'; // can save a link for a redirection.
 
 		/**
-		 * initialize_front function
+		 * User capability of access to link target setting page
+		 *
+		 * @var string
+		 */
+		public $user_capability_settings = 'manage_options'; // can access to the settings page.
+
+		/**
+		 * Initialize_front function
 		 * Activate plugin features on front-end
 		 *
 		 * @access public
@@ -42,24 +56,21 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		 */
 		function initialize_front() {
 
-			// rewrite link
+			// Rewrite link.
 			global $post;
 			if ( isset( $post ) ) {
 
 				$link = get_post_meta( $post->ID, 'vk-ltc-link', true );
 
-				// activate link rewriting only for concerned posts
+				// Activate link rewriting only for concerned posts.
 				if ( ! empty( $link ) && $this->candidate_post_type() ) {
 					add_filter( 'the_permalink', array( $this, 'rewrite_link' ) );
-				} else {
-					// remove the filter to re-establish default the_permalink behaviour
-					remove_filter( 'the_permalink', array( $this, 'rewrite_link' ) );
 				}
 			}
 		}
 
 		/**
-		 * initialize_front_script function
+		 * Initialize_front_script function
 		 * Load plugin script on front-end
 		 *
 		 * @access public
@@ -67,13 +78,13 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		 */
 		function initialize_front_script() {
 
-			// add script for target blank support
+			// Add script for target blank support.
 			$path_to_script = plugins_url() . '/vk-link-target-controller/js/script.min.js';
 
 			wp_register_script( 'vk-ltc-js', $path_to_script, array( 'jquery' ), LTC_VERSION, true );
 			wp_enqueue_script( 'vk-ltc-js' );
 
-			// Ajax
+			// Ajax.
 			wp_localize_script( 'vk-ltc-js', 'vkLtc', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
 			add_action( 'wp_ajax_ids', array( $this, 'ajax_rewrite_ids' ) );
 			add_action( 'wp_ajax_nopriv_ids', array( $this, 'ajax_rewrite_ids' ) );
@@ -88,7 +99,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		 */
 		function initialize_admin() {
 
-			// allow meta box for user with permission
+			// allow meta box for user with permission.
 			if ( current_user_can( $this->user_capability_link ) ) {
 				add_action( 'add_meta_boxes', array( $this, 'add_link_meta_box' ) ); // add a meta box for the link to the post edit screen
 				add_action( 'save_post', array( $this, 'save_link' ) ); // save meta box data
@@ -116,10 +127,10 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		function redirection() {
 
 			global $post;
-			// prevent unwanted redirection on admin or archive page
+			// prevent unwanted redirection on admin or archive page.
 			if ( isset( $post ) && ( is_single() || is_page() ) ) {
 				$redirect = $this->has_redirection( $post->ID );
-				// redirect to the associated link
+				// redirect to the associated link.
 				if ( false != $redirect && $this->candidate_post_type() ) {
 					wp_redirect( html_entity_decode( esc_url( $redirect ) ) );
 					exit;
@@ -172,7 +183,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		 */
 		function create_settings_page() {
 
-			// create page for user with permission
+			// create page for user with permission.
 			if ( current_user_can( $this->user_capability_settings ) ) {
 
 				add_options_page(
@@ -181,13 +192,13 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 					$this->user_capability_settings,
 					'vk-ltc',
 					array( $this, 'settings_page_html' )
-				);  // add link inside options menu and related settings page
+				);  // add link inside options menu and related settings page.
 
 				register_setting(
 					'vk-ltc-options',
 					'custom-post-types',
 					array( $this, 'sanitize_settings' )
-				); // create settings options in DB (use WordPress Settings API)
+				); // create settings options in DB (use WordPress Settings API).
 			}
 		}
 
@@ -260,12 +271,12 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		 * Callback function that sanitizes the option's value
 		 *
 		 * @access public
-		 * @param $input array of data sent by the form
+		 * @param $input array of data sent by the form.
 		 * @return void
 		 */
 		function sanitize_settings( $input ) {
 			if ( isset( $input ) ) {
-				// post types the meta box can be applied to
+				// post types the meta box can be applied to.
 				$post_types      = $this->get_public_post_types();
 				$post_type_slugs = array_keys( $post_types );
 
@@ -290,7 +301,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		function add_link_meta_box() {
 			if ( $this->candidate_post_type() ) {
 				add_meta_box(
-					'vk-ltc-url', // meta box html id
+					'vk-ltc-url', // meta box html id.
 					esc_html__( 'URL to redirect to', 'vk-link-target-controller' ),
 					array( $this, 'render_meta_box' ),
 					null,
@@ -305,15 +316,15 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		 * Display HTML form for link insertion
 		 *
 		 * @access public
-		 * @param WP_Post $post The object for the current post/custom post
+		 * @param WP_Post $post The object for the current post/custom post.
 		 * @return void
 		 */
 		function render_meta_box( $post ) {
 
-			// nonce field
+			// nonce field.
 			wp_nonce_field( 'vk-ltc-link', 'vk-ltc-link-nonce' );
 
-			// retrieve existing values from DB (empty if doesn't exist)
+			// retrieve existing values from DB (empty if doesn't exist).
 			$link   = get_post_meta( $post->ID, 'vk-ltc-link', true );
 			$target = get_post_meta( $post->ID, 'vk-ltc-target', true );
 
@@ -392,17 +403,17 @@ jQuery(document).ready(function($){
 		 */
 		function save_link( $post_id ) {
 
-			// kill unauthorized user (double verification)
+			// kill unauthorized user (double verification).
 			if ( ! current_user_can( $this->user_capability_link ) ) {
 				wp_die( 'You do not have sufficient permissions to access this page.', 'vk-link-target-controller' );
 			} else {
-				// check form
+				// check form.
 				if ( isset( $_POST['vk-ltc-link-field'] )
 					&& wp_verify_nonce( $_POST['vk-ltc-link-nonce'], 'vk-ltc-link' ) ) {
 
-					// link field
+					// link field.
 					if ( isset( $_POST['vk-ltc-link-field'] ) ) {
-						// sanitize the user input
+						// sanitize the user input.
 						$link = esc_url( $_POST['vk-ltc-link-field'] );
 
 						update_post_meta( $post_id, 'vk-ltc-link', esc_url( $link ) );
@@ -416,7 +427,7 @@ jQuery(document).ready(function($){
 						*/
 					}
 
-					// target blank option
+					// target blank option.
 					if ( isset( $_POST['vk-ltc-target-check'] ) ) {
 						update_post_meta( $post_id, 'vk-ltc-target', 1 );
 					} else {
@@ -439,8 +450,8 @@ jQuery(document).ready(function($){
 		function rewrite_link( $id = 0 ) {
 
 			if ( 0 == $id ) {
-				global $post; // use $post object
-				$id = $post->ID; // id of current post
+				global $post; // use $post object.
+				$id = $post->ID; // id of current post.
 			}
 
 			$modified_url = '';
@@ -451,9 +462,9 @@ jQuery(document).ready(function($){
 			if ( empty( $link ) ) {
 				$modified_url = get_permalink( $id );
 			} elseif ( strpos( $link, '.' ) ) {
-				$modified_url = esc_url( $link ); // complete url (extern url)
+				$modified_url = esc_url( $link ); // complete url (extern url).
 			} else {
-				$modified_url = esc_url( home_url() . $link ); // partial url (internal url)
+				$modified_url = esc_url( home_url() . $link ); // partial url (internal url).
 			}
 			return $modified_url;
 		}
@@ -463,7 +474,7 @@ jQuery(document).ready(function($){
 		 * Utility function to check if given string is an URL
 		 *
 		 * @access public
-		 * @param string $url The string to test
+		 * @param string $url The string to test.
 		 * @return bool
 		 */
 		function is_url( $url ) {
@@ -504,12 +515,12 @@ jQuery(document).ready(function($){
 
 			$public_post_types = array();
 
-			// default post type
+			// default post type.
 			$post_obj = get_post_type_object( 'post' );
 
 			$public_post_types[ $post_obj->name ] = $post_obj->label;
 
-			// gets all custom post types set PUBLIC
+			// gets all custom post types set PUBLIC.
 			$args             = array(
 				'public'   => true,
 				'_builtin' => false,
@@ -541,7 +552,7 @@ jQuery(document).ready(function($){
 		}
 
 		/**
-		 * candidate_post_type function
+		 * Candidate_post_type function
 		 * Utility function that checks if the plugin features should be activated for the current post type
 		 * Used on both front and back end
 		 *
@@ -563,7 +574,7 @@ jQuery(document).ready(function($){
 		}
 
 		/**
-		 * ajax_rewrite_ids function
+		 * Ajax_rewrite_ids function
 		 * Used by jQuery script to dynamically add target="_blank" on the corresponding posts
 		 *
 		 * @access public
@@ -577,7 +588,7 @@ jQuery(document).ready(function($){
 			$post_types_slugs   = array_keys( $post_types );
 			$post_types_slugs[] = 'page';
 
-			// get posts with specific post meta and post meta value
+			// get posts with specific post meta and post meta value.
 			$args  = array(
 				'posts_per_page' => -1,
 				'paged'          => 0,
@@ -587,7 +598,7 @@ jQuery(document).ready(function($){
 			);
 			$query = new WP_Query( $args );
 
-			// create an array( 'id' => 'link' ) of ids from the posts found in the query
+			// create an array( 'id' => 'link' ) of ids from the posts found in the query.
 			if ( $query->found_posts > 0 ) {
 				$matching_posts = $query->posts;
 				foreach ( $matching_posts as $post ) {
@@ -597,10 +608,10 @@ jQuery(document).ready(function($){
 				}
 			}
 
-			// convert php array to json format for use in jQuery
+			// Convert php array to json format for use in jQuery.
 			$json_ids = json_encode( $ids );
 
-			// send data to the front
+			// Send data to the front.
 			header( 'Content-Type: application/json' );
 			echo $json_ids;
 			exit;
@@ -613,13 +624,12 @@ jQuery(document).ready(function($){
 $vk_link_target_controller = new VK_Link_Target_Controller();
 
 if ( isset( $vk_link_target_controller ) ) {
-	// activate on front
+	// Activate on front.
 	add_action( 'the_post', array( $vk_link_target_controller, 'initialize_front' ), 1 );
 	add_action( 'init', array( $vk_link_target_controller, 'initialize_front_script' ) );
 	add_action( 'wp', array( $vk_link_target_controller, 'redirection' ) );
 	add_action( 'get_header', array( $vk_link_target_controller, 'robots' ) );
-
-	// set up admin
+	// Set up admin.
 	add_action( 'admin_init', array( $vk_link_target_controller, 'initialize_admin' ) );
 	add_action( 'admin_menu', array( $vk_link_target_controller, 'create_settings_page' ) );
 	add_action( 'plugins_loaded', array( $vk_link_target_controller, 'translation' ) );
