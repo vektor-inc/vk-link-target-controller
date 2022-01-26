@@ -3,8 +3,8 @@ Contributors: vektor-inc,kurudrive,dswebstudio,bizvektor,nc30,catherine8007
 Donate link:
 Tags: redirection,link,recent posts,list,page,post
 Requires at least: 5.3
-Tested up to: 4.9.8
-Stable tag: 1.5.4
+Tested up to: 5.8.3
+Stable tag: 1.6.0
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -108,6 +108,9 @@ But we have a .pot file available so feel free to translate it in your language 
 4. A relative url that refer to a page of your website: **note slash "/" at the beginning**.
 
 == Changelog ==
+
+= 1.6.0 =
+* Add setting link
 
 = 1.5.4 =
 * Update VK Admin Library
