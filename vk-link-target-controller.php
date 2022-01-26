@@ -12,6 +12,7 @@ Domain Path: /languages
 Text Domain: vk-link-target-controller
 */
 
+define( 'VK_LTC_BASENAME', plugin_basename( __FILE__ ) );
 
 require_once plugin_dir_path( __FILE__ ) . 'inc/vk-admin/vk-admin-config.php';
 
@@ -19,7 +20,8 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 	// Get Plugin version
 	$data = get_file_data(
-		__FILE__, array(
+		__FILE__,
+		array(
 			'version'    => 'Version',
 			'textdomain' => 'Text Domain',
 		)
@@ -250,7 +252,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 				</div>
 
 			</div>
-		<?php
+			<?php
 		}
 
 		/**
