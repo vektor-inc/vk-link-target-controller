@@ -3,8 +3,8 @@ Contributors: vektor-inc,kurudrive,dswebstudio,bizvektor,nc30,catherine8007
 Donate link:
 Tags: redirection,link,recent posts,list,page,post
 Requires at least: 5.3
-Tested up to: 5.9.0
-Stable tag: 1.6.1
+Tested up to: 5.9.2
+Stable tag: 1.6.2
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
