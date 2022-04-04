@@ -227,8 +227,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 									$post_types         = $this->get_public_post_types(); // array of post types to create a checkbox list
 									$post_types['page'] = __( 'Pages' );
 									foreach ( $post_types as $slug => $label ) {
-										$defult_option = $this->default_option();
-										$options_exist = get_option( 'custom-post-types', $defult_option );
+										$options_exist = $this->get_option();
 										$checked       = ( 0 != $options_exist && in_array( $slug, $options_exist ) ) ? 'checked="checked"' : '';
 										?>
 										<input type="checkbox" name="custom-post-types[]" id="custom-post-types-<?php echo $slug; ?>" value="<?php echo $slug; ?>" <?php echo $checked; ?> />
@@ -538,11 +537,11 @@ jQuery(document).ready(function($){
 		/**
 		 * default option
 		 */
-		function default_option() {
+		function get_option() {
 			$post_types         = $this->get_public_post_types(); // array of post types to create a checkbox list
 			$post_types['page'] = __( 'Pages' );
 			$post_types_slugs   = array_keys( $post_types );
-			return $post_types_slugs;		
+			return get_option( 'custom-post-types', $post_types_slugs );		
 		}
 
 		/**
@@ -571,8 +570,7 @@ jQuery(document).ready(function($){
 		 * @return bool
 		 */
 		function candidate_post_type() {
-			$defult_option = $this->default_option();
-			$candidates   = get_option( 'custom-post-types', $defult_option ); // post types where the meta box shows
+			$candidates   = $this->get_option();// post types where the meta box shows
 			$current_post = get_post(); // object of the post being modified
 
 			if ( ! empty( $candidates ) ) {
