@@ -4,7 +4,7 @@ Donate link:
 Tags: redirection,link,recent posts,list,page,post
 Requires at least: 5.3
 Tested up to: 5.9.2
-Stable tag: 1.6.4
+Stable tag: 1.6.3
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -108,6 +108,9 @@ But we have a .pot file available so feel free to translate it in your language 
 4. A relative url that refer to a page of your website: **note slash "/" at the beginning**.
 
 == Changelog ==
+
+= 1.6.4 =
+* Fix default setting from all off to all on.
 
 = 1.6.3 =
 * Fix Screenshots
