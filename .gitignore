@@ -1,7 +1,9 @@
 node_modules/*
+vendor/
 .DS_Store
 .AppleDouble
 .LSOverride
 *.lnk
 Thumbs.db
 sftp-config.json
+.wp-env.override.json
