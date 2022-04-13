@@ -6,3 +6,4 @@ vendor/
 *.lnk
 Thumbs.db
 sftp-config.json
+.wp-env.override.json
