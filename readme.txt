@@ -109,7 +109,7 @@ But we have a .pot file available so feel free to translate it in your language 
 
 == Changelog ==
 
-= 1.6.3 =
+= 1.6.4 =
 * Fix default setting from all off to all on.
 
 = 1.6.3 =
