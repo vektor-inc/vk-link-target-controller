@@ -16,6 +16,18 @@ define( 'VK_LTC_BASENAME', plugin_basename( __FILE__ ) );
 
 require_once dirname( __FILE__ ) . '/vendor/autoload.php';
 
+use VektorInc\VK_Admin\VkAdmin;
+new VkAdmin();
+
+// Add a link to this plugin's settings page
+function vkltc_set_plugin_meta( $links ) {
+	$settings_link = '<a href="' . admin_url() . 'options-general.php?page=vk-ltc">' . __( 'Setting', 'vk-link-target-controller' ) . '</a>';
+	array_unshift( $links, $settings_link );
+	return $links;
+}
+ add_filter( 'plugin_action_links_' . VK_LTC_BASENAME, 'vkltc_set_plugin_meta', 10, 1 );
+
+
 if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 	// Get Plugin version.
