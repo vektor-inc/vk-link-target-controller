@@ -7,7 +7,7 @@
         }
     ],
 	"require": {
-        "phpcompatibility/phpcompatibility-wp": "^2.1"
+        "vektor-inc/vk-admin": "^0.2.0"
     },
 	"require-dev": {
 		"sirbrillig/phpcs-variable-analysis": "^2.8",

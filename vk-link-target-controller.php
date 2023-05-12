@@ -14,7 +14,7 @@ Text Domain: vk-link-target-controller
 
 define( 'VK_LTC_BASENAME', plugin_basename( __FILE__ ) );
 
-require_once plugin_dir_path( __FILE__ ) . 'inc/vk-admin/vk-admin-config.php';
+require_once dirname( __FILE__ ) . '/vendor/autoload.php';
 
 if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
