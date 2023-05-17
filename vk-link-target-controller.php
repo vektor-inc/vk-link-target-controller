@@ -17,7 +17,10 @@ define( 'VK_LTC_BASENAME', plugin_basename( __FILE__ ) );
 require_once dirname( __FILE__ ) . '/vendor/autoload.php';
 
 use VektorInc\VK_Admin\VkAdmin;
-new VkAdmin();
+VkAdmin::init();
+
+$admin_pages = array( 'settings_page_vk-link-target-controller_plugin_options' );
+VkAdmin::admin_scripts( $admin_pages );
 
 // Add a link to this plugin's settings page
 function vkltc_set_plugin_meta( $links ) {
@@ -58,6 +61,17 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		 * @var string
 		 */
 		public $user_capability_settings = 'manage_options'; // can access to the settings page.
+
+		/**
+		 * Setting Page
+		 */
+		function add_custom_setting_page() {
+			$get_page_title = __( 'VK Link Target Controller', 'vk-link-target-controller' );
+			$get_logo_html  = '';
+			$get_menu_html  = '<li><a href="#vk-link-target-controller">' . __( 'VK Link Target Controller', 'vk-link-target-controller' ) . '</a></li>';
+
+			VkAdmin::admin_page_frame( $get_page_title, array( $this, 'settings_page_html' ), $get_logo_html, $get_menu_html );
+		}
 
 		/**
 		 * Initialize_front function
@@ -203,7 +217,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 					esc_html_x( 'Link Target Controller', 'admin menu link label', 'vk-link-target-controller' ),
 					$this->user_capability_settings,
 					'vk-ltc',
-					array( $this, 'settings_page_html' )
+					array( $this, 'add_custom_setting_page' )
 				);  // add link inside options menu and related settings page.
 
 				register_setting(
@@ -226,7 +240,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			<div class="wrap" id="vk-link-target-controller">
 				<h2><?php echo esc_html_x( 'VK Link Target Controller', 'settings page title', 'vk-link-target-controller' ); ?></h2>
 
-				<div style="width:68%;display:inline-block;vertical-align:top;">
+				<div>
 					<form method="post" action="options.php">
 						<?php settings_fields( 'vk-ltc-options' ); // display nonce and other control hidden fields ?>
 						<table class="form-table">
@@ -252,26 +266,6 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 						</table>
 						<?php submit_button(); ?>
 					</form>
-				</div>
-
-				<!-- div for banner -->
-				<div style="width:29%;display:block; overflow:hidden;float:right;">
-				<?php if ( strtoupper( get_locale() ) == 'JA' ) : ?>
-					<a href="http://lightning.vektor-inc.co.jp/ja/" target="_blank">
-						<img style="max-width:100%;" src="<?php echo plugins_url( 'img/336_280_lightning.png', __FILE__ ); ?>" alt="WordPress Theme Lightning" />
-					</a>
-					<a href="http://ex-unit.vektor-inc.co.jp/ja/" target="_blank">
-						<img style="max-width:100%;" src="<?php echo plugins_url( 'img/336_280_ExUnit.png', __FILE__ ); ?>" alt="VK All in One Expansion Unit" />
-					</a>
-				<?php else : ?>
-
-					<a href="http://lightning.vektor-inc.co.jp/" target="_blank">
-						<img style="max-width:100%;" src="<?php echo plugins_url( 'img/lightning_bnr_en.jpg', __FILE__ ); ?>" alt="lightning_bnr_en" />
-					</a>
-					<a href="http://bizvektor.com/en/" target="_blank" title="<?php esc_html_e( 'Free WordPress theme for businesses', 'vk-link-target-controller' ); ?>">
-						<img style="max-width:100%;" src="<?php echo plugins_url( 'img/bizVektor-ad-banner-vert.jpg', __FILE__ ); ?>" alt="<?php esc_html_e( 'Download Biz Vektor free WordPress theme for businesses', 'vk-link-target-controller' ); ?>" />
-					</a>
-				<?php endif; ?>
 				</div>
 
 			</div>
