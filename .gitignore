@@ -1,4 +1,4 @@
-node_modules/*
+node_modules/
 vendor/
 .DS_Store
 .AppleDouble
@@ -7,3 +7,5 @@ vendor/
 Thumbs.db
 sftp-config.json
 .wp-env.override.json
+.phpunit.result.cache
+temp/

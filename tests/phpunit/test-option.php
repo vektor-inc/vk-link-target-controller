@@ -20,7 +20,7 @@ class OptionTest extends WP_UnitTestCase {
 		 * カスタム投稿タイプを設置
 		 */
 		register_post_type(
-			'custom',
+			'event',
 			array(
 				'has_archive' => true,
 				'public'      => true,
@@ -30,7 +30,7 @@ class OptionTest extends WP_UnitTestCase {
 		$test_array = array(
 			array(
 				'options'  => false,
-				'correct' => array( 'post', 'custom', 'page' ),
+				'correct' => array( 'post', 'event', 'page' ),
 			),
 			array(
 				'options'  => array( 'post' ),
@@ -41,24 +41,24 @@ class OptionTest extends WP_UnitTestCase {
 				'correct' => array( 'page' ),
 			),
 			array(
-				'options'  => array( 'custom' ),
-				'correct' => array( 'custom' ),
+				'options'  => array( 'event' ),
+				'correct' => array( 'event' ),
 			),
 			array(
 				'options'  => array( 'post', 'page' ),
 				'correct' => array( 'post', 'page' ),
 			),
 			array(
-				'options'  => array( 'post', 'custom' ),
-				'correct' => array( 'post', 'custom' ),
+				'options'  => array( 'post', 'event' ),
+				'correct' => array( 'post', 'event' ),
 			),
 			array(
-				'options'  => array( 'page', 'custom' ),
-				'correct' => array( 'page', 'custom' ),
+				'options'  => array( 'page', 'event' ),
+				'correct' => array( 'page', 'event' ),
 			),
 			array(
-				'options'  => array( 'post', 'page', 'custom' ),
-				'correct' => array( 'post', 'page', 'custom' ),
+				'options'  => array( 'post', 'page', 'event' ),
+				'correct' => array( 'post', 'page', 'event' ),
 			),
 		);
 		foreach ( $test_array as $key => $value ) {
@@ -66,7 +66,7 @@ class OptionTest extends WP_UnitTestCase {
 			$instanse = new VK_Link_Target_Controller();
 			$result   = $instanse->get_option();
 			$correct  = $value['correct'];
-			$this->assertEquals( $result, $correct );
+			$this->assertEquals( $correct, $result );
 
 		}
 	}
