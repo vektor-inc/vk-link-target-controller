@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
         matrix:
-            php-versions: ['7.4', '8.0', '8.1']
-            wp-versions: ['6.3', '6.4', '6.5']
+            php-versions: ['7.4', '8.1']
+            wp-versions: ['6.5']
     name: PHP Unit Test on PHP ${{ matrix.php-versions }} / WP ${{ matrix.wp-versions }} Test
     services:
         mysql:
@@ -93,49 +93,3 @@ jobs:
         SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
         SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
         SLUG: ${{ env.plugin_name }}
-  release:
-    name: release
-    runs-on: ubuntu-latest
-    needs: [php_unit]
-    steps:
-        - uses: actions/checkout@v3
-        # get the node version from the .node-version file
-        - name: Read .node-version
-          run: echo "##[set-output name=NODEVERSION;]$(cat .node-version)"
-          id: nodenv
-
-        # setup node based on the version from the .node-version file, fetched in the previous step
-        - name: Setup Node.js (.node-version)
-          uses: actions/setup-node@v3
-          with:
-              node-version: '${{ steps.nodenv.outputs.NODEVERSION }}'
-        - name: install npm scripts
-          run: npm install
-        - name: Install Composer Packages
-          run: composer install --optimize-autoloader --prefer-dist --no-dev
-        - name: Make Distribution
-          run: bash bin/dist.sh
-        - name: zip test
-          run: test -e dist/${{ env.plugin_name }}.zip
-        - name: Create Release
-          id: create_release
-          uses: actions/create-release@v1
-          env:
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          with:
-              tag_name: ${{ github.ref }}
-              release_name: Release ${{ github.ref }}
-              draft: false
-              prerelease: false
-        - name: zip test
-          run: test -e dist/${{ env.plugin_name }}.zip
-        - name: Upload Release Asset
-          id: upload-release-asset
-          uses: actions/upload-release-asset@v1.0.1
-          env:
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          with:
-              upload_url: ${{ steps.create_release.outputs.upload_url }}
-              asset_path: ./dist/${{ env.plugin_name }}.zip
-              asset_name: ${{ env.plugin_name }}.zip
-              asset_content_type: application/zip
