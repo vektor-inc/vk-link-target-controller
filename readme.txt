@@ -109,7 +109,7 @@ But we have a .pot file available so feel free to translate it in your language 
 
 == Changelog ==
 
-= 1.7.3 =
+= 1.7.4 =
 * [ Bug fix ] Fixed an issue that occurred in a PHP 8.0 or higher environment.
 * [ Bug fix ] Fixed an issue where the feature to open in a new window did not work.
 
