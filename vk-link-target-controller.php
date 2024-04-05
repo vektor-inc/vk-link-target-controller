@@ -90,7 +90,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 				// Activate link rewriting only for concerned posts.
 				if ( ! empty( $link ) && $this->candidate_post_type() ) {
-					add_filter( 'the_permalink', array( $this, 'rewrite_link' ) );
+					add_filter( 'the_permalink', array( $this, 'rewrite_link_filter' ), 10, 2 );
 				}
 			}
 		}
@@ -450,27 +450,46 @@ jQuery(document).ready(function($){
 		 * Rewrite the link that the the_permalink() function prints out
 		 *
 		 * @access public
-		 * @param int $id The ID of the post.
+		 * @param int $post_id The ID of the post.
 		 * @return string
 		 */
-		function rewrite_link( $id = 0 ) {
-
-			if ( 0 == $id ) {
-				global $post; // use $post object.
-				$id = $post->ID; // id of current post.
-			}
+		function rewrite_link( $post_id = 0 ) {
 
 			$modified_url = '';
 
-			$link   = get_post_meta( $id, 'vk-ltc-link', true );
-			$target = get_post_meta( $id, 'vk-ltc-target', true );
+			$link   = get_post_meta( $post_id, 'vk-ltc-link', true );
+			$target = get_post_meta( $post_id, 'vk-ltc-target', true );
 
 			if ( empty( $link ) ) {
-				$modified_url = get_permalink( $id );
+				$modified_url = get_permalink( $post_id );
 			} elseif ( strpos( $link, '.' ) ) {
 				$modified_url = esc_url( $link ); // complete url (extern url).
 			} else {
 				$modified_url = esc_url( home_url() . $link ); // partial url (internal url).
+			}
+			return $modified_url;
+		}
+
+		/**
+		 * rewrite_link_filter function
+		 * Wrapper function with the_permalink filter
+		 * call rewrite_link for rewriting link
+		 *
+		 * @access public
+		 * @param string      $orig_link Original permalink URL.
+		 * @param int|WP_Post $post Post ID, WP_Post object, or 0. Default 0.
+		 * @return string
+		 */
+		function rewrite_link_filter( $orig_link, $post = 0 ) {
+			$modified_url = ''; // No need to esc_url(), it's done in rewrite_link().
+			if ( isset( $post->ID ) ) {
+				$modified_url = $this->rewrite_link( $post->ID );
+			}
+
+			if ( empty( $modified_url ) ) {
+				// Rewrite failed ? Invalid $post ?
+				// Back to $orig_link
+				$modified_url = $orig_link;
 			}
 			return $modified_url;
 		}
