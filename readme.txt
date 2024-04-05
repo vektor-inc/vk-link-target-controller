@@ -109,6 +109,8 @@ But we have a .pot file available so feel free to translate it in your language 
 
 == Changelog ==
 
+* [ Bug fix ] Fixed an issue that occurred in a PHP 8.0 or higher environment.
+
 = 1.7.2 =
 * [ Other ] Update admin settingpage library 2.6.0
 
