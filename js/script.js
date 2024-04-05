@@ -16,11 +16,11 @@ $.post(
 				try{ // 例外エラーが発生しるかもしれない処理
 					ls.forEach(function(l){
 						// c : 対象セレクタ
-						var c = $('#post-'+id+' a[href="'+l+'"]');
+						var c = $('.post-'+id+' a[href="'+l+'"]');
 						// 対象が存在したら
 						if(c.length){
 							// 対象セレクタの要素に _blank 属性を付与
-							$(c).attr('target','_blank');
+							$(c).attr('target','_blank').attr('rel','noreferrer noopener');
 						}
 					});
 				}finally{}
