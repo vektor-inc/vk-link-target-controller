@@ -11,6 +11,8 @@
 .svnignore
 .wp-env.json
 .editorconfig
+.phpunit.xml
+.node-version
 .vscode/
 gulpfile.js
 package.json
