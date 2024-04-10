@@ -14,6 +14,7 @@
 .phpunit.xml
 .node-version
 .vscode/
+phpcs.ruleset.xml
 gulpfile.js
 package.json
 package-lock.json
