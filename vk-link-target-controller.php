@@ -3,7 +3,7 @@
 Plugin Name: VK Link Target Controller
 Plugin URI: https://github.com/kurudrive/vk-link-target-controller
 Description: Allow you to link a post title from the recent posts list to another page (internal or external link) rather than link to the actual post page
-Version: 1.7.5.0
+Version: 1.7.5.1
 Author: Vektor,Inc.
 Author URI: http://www.vektor-inc.co.jp/
 License: GPL2
@@ -14,7 +14,7 @@ Text Domain: vk-link-target-controller
 
 define( 'VK_LTC_BASENAME', plugin_basename( __FILE__ ) );
 
-require_once dirname( __FILE__ ) . '/vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
 use VektorInc\VK_Admin\VkAdmin;
 VkAdmin::init();
@@ -28,7 +28,7 @@ function vkltc_set_plugin_meta( $links ) {
 	array_unshift( $links, $settings_link );
 	return $links;
 }
- add_filter( 'plugin_action_links_' . VK_LTC_BASENAME, 'vkltc_set_plugin_meta', 10, 1 );
+add_filter( 'plugin_action_links_' . VK_LTC_BASENAME, 'vkltc_set_plugin_meta', 10, 1 );
 
 
 if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
@@ -235,7 +235,8 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		 * @access public
 		 * @return void
 		 */
-		function settings_page_html() { ?>
+		function settings_page_html() {
+			?>
 
 			<div class="wrap" id="vk-link-target-controller">
 				<h2><?php echo esc_html_x( 'VK Link Target Controller', 'settings page title', 'vk-link-target-controller' ); ?></h2>
