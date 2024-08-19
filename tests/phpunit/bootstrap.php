@@ -1,6 +1,6 @@
 <?php
 // Require composer dependencies.
-require_once dirname( dirname( dirname( __FILE__ ) ) ) . '/vendor/autoload.php';
+require_once dirname( dirname( __DIR__ ) ) . '/vendor/autoload.php';
 
 // If we're running in WP's build directory, ensure that WP knows that, too.
 if ( 'build' === getenv( 'LOCAL_DIR' ) ) {
@@ -18,7 +18,7 @@ if ( ! $_tests_dir ) {
 
 // See if we're installed inside an existing WP dev instance.
 if ( ! $_tests_dir ) {
-	$_try_tests_dir = dirname( __FILE__ ) . '/../../../../../../tests/phpunit';
+	$_try_tests_dir = __DIR__ . '/../../../../../../tests/phpunit';
 	if ( file_exists( $_try_tests_dir . '/includes/functions.php' ) ) {
 		$_tests_dir = $_try_tests_dir;
 	}
@@ -39,17 +39,18 @@ define( 'GUTENBERG_LOAD_VENDOR_SCRIPTS', false );
  * Manually load the plugin being tested.
  */
 function _manually_load_plugin() {
-	
-	// ./temp/themes/ から読み込む
-	register_theme_directory( dirname( __DIR__ ) . '/../temp/themes/' );
-	search_theme_directories();
+	// bin/install-theme.sh で tests/themes/ に Lightning をインストールしている.
+	// bin/install-theme.sh は .gitHub/workflows/php_unit_tsts で読み込んでいる.
+	// ローカルでプラグインから wp-env 起動して npm run phpunit する場合は事前に bin/install-theme.sh を叩く.
+	// ./tests/themes/ から読み込む
+	// register_theme_directory( __DIR__ . '/themes' );
+	// search_theme_directories();
 	// Lightning 有効化（インストールは wp-env.json で行っている）
 	switch_theme( 'lightning' );
 	// Lightningを g3 モード指定
 	update_option( 'lightning_theme_generation', 'g3' );
 
-	require dirname( dirname( dirname( __FILE__ ) ) ) . '/vk-link-target-controller.php';
-
+	require dirname( dirname( __DIR__ ) ) . '/vk-link-target-controller.php';
 }
 tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
 
