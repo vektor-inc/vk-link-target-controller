@@ -11,6 +11,7 @@
 			<directory prefix="test-" suffix=".php">./vendor/vektor-inc/vk-wp-unit-test-tools/src/tests/</directory>
 			<directory prefix="test-" suffix=".php">./tests/</directory>
 			<exclude>./tests/test-sample.php</exclude>
+			<exclude><directory>./tests/themes/</directory></exclude>
 		</testsuite>
 	</testsuites>
 </phpunit>
