@@ -9,3 +9,4 @@ sftp-config.json
 .wp-env.override.json
 .phpunit.result.cache
 temp/
+tests/themes/

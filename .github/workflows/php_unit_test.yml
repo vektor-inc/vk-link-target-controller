@@ -11,7 +11,7 @@ jobs:
         strategy:
             matrix:
                 php-versions: ['7.4', '8.0', '8.1']
-                wp-versions: ['6.3', '6.4', '6.5']
+                wp-versions: ['6.4', '6.5', '6.6']
         name: PHP Unit Test on PHP ${{ matrix.php-versions }} / WP ${{ matrix.wp-versions }} Test
         services:
             mysql:
@@ -56,6 +56,10 @@ jobs:
               run: WP_ENV_PHP_VERSION=${{ matrix.php-versions }} WP_ENV_CORE=WordPress/WordPress#${{ matrix.wp-versions }} npm run wp-env start --update
             - name: Check WordPress Version
               run: npm run wp-env run cli wp core version
+            - name: Set Permissions for Theme Directory
+              run: |
+                  sudo mkdir -p tests/themes
+                  sudo chmod -R 777 tests/themes
             - name: Install Themes
               run: bash bin/install-theme.sh
             - name: Start Environment
