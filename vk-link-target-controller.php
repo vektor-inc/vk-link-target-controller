@@ -641,6 +641,7 @@ jQuery(document).ready(function($){
 		
 					$ids[ $post->ID ][] = html_entity_decode( $link );
 					$ids[ $post->ID ][] = get_permalink( $post->ID );
+					$ids[ $post->ID ][] = $target; // ターゲットの情報を追加
 					$ids[ $post->ID ]   = array_unique( $ids[ $post->ID ] );
 				}
 			}
@@ -652,7 +653,7 @@ jQuery(document).ready(function($){
 			header( 'Content-Type: application/json' );
 			echo $json_ids;
 			exit;
-		}
+		}		
 	}
 
 }

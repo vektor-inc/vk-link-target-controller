@@ -1,40 +1,37 @@
 document.addEventListener("DOMContentLoaded", function(e) {
-	var $ = jQuery;
-	// .post でサーバーへ通信する
-	const pathToServer = vkLtc.ajaxurl;
-	const sendData = { action: 'ids' };
-	
-	$.post(pathToServer, sendData, function(ps) {
-		// ps : 対象の投稿データっぽい
-		if (!$.isEmptyObject(ps)) {
-			$.each(ps, function(id, ls) {
-				// ls
-				// [0]リプレースURL
-				// [1]変換元URL
-				try { // 例外エラーが発生しるかもしれない処理
-					var originalUrl = decodeURIComponent(ls[1]);
-					var c = $('.post-' + id + ' a').filter(function() {
-						return decodeURIComponent($(this).attr('href')) === originalUrl;
-					});
+    var $ = jQuery;
+    const pathToServer = vkLtc.ajaxurl;
+    const sendData = { action: 'ids' };
+    
+    $.post(pathToServer, sendData, function(ps) {
+        if (!$.isEmptyObject(ps)) {
+            $.each(ps, function(id, ls) {
+                var originalUrl = decodeURIComponent(ls[1]);
+                var c = $('.post-' + id + ' a').filter(function() {
+                    return decodeURIComponent($(this).attr('href')) === originalUrl;
+                });
 
-					if (c.length) {
-						// href属性をリプレースURLに変更
-						$(c).attr('href', ls[0]);
+                if (c.length) {
+                    // href属性をリプレースURLに変更（URLが変更されていない場合も強制的に実行）
+                    $(c).attr('href', ls[0]);
 
-						// targetが設定されていない場合は、強制的に target="_self" を追加
-						if (!$(c).attr('target')) {
-							$(c).attr('target', '_self');
-						}
+                    // ターゲット属性を更新
+                    if (ls[2] === '1') {
+                        $(c).attr('target', '_blank');
+                    } else {
+                        $(c).attr('target', '_self');
+                    }
 
-						// targetが_selfでない場合のみ、rel属性を追加
-						if ($(c).attr('target') !== '_self') {
-							if (!$(c).attr('rel')) {
-								$(c).attr('rel', 'noreferrer noopener');
-							}
-						}
-					}
-				} finally {}
-			});
-		}
-	});
+                    // targetが_blankである場合にのみrel属性を追加
+                    if ($(c).attr('target') === '_blank') {
+                        if (!$(c).attr('rel')) {
+                            $(c).attr('rel', 'noreferrer noopener');
+                        }
+                    } else {
+                        $(c).removeAttr('rel');
+                    }
+                }
+            });
+        }
+    });
 }, false);
