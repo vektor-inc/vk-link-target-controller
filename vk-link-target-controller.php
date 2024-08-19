@@ -628,7 +628,7 @@ jQuery(document).ready(function($){
 				'posts_per_page' => -1,
 				'paged'          => 0,
 				'post_type'      => $post_types_slugs,
-				'meta_key'       => 'vk-ltc-link',  // 注意：リンクのmeta_keyを使用しているか確認
+				'meta_key'       => 'vk-ltc-link',
 			);
 			$query = new WP_Query( $args );
 		
@@ -639,7 +639,10 @@ jQuery(document).ready(function($){
 					$link = get_post_meta( $post->ID, 'vk-ltc-link', true );
 					$target = get_post_meta( $post->ID, 'vk-ltc-target', true );
 		
-					$ids[ $post->ID ][] = html_entity_decode( $link );
+					// リダイレクト先のURLが空でない場合のみ情報を追加
+					if (!empty($link)) {
+						$ids[ $post->ID ][] = html_entity_decode( $link );
+					}
 					$ids[ $post->ID ][] = get_permalink( $post->ID );
 					$ids[ $post->ID ][] = $target; // ターゲットの情報を追加
 					$ids[ $post->ID ]   = array_unique( $ids[ $post->ID ] );
@@ -653,7 +656,8 @@ jQuery(document).ready(function($){
 			header( 'Content-Type: application/json' );
 			echo $json_ids;
 			exit;
-		}		
+		}
+			
 	}
 
 }
