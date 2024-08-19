@@ -21,7 +21,7 @@
 	},
 	"homepage": "https://wordpress.org/plugins/vk-link-target-controller/",
 	"devDependencies": {
-		"@wordpress/env": "5.16.0",
+		"@wordpress/env": "10.5.0",
 		"gulp": "^4.0.2",
 		"gulp-jsmin": "^0.1.5",
 		"gulp-jsvalidate": "^5.0.0",
