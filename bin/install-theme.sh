@@ -2,12 +2,26 @@
 
 set -ex
 
-# -o 実行結果をファイルへ出力
-# -s ファイル出力時の進捗状況を非表示にする(エラーも非表示)
-# curl -s $WP_THEME -o theme.zip
-curl -s https://downloads.wordpress.org/theme/lightning.zip -o theme.zip
-# -d 指定したディレクトリに展開
-mkdir ./temp/
+# テーマのダウンロード
+curl -sf https://downloads.wordpress.org/theme/lightning.zip -o theme.zip
+
+# ダウンロードが成功したか確認
+if [ $? -ne 0 ]; then
+  echo "Error: Theme download failed."
+  exit 1
+fi
+
+# テーマを展開するディレクトリの作成
+mkdir -p ./temp/
+
+# テーマの解凍
 unzip theme.zip -d ./temp/themes
-# 展開したのでもとのzipファイルを削除 -f はエラーメッセージを表示しない
+
+# 解凍が成功したか確認
+if [ $? -ne 0 ]; then
+  echo "Error: Failed to unzip theme.zip."
+  exit 1
+fi
+
+# ZIPファイルの削除
 rm -f theme.zip
