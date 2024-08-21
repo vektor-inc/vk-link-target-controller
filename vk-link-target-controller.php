@@ -3,7 +3,7 @@
 Plugin Name: VK Link Target Controller
 Plugin URI: https://github.com/kurudrive/vk-link-target-controller
 Description: Allow you to link a post title from the recent posts list to another page (internal or external link) rather than link to the actual post page
-Version: 1.7.5.1
+Version: 1.7.6.0
 Author: Vektor,Inc.
 Author URI: http://www.vektor-inc.co.jp/
 License: GPL2
@@ -618,39 +618,46 @@ jQuery(document).ready(function($){
 		function ajax_rewrite_ids() {
 
 			$ids = array();
-
+		
 			$post_types         = $this->get_public_post_types();
 			$post_types_slugs   = array_keys( $post_types );
 			$post_types_slugs[] = 'page';
-
+		
 			// get posts with specific post meta and post meta value.
 			$args  = array(
 				'posts_per_page' => -1,
 				'paged'          => 0,
 				'post_type'      => $post_types_slugs,
-				'meta_key'       => 'vk-ltc-target',
-				'meta_value'     => 1,
+				'meta_key'       => 'vk-ltc-link',
 			);
 			$query = new WP_Query( $args );
-
+		
 			// create an array( 'id' => 'link' ) of ids from the posts found in the query.
 			if ( $query->found_posts > 0 ) {
 				$matching_posts = $query->posts;
 				foreach ( $matching_posts as $post ) {
-					$ids[ $post->ID ][] = html_entity_decode( $this->rewrite_link( $post->ID ) );
+					$link = get_post_meta( $post->ID, 'vk-ltc-link', true );
+					$target = get_post_meta( $post->ID, 'vk-ltc-target', true );
+		
+					// リダイレクト先のURLが空でない場合のみ情報を追加
+					if (!empty($link)) {
+						$ids[ $post->ID ][] = html_entity_decode( $link );
+					}
 					$ids[ $post->ID ][] = get_permalink( $post->ID );
+					$ids[ $post->ID ][] = $target; // ターゲットの情報を追加
 					$ids[ $post->ID ]   = array_unique( $ids[ $post->ID ] );
 				}
 			}
-
+		
 			// Convert php array to json format for use in jQuery.
 			$json_ids = json_encode( $ids );
-
+		
 			// Send data to the front.
 			header( 'Content-Type: application/json' );
 			echo $json_ids;
 			exit;
 		}
+			
 	}
 
 }
