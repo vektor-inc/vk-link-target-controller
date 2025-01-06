@@ -109,6 +109,9 @@ But we have a .pot file available so feel free to translate it in your language 
 
 == Changelog ==
 
+= 1.7.7 =
+[ Other ] change version only ( change WordPress.org banner ).
+
 = 1.7.6 =
 * [ Bug fix ] Handle links other than the_permalink.
 
