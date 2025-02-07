@@ -618,11 +618,11 @@ jQuery(document).ready(function($){
 		function ajax_rewrite_ids() {
 
 			$ids = array();
-		
+
 			$post_types         = $this->get_public_post_types();
 			$post_types_slugs   = array_keys( $post_types );
 			$post_types_slugs[] = 'page';
-		
+
 			// get posts with specific post meta and post meta value.
 			$args  = array(
 				'posts_per_page' => -1,
@@ -631,16 +631,16 @@ jQuery(document).ready(function($){
 				'meta_key'       => 'vk-ltc-link',
 			);
 			$query = new WP_Query( $args );
-		
+
 			// create an array( 'id' => 'link' ) of ids from the posts found in the query.
 			if ( $query->found_posts > 0 ) {
 				$matching_posts = $query->posts;
 				foreach ( $matching_posts as $post ) {
-					$link = get_post_meta( $post->ID, 'vk-ltc-link', true );
+					$link   = get_post_meta( $post->ID, 'vk-ltc-link', true );
 					$target = get_post_meta( $post->ID, 'vk-ltc-target', true );
-		
+
 					// リダイレクト先のURLが空でない場合のみ情報を追加
-					if (!empty($link)) {
+					if ( ! empty( $link ) ) {
 						$ids[ $post->ID ][] = html_entity_decode( $link );
 					}
 					$ids[ $post->ID ][] = get_permalink( $post->ID );
@@ -648,16 +648,15 @@ jQuery(document).ready(function($){
 					$ids[ $post->ID ]   = array_unique( $ids[ $post->ID ] );
 				}
 			}
-		
+
 			// Convert php array to json format for use in jQuery.
 			$json_ids = json_encode( $ids );
-		
+
 			// Send data to the front.
 			header( 'Content-Type: application/json' );
 			echo $json_ids;
 			exit;
 		}
-			
 	}
 
 }
