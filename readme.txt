@@ -109,7 +109,8 @@ But we have a .pot file available so feel free to translate it in your language 
 
 == Changelog ==
 
-[ Other ] change version only ( change WordPress.org banner ).
+* [ Other ] change version only ( change WordPress.org banner ).
+* [ Bug fix ] Fix the issue where URL retrieval sometimes fails.
 
 = 1.7.6 =
 * [ Bug fix ] Handle links other than the_permalink.
