@@ -2,6 +2,22 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	var $ = jQuery;
 	const pathToServer = vkLtc.ajaxurl;
 	const sendData = { action: 'ids' };
+
+	const decodeUri = ( url ) => {
+
+		// 文字列内に "%XX" の形式が存在するかどうかを正規表現でチェック
+		if (/%[0-9a-fA-F]{2}/.test(url)) {
+			// エンコードされていると判断された場合はデコードして返す
+			try {
+				return decodeURIComponent(url);
+			} catch (error) {
+				return url;
+			}
+		}
+		// エンコードされていないと判断された場合はそのまま返す
+		return url;
+		
+	}
 	
 	$.post(pathToServer, sendData, function(ps) {
 		if (!$.isEmptyObject(ps)) {
@@ -11,9 +27,9 @@ document.addEventListener("DOMContentLoaded", function(e) {
 				// [1]変換元URL
 				// [2]ターゲット属性
 				try{ // 例外エラーが発生するかもしれない処理
-					var originalUrl = decodeURIComponent(ls[1]);
+					var originalUrl = decodeUri(ls[1]);
 					var c = $('.post-' + id + ' a').filter(function() {
-						return decodeURIComponent($(this).attr('href')) === originalUrl;
+						return decodeUri($(this).attr('href')) === originalUrl;
 					});
 
 					if (c.length) {
