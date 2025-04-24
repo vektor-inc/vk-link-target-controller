@@ -3,8 +3,8 @@ Contributors: vektor-inc,kurudrive,dswebstudio,bizvektor,nc30,catherine8007,rick
 Donate link:
 Tags: redirection,link,recent posts,list,page,post
 Requires at least: 5.3
-Tested up to: 6.7
-Stable tag: 1.7.7.0
+Tested up to: 6.8
+Stable tag: 1.7.8.0
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -109,6 +109,7 @@ But we have a .pot file available so feel free to translate it in your language 
 
 == Changelog ==
 
+= 1.7.8 =
  [ Bug fix ] Fix fatal error on setting screen.
 
 = 1.7.7 =
