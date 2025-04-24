@@ -254,7 +254,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 									$post_types         = $this->get_public_post_types(); // array of post types to create a checkbox list
 									$post_types['page'] = __( 'Pages' );
 									foreach ( $post_types as $slug => $label ) {
-										$options_exist = $this->get_option();
+										$options_exist = $this->get_option() ? $this->get_option() : array();
 										$checked       = ( 0 != $options_exist && in_array( $slug, $options_exist ) ) ? 'checked="checked"' : '';
 										?>
 										<input type="checkbox" name="custom-post-types[]" id="custom-post-types-<?php echo $slug; ?>" value="<?php echo $slug; ?>" <?php echo $checked; ?> />
