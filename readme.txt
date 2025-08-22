@@ -86,14 +86,24 @@ In order to have the link opened in a new window VK Link Target Controller needs
 
 Your theme probably has it if it follows the WordPress Theme recommendations.
 
-Example:
+Example A:
 `
-<div class="post-item post-block front-page-list" id="post-<?php the_ID(); ?>">
+<div class="post-item post-block front-page-list post-<?php the_ID(); ?>" id="post-<?php the_ID(); ?>">
 	<a href="<?php the permalink(); ?>">
  		<?php the_title(); ?>
 	</a>
 </div>
 `
+
+Example B:
+`
+<div class="<?php echo esc_attr( implode( ' ', get_post_class() ) ); ?>" id="post-<?php the_ID(); ?>">
+    <a href="<?php the_permalink(); ?>">
+        <?php the_title(); ?>
+    </a>
+</div>
+`
+get_post_class() returns a value that includes the post ID.
 
 = Any chance to get the plugin translated in my language? =
 
