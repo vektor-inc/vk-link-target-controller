@@ -26,7 +26,7 @@
 		"gulp-jsmin": "^0.1.5",
 		"gulp-jsvalidate": "^5.0.0",
 		"gulp-replace": "^1.1.4",
-		"npm-check-updates": "^16.10.12"
+		"npm-check-updates": "^19.3.1"
 	},
 	"volta": {
 		"node": "18.16.0"
