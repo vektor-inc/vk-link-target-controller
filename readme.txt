@@ -3,8 +3,8 @@ Contributors: vektor-inc,kurudrive,dswebstudio,bizvektor,nc30,catherine8007,rick
 Donate link:
 Tags: redirection,link,recent posts,list,page,post
 Requires at least: 5.3
-Tested up to: 6.8
-Stable tag: 1.7.9.0
+Tested up to: 6.9
+Stable tag: 1.7.10.0
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -118,6 +118,9 @@ But we have a .pot file available so feel free to translate it in your language 
 4. A relative url that refer to a page of your website: **note slash "/" at the beginning**.
 
 == Changelog ==
+
+= 1.7.10 =
+ [ Bug fix ] Avoid PHP warning when current post is not available (e.g. comment edit screen).
 
 = 1.7.9 =
  [ Other ] Update Readme
