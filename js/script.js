@@ -27,36 +27,34 @@ document.addEventListener("DOMContentLoaded", function(e) {
 				return;
 			}
 		}
-		if (!ps || typeof ps !== 'object') return;
-		if (!$.isEmptyObject(ps)) {
-			$.each(ps, function(id, ls) {
-				// ls: { re: リダイレクトURL, pl: パーマリンク, tg: ターゲット(0|1) }
-				if (!ls || typeof ls !== 'object') return;
-				try {
-					var redirectUrl = ls.re || '';
-					var permalinkUrl = ls.pl || '';
-					var targetBlank = ls.tg === 1;
-					// re または pl のいずれかにマッチするリンクを検索（テーマによって出力が異なる）
-					var c = $('.post-' + id + ' a').filter(function() {
-						var href = decodeUri($(this).attr('href'));
-						return href === decodeUri(redirectUrl) || href === decodeUri(permalinkUrl);
-					});
+		if (!ps || typeof ps !== 'object' || $.isEmptyObject(ps)) return;
+		$.each(ps, function(id, ls) {
+			// ls: { re: リダイレクトURL, pl: パーマリンク, tg: ターゲット(0|1) }
+			if (!ls || typeof ls !== 'object') return;
+			try {
+				var redirectUrl = ls.re || '';
+				var permalinkUrl = ls.pl || '';
+				var targetBlank = ls.tg === 1;
+				// re または pl のいずれかにマッチするリンクを検索（テーマによって出力が異なる）
+				var c = $('.post-' + id + ' a').filter(function() {
+					var href = decodeUri($(this).attr('href'));
+					return href === decodeUri(redirectUrl) || href === decodeUri(permalinkUrl);
+				});
 
-					if (c.length) {
-						if (redirectUrl) {
-							$(c).attr('href', redirectUrl);
-						}
-						$(c).attr('target', targetBlank ? '_blank' : '_self');
-						if (targetBlank) {
-							if (!$(c).attr('rel')) {
-								$(c).attr('rel', 'noreferrer noopener');
-							}
-						} else {
-							$(c).removeAttr('rel');
-						}
+				if (c.length) {
+					if (redirectUrl) {
+						$(c).attr('href', redirectUrl);
 					}
-				} catch (e) {}
-			});
-		}
+					$(c).attr('target', targetBlank ? '_blank' : '_self');
+					if (targetBlank) {
+						if (!$(c).attr('rel')) {
+							$(c).attr('rel', 'noreferrer noopener');
+						}
+					} else {
+						$(c).removeAttr('rel');
+					}
+				}
+			} catch (e) {}
+		});
 	});
 }, false);
