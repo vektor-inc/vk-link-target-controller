@@ -119,6 +119,9 @@ But we have a .pot file available so feel free to translate it in your language 
 
 == Changelog ==
 
+= 1.7.11 =
+* Fix open in new window not working on frontend.
+
 = 1.7.10 =
  [ Bug fix ] Avoid PHP warning when current post is not available (e.g. comment edit screen).
 
