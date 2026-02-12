@@ -166,10 +166,6 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		 * @return void
 		 */
 		function maybe_output_link_dialog() {
-			$screen = get_current_screen();
-			if ( ! $screen || ! in_array( $screen->base, array( 'post' ), true ) ) {
-				return;
-			}
 			if ( ! $this->is_meta_box_screen() ) {
 				return;
 			}
