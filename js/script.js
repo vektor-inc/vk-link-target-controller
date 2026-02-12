@@ -47,9 +47,14 @@ document.addEventListener("DOMContentLoaded", function(e) {
 					}
 					$(c).attr('target', targetBlank ? '_blank' : '_self');
 					if (targetBlank) {
-						if (!$(c).attr('rel')) {
-							$(c).attr('rel', 'noreferrer noopener');
-						}
+						$(c).each(function() {
+							var rel = ($(this).attr('rel') || '')
+								.split(/\s+/)
+								.filter(Boolean);
+							if (rel.indexOf('noreferrer') === -1) rel.push('noreferrer');
+							if (rel.indexOf('noopener') === -1) rel.push('noopener');
+							$(this).attr('rel', rel.join(' '));
+						});
 					} else {
 						$(c).each(function() {
 							var rel = ($(this).attr('rel') || '')
