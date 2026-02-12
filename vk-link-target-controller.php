@@ -711,13 +711,11 @@ jQuery(document).ready(function($){
 
 					// リダイレクト先のURLが空でない場合のみ情報を追加
 					if ( ! empty( $link ) ) {
-						$redirect_url = $this->rewrite_link( $post->ID );
-						$ids[ $post->ID ] = array(
-							're' => $redirect_url,
-							'pl' => get_permalink( $post->ID ),
-							'tg' => (int) $target,
-						);
+						$ids[ $post->ID ][] = html_entity_decode( $link );
 					}
+					$ids[ $post->ID ][] = get_permalink( $post->ID );
+					$ids[ $post->ID ][] = $target; // ターゲットの情報を追加
+					$ids[ $post->ID ]   = array_unique( $ids[ $post->ID ] );
 				}
 			}
 
