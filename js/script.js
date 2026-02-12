@@ -34,11 +34,14 @@ document.addEventListener("DOMContentLoaded", function(e) {
 			try {
 				var redirectUrl = ls.re || '';
 				var permalinkUrl = ls.pl || '';
+				if (!redirectUrl && !permalinkUrl) return;
+				var decodedRedirect = decodeUri(redirectUrl);
+				var decodedPermalink = decodeUri(permalinkUrl);
 				var targetBlank = Number(ls.tg) === 1;
 				// re または pl のいずれかにマッチするリンクを検索（テーマによって出力が異なる）
 				var c = $('.post-' + id + ' a').filter(function() {
 					var href = decodeUri($(this).attr('href'));
-					return href === decodeUri(redirectUrl) || href === decodeUri(permalinkUrl);
+					return href === decodedRedirect || href === decodedPermalink;
 				});
 
 				if (c.length) {
