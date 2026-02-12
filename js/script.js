@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 			try {
 				var redirectUrl = ls.re || '';
 				var permalinkUrl = ls.pl || '';
-				var targetBlank = ls.tg === 1;
+				var targetBlank = Number(ls.tg) === 1;
 				// re または pl のいずれかにマッチするリンクを検索（テーマによって出力が異なる）
 				var c = $('.post-' + id + ' a').filter(function() {
 					var href = decodeUri($(this).attr('href'));
@@ -51,7 +51,18 @@ document.addEventListener("DOMContentLoaded", function(e) {
 							$(c).attr('rel', 'noreferrer noopener');
 						}
 					} else {
-						$(c).removeAttr('rel');
+						$(c).each(function() {
+							var rel = ($(this).attr('rel') || '')
+								.split(/\s+/)
+								.filter(Boolean)
+								.filter(function(v) { return v !== 'noreferrer' && v !== 'noopener'; })
+								.join(' ');
+							if (rel) {
+								$(this).attr('rel', rel);
+							} else {
+								$(this).removeAttr('rel');
+							}
+						});
 					}
 				}
 			} catch (e) {}
