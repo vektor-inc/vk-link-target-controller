@@ -119,6 +119,8 @@ But we have a .pot file available so feel free to translate it in your language 
 
 == Changelog ==
 
+[ Add function ] Add internal link search with WordPress standard link dialog.
+
 = 1.7.10 =
  [ Bug fix ] Avoid PHP warning when current post is not available (e.g. comment edit screen).
 
