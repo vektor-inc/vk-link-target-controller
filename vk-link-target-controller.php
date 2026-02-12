@@ -702,7 +702,7 @@ jQuery(document).ready(function($){
 			);
 			$query = new WP_Query( $args );
 
-			// create an array( 'id' => 'link' ) of ids from the posts found in the query.
+			// create array( 'id' => object ) of ids from the posts found in the query.
 			if ( $query->found_posts > 0 ) {
 				$matching_posts = $query->posts;
 				foreach ( $matching_posts as $post ) {
@@ -711,11 +711,13 @@ jQuery(document).ready(function($){
 
 					// リダイレクト先のURLが空でない場合のみ情報を追加
 					if ( ! empty( $link ) ) {
-						$ids[ $post->ID ][] = html_entity_decode( $link );
+						$redirect_url = $this->rewrite_link( $post->ID );
+						$ids[ $post->ID ] = array(
+							're' => $redirect_url,
+							'pl' => get_permalink( $post->ID ),
+							'tg' => (int) $target,
+						);
 					}
-					$ids[ $post->ID ][] = get_permalink( $post->ID );
-					$ids[ $post->ID ][] = $target; // ターゲットの情報を追加
-					$ids[ $post->ID ]   = array_unique( $ids[ $post->ID ] );
 				}
 			}
 
