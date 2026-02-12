@@ -20,33 +20,34 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	}
 	
 	$.post(pathToServer, sendData, function(ps) {
+		if (typeof ps === 'string') {
+			try {
+				ps = JSON.parse(ps);
+			} catch (e) {
+				return;
+			}
+		}
+		if (!ps || typeof ps !== 'object') return;
 		if (!$.isEmptyObject(ps)) {
 			$.each(ps, function(id, ls) {
-				// ls
-				// [0]リプレースURL
-				// [1]変換元URL
-				// [2]ターゲット属性
-				try{ // 例外エラーが発生するかもしれない処理
-					var originalUrl = decodeUri(ls[1]);
+				// ls: { re: リダイレクトURL, pl: パーマリンク, tg: ターゲット(0|1) }
+				if (!ls || typeof ls !== 'object') return;
+				try {
+					var redirectUrl = ls.re || '';
+					var permalinkUrl = ls.pl || '';
+					var targetBlank = ls.tg === 1;
+					// re または pl のいずれかにマッチするリンクを検索（テーマによって出力が異なる）
 					var c = $('.post-' + id + ' a').filter(function() {
-						return decodeUri($(this).attr('href')) === originalUrl;
+						var href = decodeUri($(this).attr('href'));
+						return href === decodeUri(redirectUrl) || href === decodeUri(permalinkUrl);
 					});
 
 					if (c.length) {
-						// リダイレクトURLが空でない場合のみhref属性を更新
-						if (ls[0]) {
-							$(c).attr('href', ls[0]);
+						if (redirectUrl) {
+							$(c).attr('href', redirectUrl);
 						}
-
-						// ターゲット属性を更新
-						if (ls[2] === '1') {
-							$(c).attr('target', '_blank');
-						} else {
-							$(c).attr('target', '_self');
-						}
-
-						// targetが_blankである場合にのみrel属性を追加
-						if ($(c).attr('target') === '_blank') {
+						$(c).attr('target', targetBlank ? '_blank' : '_self');
+						if (targetBlank) {
 							if (!$(c).attr('rel')) {
 								$(c).attr('rel', 'noreferrer noopener');
 							}
@@ -54,9 +55,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 							$(c).removeAttr('rel');
 						}
 					}
-				} finally{
-					
-				}
+				} catch (e) {}
 			});
 		}
 	});

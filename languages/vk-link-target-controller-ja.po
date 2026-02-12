@@ -76,6 +76,10 @@ msgstr "URL"
 msgid "File Link"
 msgstr ""
 
+#: vk-link-target-controller.php:394
+msgid "Search internal link"
+msgstr "サイト内リンクを検索"
+
 #: vk-link-target-controller.php:332
 msgid "Open the link in a separate window"
 msgstr "別ウィンドウで開く"
