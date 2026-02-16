@@ -513,7 +513,9 @@ jQuery(document).ready(function($){
 			} elseif ( strpos( $link, '.' ) ) {
 				$modified_url = esc_url( $link ); // complete url (extern url).
 			} else {
-				$modified_url = esc_url( home_url() . $link ); // partial url (internal url).
+				// partial url (internal url) - trim leading slash from $link to avoid double slash
+				$link = ltrim( $link, '/' );
+				$modified_url = esc_url( home_url( '/' . $link ) ); // partial url (internal url).
 			}
 			return $modified_url;
 		}
