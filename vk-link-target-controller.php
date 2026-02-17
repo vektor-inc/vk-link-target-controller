@@ -129,6 +129,52 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			if ( current_user_can( $this->user_capability_link ) ) {
 				add_action( 'add_meta_boxes', array( $this, 'add_link_meta_box' ) ); // add a meta box for the link to the post edit screen
 				add_action( 'save_post', array( $this, 'save_link' ) ); // save meta box data
+				add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_link_dialog_assets' ) );
+				add_action( 'admin_footer', array( $this, 'maybe_output_link_dialog' ) );
+			}
+		}
+
+		/**
+		 * Enqueue scripts and styles for WordPress link dialog (site-internal link search).
+		 *
+		 * @access public
+		 * @param string $hook_suffix The current admin page.
+		 * @return void
+		 */
+		function enqueue_link_dialog_assets( $hook_suffix ) {
+			if ( ! in_array( $hook_suffix, array( 'post.php', 'post-new.php' ), true ) ) {
+				return;
+			}
+			if ( ! $this->is_meta_box_screen() ) {
+				return;
+			}
+			wp_enqueue_script( 'wplink' );
+			wp_enqueue_style( 'editor-buttons' );
+			wp_enqueue_script(
+				'vk-ltc-admin-link-dialog',
+				plugins_url( 'js/admin-link-dialog.js', __FILE__ ),
+				array( 'jquery', 'wplink' ),
+				LTC_VERSION,
+				true
+			);
+		}
+
+		/**
+		 * Output the WordPress link dialog HTML when not already present (e.g. Block Editor).
+		 *
+		 * @access public
+		 * @return void
+		 */
+		function maybe_output_link_dialog() {
+			if ( ! $this->is_meta_box_screen() ) {
+				return;
+			}
+			if ( ! did_action( 'wp_enqueue_editor' ) ) {
+				// Block Editor or no classic editor: output link dialog HTML manually.
+				if ( ! class_exists( '_WP_Editors', false ) ) {
+					require_once ABSPATH . 'wp-includes/class-wp-editor.php';
+				}
+				_WP_Editors::wp_link_dialog();
 			}
 		}
 
@@ -346,7 +392,8 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			<p>
 				<label style="display:inline-block;width:150px;" for="vk-ltc-link-field"><?php esc_html_e( 'URL', 'vk-link-target-controller' ); ?></label>
 				<input type="text" id="vk-ltc-link-field" name="vk-ltc-link-field" value="<?php echo esc_url( urldecode( $link ) ); ?>" size="35" />
-				<button id="media_vk-ltc-link-field" class="media_btn button button-default"><?php _e( 'File Link', 'vk-link-target-controller' ); ?></button>
+				<button type="button" class="vk-ltc-link-search-btn button button-default"><?php esc_html_e( 'Search internal link', 'vk-link-target-controller' ); ?></button>
+				<button id="media_vk-ltc-link-field" class="media_btn button button-default"><?php esc_html_e( 'File Link', 'vk-link-target-controller' ); ?></button>
 			</p>
 
 <script type="text/javascript">
@@ -463,10 +510,12 @@ jQuery(document).ready(function($){
 
 			if ( empty( $link ) ) {
 				$modified_url = get_permalink( $post_id );
-			} elseif ( strpos( $link, '.' ) ) {
-				$modified_url = esc_url( $link ); // complete url (extern url).
+			} elseif ( 0 === strpos( $link, 'http://' ) || 0 === strpos( $link, 'https://' ) ) {
+				$modified_url = esc_url( $link ); // absolute url (external or internal full URL).
 			} else {
-				$modified_url = esc_url( home_url() . $link ); // partial url (internal url).
+				// relative path (internal): ensure single leading slash for home_url().
+				$path         = '/' . ltrim( $link, '/' );
+				$modified_url = esc_url( home_url( $path ) );
 			}
 			return $modified_url;
 		}
@@ -611,6 +660,23 @@ jQuery(document).ready(function($){
 		}
 
 		/**
+		 * Check if the current admin screen is one where the meta box is shown.
+		 * Used for admin_enqueue_scripts when get_post() may not be available (e.g. post-new.php).
+		 *
+		 * @access public
+		 * @return bool
+		 */
+		function is_meta_box_screen() {
+			$screen = get_current_screen();
+			if ( ! $screen || 'post' !== $screen->base ) {
+				return false;
+			}
+			$post_type    = isset( $screen->post_type ) ? $screen->post_type : 'post';
+			$candidates   = $this->get_option();
+			return ! empty( $candidates ) && in_array( $post_type, $candidates, true );
+		}
+
+		/**
 		 * Ajax_rewrite_ids function
 		 * Used by jQuery script to dynamically add target="_blank" on the corresponding posts
 		 *
@@ -634,7 +700,7 @@ jQuery(document).ready(function($){
 			);
 			$query = new WP_Query( $args );
 
-			// create an array( 'id' => 'link' ) of ids from the posts found in the query.
+			// create array( 'id' => object ) of ids from the posts found in the query.
 			if ( $query->found_posts > 0 ) {
 				$matching_posts = $query->posts;
 				foreach ( $matching_posts as $post ) {
@@ -643,11 +709,13 @@ jQuery(document).ready(function($){
 
 					// リダイレクト先のURLが空でない場合のみ情報を追加
 					if ( ! empty( $link ) ) {
-						$ids[ $post->ID ][] = html_entity_decode( $link );
+						$redirect_url = $this->rewrite_link( $post->ID );
+						$ids[ $post->ID ] = array(
+							're' => $redirect_url,
+							'pl' => get_permalink( $post->ID ),
+							'tg' => (int) $target,
+						);
 					}
-					$ids[ $post->ID ][] = get_permalink( $post->ID );
-					$ids[ $post->ID ][] = $target; // ターゲットの情報を追加
-					$ids[ $post->ID ]   = array_unique( $ids[ $post->ID ] );
 				}
 			}
 

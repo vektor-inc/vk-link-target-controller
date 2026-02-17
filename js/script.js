@@ -20,44 +20,60 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	}
 	
 	$.post(pathToServer, sendData, function(ps) {
-		if (!$.isEmptyObject(ps)) {
-			$.each(ps, function(id, ls) {
-				// ls
-				// [0]リプレースURL
-				// [1]変換元URL
-				// [2]ターゲット属性
-				try{ // 例外エラーが発生するかもしれない処理
-					var originalUrl = decodeUri(ls[1]);
-					var c = $('.post-' + id + ' a').filter(function() {
-						return decodeUri($(this).attr('href')) === originalUrl;
-					});
-
-					if (c.length) {
-						// リダイレクトURLが空でない場合のみhref属性を更新
-						if (ls[0]) {
-							$(c).attr('href', ls[0]);
-						}
-
-						// ターゲット属性を更新
-						if (ls[2] === '1') {
-							$(c).attr('target', '_blank');
-						} else {
-							$(c).attr('target', '_self');
-						}
-
-						// targetが_blankである場合にのみrel属性を追加
-						if ($(c).attr('target') === '_blank') {
-							if (!$(c).attr('rel')) {
-								$(c).attr('rel', 'noreferrer noopener');
-							}
-						} else {
-							$(c).removeAttr('rel');
-						}
-					}
-				} finally{
-					
-				}
-			});
+		if (typeof ps === 'string') {
+			try {
+				ps = JSON.parse(ps);
+			} catch (e) {
+				return;
+			}
 		}
+		if (!ps || typeof ps !== 'object' || $.isEmptyObject(ps)) return;
+		$.each(ps, function(id, ls) {
+			// ls: { re: リダイレクトURL, pl: パーマリンク, tg: ターゲット(0|1) }
+			if (!ls || typeof ls !== 'object') return;
+			try {
+				var redirectUrl = ls.re || '';
+				var permalinkUrl = ls.pl || '';
+				if (!redirectUrl && !permalinkUrl) return;
+				var decodedRedirect = decodeUri(redirectUrl);
+				var decodedPermalink = decodeUri(permalinkUrl);
+				var targetBlank = Number(ls.tg) === 1;
+				// re または pl のいずれかにマッチするリンクを検索（テーマによって出力が異なる）
+				var c = $('.post-' + id + ' a').filter(function() {
+					var href = decodeUri($(this).attr('href'));
+					return href === decodedRedirect || href === decodedPermalink;
+				});
+
+				if (c.length) {
+					if (redirectUrl) {
+						$(c).attr('href', redirectUrl);
+					}
+					$(c).attr('target', targetBlank ? '_blank' : '_self');
+					if (targetBlank) {
+						$(c).each(function() {
+							var rel = ($(this).attr('rel') || '')
+								.split(/\s+/)
+								.filter(Boolean);
+							if (rel.indexOf('noreferrer') === -1) rel.push('noreferrer');
+							if (rel.indexOf('noopener') === -1) rel.push('noopener');
+							$(this).attr('rel', rel.join(' '));
+						});
+					} else {
+						$(c).each(function() {
+							var rel = ($(this).attr('rel') || '')
+								.split(/\s+/)
+								.filter(Boolean)
+								.filter(function(v) { return v !== 'noreferrer' && v !== 'noopener'; })
+								.join(' ');
+							if (rel) {
+								$(this).attr('rel', rel);
+							} else {
+								$(this).removeAttr('rel');
+							}
+						});
+					}
+				}
+			} catch (e) {}
+		});
 	});
 }, false);
