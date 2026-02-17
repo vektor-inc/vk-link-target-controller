@@ -510,12 +510,12 @@ jQuery(document).ready(function($){
 
 			if ( empty( $link ) ) {
 				$modified_url = get_permalink( $post_id );
-			} elseif ( strpos( $link, '.' ) ) {
-				$modified_url = esc_url( $link ); // complete url (extern url).
+			} elseif ( 0 === strpos( $link, 'http://' ) || 0 === strpos( $link, 'https://' ) ) {
+				$modified_url = esc_url( $link ); // absolute url (external or internal full URL).
 			} else {
-				// partial url (internal url) - trim leading slash from $link to avoid double slash
-				$link = ltrim( $link, '/' );
-				$modified_url = esc_url( home_url( '/' . $link ) ); // partial url (internal url).
+				// relative path (internal): ensure single leading slash for home_url().
+				$path         = '/' . ltrim( $link, '/' );
+				$modified_url = esc_url( home_url( $path ) );
 			}
 			return $modified_url;
 		}
