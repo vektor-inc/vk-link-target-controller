@@ -4,6 +4,8 @@
 	"description": "Allow you to link a post title from the recent posts list to another page (internal or external link) rather than link to the actual post page",
 	"scripts": {
 		"update": "ncu -u -x '@wordpress/env' && rm -rf node_modules package-lock.json && npm install",
+		"setup:agents": "node scripts/install-agent-skills.mjs",
+		"postinstall": "npm run setup:agents",
 		"wp-env": "wp-env",
 		"build": "gulp replace_text_domain && gulp jsmin",
 		"jsmin": "gulp jsmin",

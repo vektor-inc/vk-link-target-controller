@@ -11,3 +11,7 @@ sftp-config.json
 temp/
 tests/themes/
 dist/
+.codex/
+.claude/
+.cursor/
+.github/skills/
