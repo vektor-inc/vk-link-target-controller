@@ -1,6 +1,10 @@
 /.wordpress-org
 /.git
 /.github
+/.codex
+/.claude
+/.cursor
+/.github/skills
 /node_modules
 /dist
 
