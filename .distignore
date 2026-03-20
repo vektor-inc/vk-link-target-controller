@@ -14,10 +14,13 @@
 .gitignore
 .svnignore
 .wp-env.json
+.wp-env.override.json
+.phpunit.result.cache
 .editorconfig
 .phpunit.xml
 .node-version
 .vscode/
+.DS_Store
 phpcs.ruleset.xml
 gulpfile.js
 package.json
@@ -30,6 +33,8 @@ phpunit.xml.dist
 webpack.config.js
 README.md
 node_modules/
+scripts/
 tests/
 bin/
 dist/
+tools/
