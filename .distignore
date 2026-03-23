@@ -4,13 +4,10 @@
 /.codex
 /.claude
 /.cursor
-/.github/skills
 /node_modules
 /dist
 
 .distignore
-.gitignore
-.github/
 .gitignore
 .svnignore
 .wp-env.json
