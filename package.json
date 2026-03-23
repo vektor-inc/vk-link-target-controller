@@ -10,6 +10,7 @@
 		"build": "gulp replace_text_domain && gulp jsmin",
 		"jsmin": "gulp jsmin",
 		"test": "gulp test",
+		"dist": "composer install --optimize-autoloader --prefer-dist --no-dev && npm run build && bash bin/dist.sh",
 		"phpunit": "composer install && wp-env run tests-cli --env-cwd='wp-content/plugins/vk-link-target-controller' vendor/bin/phpunit -c .phpunit.xml --verbose"
 	},
 	"repository": {
