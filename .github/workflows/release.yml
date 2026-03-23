@@ -106,7 +106,7 @@ jobs:
               run: |
                   curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
                   chmod +x wp-cli.phar
-                  mv wp-cli.phar /usr/local/bin/wp
+                  sudo mv wp-cli.phar /usr/local/bin/wp
             - name: Install several WordPress version by wp-env.override.json
               run: |
                   n=0
@@ -129,7 +129,7 @@ jobs:
             - name: Build
               run: npm run build
             - name: Start Environment
-              run: npx wp-env start && sudo chmod -R 777 ~/wp-env
+              run: WP_ENV_CORE=WordPress/WordPress#${{ matrix.wp-versions }} WP_ENV_PHP_VERSION=${{ matrix.php-versions }} npx wp-env start && sudo chmod -R 777 ~/wp-env
             - name: Run PHP Unit Test
               run: npm run phpunit
     deploy:
