@@ -75,7 +75,7 @@ jobs:
         name: PHP Unit Test on PHP ${{ matrix.php-versions }} / WP ${{ matrix.wp-versions }} Test
         services:
             mysql:
-                image: mysql:5.7
+                image: mysql:8.0
                 ports:
                     - 3306
                 env:
@@ -112,7 +112,7 @@ jobs:
                   n=0
                   until (( n >= 5 ))
                   do
-                      WP_ENV_CORE=WordPress/WordPress#${{ matrix.wp-versions }} WP_ENV_PHP_VERSION=${{ matrix.php-versions }} npm run wp-env start --update && break
+                      WP_ENV_CORE=WordPress/WordPress#${{ matrix.wp-versions }} WP_ENV_PHP_VERSION=${{ matrix.php-versions }} npm run wp-env -- start --update && break
                       n=$((n+1))
                       echo "Retrying wp-env start --update ($n)..."
                       sleep 15
