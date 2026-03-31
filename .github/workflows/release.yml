@@ -133,13 +133,9 @@ jobs:
                     [ -f "$f" ] && cp "$f" "dist/${{ env.plugin_name }}/$f" || true
                   done
                   [ -d tests ] && cp -r tests "dist/${{ env.plugin_name }}/tests" || true
-            - name: Setup wp-env for dist
+            - name: Create wp-env.override.json for dist
               run: |
-                  node -e "
-                    const cfg = JSON.parse(require('fs').readFileSync('.wp-env.json','utf8'));
-                    cfg.plugins = ['./dist/${{ env.plugin_name }}'];
-                    require('fs').writeFileSync('.wp-env.json', JSON.stringify(cfg, null, 4));
-                  "
+                  printf '{"plugins": ["./dist/%s"]}' "${{ env.plugin_name }}" > wp-env.override.json
             - name: Install several WordPress version by wp-env.override.json
               run: |
                   n=0
