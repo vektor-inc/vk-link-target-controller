@@ -57,18 +57,13 @@ jobs:
               with:
                   name: dist
                   path: dist/
-            - name: Verify dist contents
+            - name: Setup wp-env for dist
               run: |
-                  echo "=== dist directory ==="
-                  find dist/ -type f | sort
-                  echo "=== vendor/autoload.php check ==="
-                  ls -la dist/${{ env.plugin_name }}/vendor/autoload.php
-            - name: Setup wp-env override for dist
-              run: |
-                  echo '{"plugins":["./dist/${{ env.plugin_name }}"]}' > wp-env.override.json
-                  echo "=== wp-env.override.json ==="
-                  cat wp-env.override.json
-                  echo "=== .wp-env.json ==="
+                  node -e "
+                    const cfg = JSON.parse(require('fs').readFileSync('.wp-env.json','utf8'));
+                    cfg.plugins = ['./dist/${{ env.plugin_name }}'];
+                    require('fs').writeFileSync('.wp-env.json', JSON.stringify(cfg, null, 4));
+                  "
                   cat .wp-env.json
             - name: Start wp-env
               run: |
@@ -138,9 +133,13 @@ jobs:
                     [ -f "$f" ] && cp "$f" "dist/${{ env.plugin_name }}/$f" || true
                   done
                   [ -d tests ] && cp -r tests "dist/${{ env.plugin_name }}/tests" || true
-            - name: Create wp-env.override.json for dist
+            - name: Setup wp-env for dist
               run: |
-                  printf '{"plugins": ["./dist/%s"]}' "${{ env.plugin_name }}" > wp-env.override.json
+                  node -e "
+                    const cfg = JSON.parse(require('fs').readFileSync('.wp-env.json','utf8'));
+                    cfg.plugins = ['./dist/${{ env.plugin_name }}'];
+                    require('fs').writeFileSync('.wp-env.json', JSON.stringify(cfg, null, 4));
+                  "
             - name: Install several WordPress version by wp-env.override.json
               run: |
                   n=0
