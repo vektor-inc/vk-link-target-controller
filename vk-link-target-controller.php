@@ -359,7 +359,8 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 					array( $this, 'render_meta_box' ),
 					null,
 					'normal',
-					'high'
+					'high',
+					array( '__back_compat_meta_box' => true ) // WordPress 7.0 RTC compatibility flag / WordPress 7.0 RTC互換フラグ
 				);
 			}
 		}
