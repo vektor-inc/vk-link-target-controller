@@ -57,9 +57,19 @@ jobs:
               with:
                   name: dist
                   path: dist/
+            - name: Verify dist contents
+              run: |
+                  echo "=== dist directory ==="
+                  find dist/ -type f | sort
+                  echo "=== vendor/autoload.php check ==="
+                  ls -la dist/${{ env.plugin_name }}/vendor/autoload.php
             - name: Setup wp-env override for dist
               run: |
                   echo '{"plugins":["./dist/${{ env.plugin_name }}"]}' > wp-env.override.json
+                  echo "=== wp-env.override.json ==="
+                  cat wp-env.override.json
+                  echo "=== .wp-env.json ==="
+                  cat .wp-env.json
             - name: Start wp-env
               run: |
                   n=0
