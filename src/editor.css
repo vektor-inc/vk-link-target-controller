@@ -1,0 +1,17 @@
+/**
+ * VK Link Target Controller - Block Editor styles
+ * ブロックエディタ用スタイル
+ *
+ * Override the core LinkControl min-width (350px) which exceeds
+ * the sidebar panel width (~280px).
+ * コアの LinkControl min-width: 350px がサイドバー幅を超えるため上書きする。
+ */
+.vk-ltc-link-control-wrapper .block-editor-link-control {
+	min-width: 0;
+	width: 100%;
+}
+
+.vk-ltc-link-control-wrapper .block-editor-link-control__search-input {
+	margin: 0;
+	min-width: auto;
+}

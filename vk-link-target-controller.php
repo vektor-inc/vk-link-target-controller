@@ -739,6 +739,17 @@ jQuery(document).ready(function($){
 				true
 			);
 
+			// Enqueue editor CSS / エディタ用CSSをエンキュー
+			$css_file = plugin_dir_path( __FILE__ ) . 'build/index.css';
+			if ( file_exists( $css_file ) ) {
+				wp_enqueue_style(
+					'vk-ltc-block-editor',
+					plugins_url( 'build/index.css', __FILE__ ),
+					array(),
+					$asset['version']
+				);
+			}
+
 			// Pass enabled post types to JS / 有効な投稿タイプをJSに渡す
 			// array_values() ensures a numeric-indexed array for JS includes().
 			// array_values() でJSの includes() に適した数値インデックス配列にする。

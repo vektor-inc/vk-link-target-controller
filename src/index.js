@@ -15,6 +15,7 @@ import { useDispatch, useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import { __experimentalLinkControl as LinkControl } from '@wordpress/block-editor';
 import { useState } from '@wordpress/element';
+import './editor.css';
 
 const VkLtcPanel = () => {
 	const { postType, meta, candidatePostTypes } = useSelect( ( select ) => {
@@ -91,21 +92,23 @@ const VkLtcPanel = () => {
 
 			{ /* URL input with internal link search / 内部リンク検索付きURL入力 */ }
 			{ isLinkOpen ? (
-				<LinkControl
-					value={ link ? { url: link } : undefined }
-					settings={ [] }
-					onChange={ ( nextValue ) => {
-						updateMeta(
-							'vk-ltc-link',
-							nextValue?.url || ''
-						);
-						setIsLinkOpen( false );
-					} }
-					onRemove={ () => {
-						updateMeta( 'vk-ltc-link', '' );
-						setIsLinkOpen( false );
-					} }
-				/>
+				<div className="vk-ltc-link-control-wrapper">
+					<LinkControl
+						value={ link ? { url: link } : undefined }
+						settings={ [] }
+						onChange={ ( nextValue ) => {
+							updateMeta(
+								'vk-ltc-link',
+								nextValue?.url || ''
+							);
+							setIsLinkOpen( false );
+						} }
+						onRemove={ () => {
+							updateMeta( 'vk-ltc-link', '' );
+							setIsLinkOpen( false );
+						} }
+					/>
+				</div>
 			) : (
 				<div>
 					{ link && (
