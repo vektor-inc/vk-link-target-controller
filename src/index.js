@@ -93,6 +93,7 @@ const VkLtcPanel = () => {
 			{ isLinkOpen ? (
 				<LinkControl
 					value={ link ? { url: link } : undefined }
+					settings={ [] }
 					onChange={ ( nextValue ) => {
 						updateMeta(
 							'vk-ltc-link',
