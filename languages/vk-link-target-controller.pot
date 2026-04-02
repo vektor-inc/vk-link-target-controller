@@ -1,78 +1,119 @@
-# WordPress Blank Pot
-# Copyright (C) 2014 ...
-# This file is distrubuted under the GPL-2.0+
+# Copyright (C) 2026 Vektor,Inc.
+# This file is distributed under the GPL2.
 msgid ""
 msgstr ""
-"Project-Id-Version: VK Link Target Controller\n"
-"Report-Msgid-Bugs-To: Translator Name <translations@example.com>\n"
-"POT-Creation-Date: 2015-12-18 13:01+0900\n"
-"PO-Revision-Date: \n"
-"Last-Translator: Kurudrive <kurudrive@gmail.com>\n"
-"Language-Team: Vektor,Inc. <info@vektor-inc.co.jp>\n"
-"Language: en_US\n"
+"Project-Id-Version: VK Link Target Controller 1.8.1\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/vk-link-target-controller\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Textdomain-Support: yesX-Generator: Poedit 1.6.4\n"
-"X-Poedit-SourceCharset: UTF-8\n"
-"X-Poedit-KeywordsList: __;_e;_x;esc_html_e;esc_html__;esc_attr_e;esc_attr__;"
-"_ex:1,2c;_nx:4c,1,2;_nx_noop:4c,1,2;_x:1,2c;_n:1,2;_n_noop:1,2;"
-"__ngettext_noop:1,2;_c,_nc:4c,1,2;esc_html_x\n"
-"X-Poedit-Basepath: ../\n"
-"X-Generator: Poedit 1.5.7\n"
-"X-Poedit-SearchPath-0: .\n"
+"POT-Creation-Date: 2026-04-02T04:18:08+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: vk-link-target-controller\n"
 
-# settings page title
-#: vk-link-target-controller.php:155 vk-link-target-controller.php:179
+#. Plugin Name of the plugin
+#: vk-link-target-controller.php
+#: vk-link-target-controller.php:70
+#: vk-link-target-controller.php:72
 msgid "VK Link Target Controller"
 msgstr ""
 
-# admin menu link label
-#: vk-link-target-controller.php:156
+#. Plugin URI of the plugin
+#: vk-link-target-controller.php
+msgid "https://github.com/vektor-inc/vk-link-target-controller"
+msgstr ""
+
+#. Description of the plugin
+#: vk-link-target-controller.php
+msgid "Allow you to link a post title from the recent posts list to another page (internal or external link) rather than link to the actual post page"
+msgstr ""
+
+#. Author of the plugin
+#: vk-link-target-controller.php
+msgid "Vektor,Inc."
+msgstr ""
+
+#. Author URI of the plugin
+#: vk-link-target-controller.php
+msgid "http://www.vektor-inc.co.jp/"
+msgstr ""
+
+#: vk-link-target-controller.php:28
+msgid "Setting"
+msgstr ""
+
+#: vk-link-target-controller.php:267
+#: vk-link-target-controller.php:293
+msgctxt "settings page title"
+msgid "VK Link Target Controller"
+msgstr ""
+
+#: vk-link-target-controller.php:268
+msgctxt "admin menu link label"
 msgid "Link Target Controller"
 msgstr ""
 
-#: vk-link-target-controller.php:187
+#: vk-link-target-controller.php:301
 msgid "Display on the following post types"
 msgstr ""
 
-#: vk-link-target-controller.php:191
-msgid "Pages"
-msgstr ""
-
-#: vk-link-target-controller.php:219
-msgid "Free Wordpress theme for businesses"
-msgstr ""
-
-#: vk-link-target-controller.php:220
-msgid "Download Biz Vektor free Wordpress theme for businesses"
-msgstr ""
-
-#: vk-link-target-controller.php:263
+#: vk-link-target-controller.php:374
+#: vk-link-target-controller.php:388
+#: build/index.js:1
+#: src/index.js:82
 msgid "URL to redirect to"
 msgstr ""
 
-#: vk-link-target-controller.php:292
-msgid ""
-"If you enter an URL here your visitors will access that URL directly when "
-"they click on the title of this post in Recent Posts list."
+#: vk-link-target-controller.php:418
+#: build/index.js:1
+#: src/index.js:86
+msgid "If you enter an URL here your visitors will access that URL directly when they click on the title of this post in Recent Posts list."
 msgstr ""
 
-#: vk-link-target-controller.php:293
-msgid ""
-"If you want to link to the file, please upload select the file from the "
-"\"File Link\" button."
+#: vk-link-target-controller.php:419
+msgid "If you want to link to the file, please upload select the file from the \"File Link\" button."
 msgstr ""
 
-#: vk-link-target-controller.php:296
+#: vk-link-target-controller.php:422
 msgid "URL"
 msgstr ""
 
-#: vk-link-target-controller.php:298
+#: vk-link-target-controller.php:424
+msgid "Search internal link"
+msgstr ""
+
+#: vk-link-target-controller.php:425
+#: build/index.js:1
+#: src/index.js:157
 msgid "File Link"
 msgstr ""
 
-#: vk-link-target-controller.php:345
+#: vk-link-target-controller.php:472
+#: build/index.js:1
+#: src/index.js:182
 msgid "Open the link in a separate window"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:144
+msgid "Edit Link"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:148
+msgid "Set Link"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:62
+#: src/index.js:64
+msgid "Choose File"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:170
+msgid "Remove"
 msgstr ""

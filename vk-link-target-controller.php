@@ -15,6 +15,7 @@ Text Domain: vk-link-target-controller
 define( 'VK_LTC_BASENAME', plugin_basename( __FILE__ ) );
 
 require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/inc/register-meta.php';
 
 use VektorInc\VK_Admin\VkAdmin;
 VkAdmin::init();
@@ -127,10 +128,14 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 			// allow meta box for user with permission.
 			if ( current_user_can( $this->user_capability_link ) ) {
-				add_action( 'add_meta_boxes', array( $this, 'add_link_meta_box' ) ); // add a meta box for the link to the post edit screen
-				add_action( 'save_post', array( $this, 'save_link' ) ); // save meta box data
+				// Classic editor: add meta box / クラシックエディタ：メタボックスを追加
+				add_action( 'add_meta_boxes', array( $this, 'add_link_meta_box' ) );
+				// Classic editor: save meta box data / クラシックエディタ：メタボックスデータを保存
+				add_action( 'save_post', array( $this, 'save_link' ) );
 				add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_link_dialog_assets' ) );
 				add_action( 'admin_footer', array( $this, 'maybe_output_link_dialog' ) );
+				// Block editor: enqueue React panel / ブロックエディタ：Reactパネルをエンキュー
+				add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_block_editor_assets' ) );
 			}
 		}
 
@@ -352,17 +357,40 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		 * @return void
 		 */
 		function add_link_meta_box() {
-			if ( $this->candidate_post_type() ) {
+			if ( ! $this->candidate_post_type() ) {
+				return;
+			}
+
+			// In the block editor, use __back_compat_meta_box => true to hide
+			// the legacy meta box (the React PluginDocumentSettingPanel replaces it).
+			// This prevents WordPress 7.0 RTC from being blocked.
+			// ブロックエディタでは__back_compat_meta_box => trueでレガシーメタボックスを非表示にする。
+			// React PluginDocumentSettingPanel が代替UIとして機能する。
+			// これによりWordPress 7.0 RTCがブロックされなくなる。
+			$screen = get_current_screen();
+			if ( $screen && method_exists( $screen, 'is_block_editor' ) && $screen->is_block_editor() ) {
 				add_meta_box(
-					'vk-ltc-url', // meta box html id.
+					'vk-ltc-url',
 					esc_html__( 'URL to redirect to', 'vk-link-target-controller' ),
 					array( $this, 'render_meta_box' ),
 					null,
 					'normal',
 					'high',
-					array( '__back_compat_meta_box' => true ) // WordPress 7.0 RTC compatibility flag / WordPress 7.0 RTC互換フラグ
+					array( '__back_compat_meta_box' => true )
 				);
+				return;
 			}
+
+			// Classic editor: register meta box without the flag.
+			// クラシックエディタ：フラグなしでメタボックスを登録
+			add_meta_box(
+				'vk-ltc-url',
+				esc_html__( 'URL to redirect to', 'vk-link-target-controller' ),
+				array( $this, 'render_meta_box' ),
+				null,
+				'normal',
+				'high'
+			);
 		}
 
 		/**
@@ -675,6 +703,58 @@ jQuery(document).ready(function($){
 			$post_type    = isset( $screen->post_type ) ? $screen->post_type : 'post';
 			$candidates   = $this->get_option();
 			return ! empty( $candidates ) && in_array( $post_type, $candidates, true );
+		}
+
+		/**
+		 * Enqueue the block editor React panel script.
+		 * ブロックエディタ用Reactパネルスクリプトをエンキューする。
+		 *
+		 * @access public
+		 * @return void
+		 */
+		function enqueue_block_editor_assets() {
+			if ( ! $this->is_meta_box_screen() ) {
+				return;
+			}
+
+			$asset_file = plugin_dir_path( __FILE__ ) . 'build/index.asset.php';
+			if ( ! file_exists( $asset_file ) ) {
+				return;
+			}
+
+			$asset = include $asset_file;
+
+			// Add wp-media-utils dependency for wp.media() in the media uploader.
+			// メディアアップローダーの wp.media() に必要な依存を追加
+			$dependencies   = $asset['dependencies'];
+			$dependencies[] = 'media-upload';
+			$dependencies[] = 'wp-media-utils';
+
+			wp_enqueue_script(
+				'vk-ltc-block-editor',
+				plugins_url( 'build/index.js', __FILE__ ),
+				$dependencies,
+				$asset['version'],
+				true
+			);
+
+			// Pass enabled post types to JS / 有効な投稿タイプをJSに渡す
+			$post_types = $this->get_option();
+			if ( ! is_array( $post_types ) ) {
+				$post_types = array();
+			}
+			wp_localize_script(
+				'vk-ltc-block-editor',
+				'vkLtcEditor',
+				array( 'postTypes' => $post_types )
+			);
+
+			// Set script translations / 翻訳ファイルを設定
+			wp_set_script_translations(
+				'vk-ltc-block-editor',
+				'vk-link-target-controller',
+				plugin_dir_path( __FILE__ ) . 'languages'
+			);
 		}
 
 		/**
