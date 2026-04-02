@@ -27,6 +27,7 @@ function vk_ltc_register_post_meta() {
 			array(
 				'type'              => 'string',
 				'description'       => 'Redirect URL / リダイレクト先URL',
+				'default'           => '',
 				'single'            => true,
 				'sanitize_callback' => 'esc_url_raw',
 				'show_in_rest'      => true,
@@ -42,6 +43,7 @@ function vk_ltc_register_post_meta() {
 			array(
 				'type'              => 'string',
 				'description'       => 'Open in new window flag / 別ウィンドウで開くフラグ',
+				'default'           => '0',
 				'single'            => true,
 				'sanitize_callback' => 'sanitize_text_field',
 				'show_in_rest'      => true,
