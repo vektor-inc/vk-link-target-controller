@@ -740,6 +740,8 @@ jQuery(document).ready(function($){
 			);
 
 			// Pass enabled post types to JS / 有効な投稿タイプをJSに渡す
+			// array_values() ensures a numeric-indexed array for JS includes().
+			// array_values() でJSの includes() に適した数値インデックス配列にする。
 			$post_types = $this->get_option();
 			if ( ! is_array( $post_types ) ) {
 				$post_types = array();
@@ -747,7 +749,7 @@ jQuery(document).ready(function($){
 			wp_localize_script(
 				'vk-ltc-block-editor',
 				'vkLtcEditor',
-				array( 'postTypes' => $post_types )
+				array( 'postTypes' => array_values( $post_types ) )
 			);
 
 			// Set script translations / 翻訳ファイルを設定
