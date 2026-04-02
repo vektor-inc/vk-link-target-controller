@@ -89,6 +89,11 @@ class registerMetaTest extends WP_UnitTestCase {
 	 * $_POST にフィールドがない場合（REST 経由の保存）に save_link() が干渉しないことを確認する。
 	 */
 	public function test_save_link_no_interference_on_rest_save() {
+		// save_link() は current_user_can('edit_posts') をチェックするため、
+		// テスト用に editor ロールのユーザーを作成してログインする。
+		$user_id = $this->factory->user->create( array( 'role' => 'editor' ) );
+		wp_set_current_user( $user_id );
+
 		// テスト用の投稿を作成
 		$post_id = $this->factory->post->create(
 			array(
