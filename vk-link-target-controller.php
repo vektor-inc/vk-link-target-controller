@@ -361,14 +361,15 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 				return;
 			}
 
-			// In the block editor, use __back_compat_meta_box => true to hide
-			// the legacy meta box (the React PluginDocumentSettingPanel replaces it).
-			// This prevents WordPress 7.0 RTC from being blocked.
-			// ブロックエディタでは__back_compat_meta_box => trueでレガシーメタボックスを非表示にする。
-			// React PluginDocumentSettingPanel が代替UIとして機能する。
-			// これによりWordPress 7.0 RTCがブロックされなくなる。
-			$screen = get_current_screen();
-			if ( $screen && method_exists( $screen, 'is_block_editor' ) && $screen->is_block_editor() ) {
+			// In the block editor, hide the legacy meta box only when the React panel
+			// build exists. If the build is missing, fall back to the legacy meta box
+			// so the user can still edit link settings.
+			// ブロックエディタでは、Reactパネルのビルドが存在する場合のみ
+			// レガシーメタボックスを非表示にする。ビルドがない場合は
+			// フォールバックとしてレガシーメタボックスを表示する。
+			$screen     = get_current_screen();
+			$asset_file = plugin_dir_path( __FILE__ ) . 'build/index.asset.php';
+			if ( $screen && method_exists( $screen, 'is_block_editor' ) && $screen->is_block_editor() && file_exists( $asset_file ) ) {
 				add_meta_box(
 					'vk-ltc-url',
 					esc_html__( 'URL to redirect to', 'vk-link-target-controller' ),
