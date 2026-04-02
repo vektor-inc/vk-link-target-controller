@@ -14,6 +14,17 @@
 class registerMetaTest extends WP_UnitTestCase {
 
 	/**
+	 * Set up test environment.
+	 * テスト環境のセットアップ。init フックが発火済みでない場合に備えて手動で登録する。
+	 */
+	public function set_up() {
+		parent::set_up();
+		// Ensure post meta is registered for tests.
+		// テスト用にメタを確実に登録する。
+		vk_ltc_register_post_meta();
+	}
+
+	/**
 	 * Test that vk-ltc-link and vk-ltc-target are registered for enabled post types.
 	 * 有効な投稿タイプでメタキーが登録されていることを確認する。
 	 */
