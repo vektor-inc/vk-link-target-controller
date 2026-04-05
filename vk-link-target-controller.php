@@ -153,6 +153,12 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			if ( ! $this->is_meta_box_screen() ) {
 				return;
 			}
+			// ブロックエディタでReactパネルのビルドがある場合はレガシーアセット不要
+			$screen     = get_current_screen();
+			$asset_file = plugin_dir_path( __FILE__ ) . 'build/index.asset.php';
+			if ( $screen && method_exists( $screen, 'is_block_editor' ) && $screen->is_block_editor() && file_exists( $asset_file ) ) {
+				return;
+			}
 			wp_enqueue_script( 'wplink' );
 			wp_enqueue_style( 'editor-buttons' );
 			wp_enqueue_script(
@@ -172,6 +178,12 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		 */
 		function maybe_output_link_dialog() {
 			if ( ! $this->is_meta_box_screen() ) {
+				return;
+			}
+			// ブロックエディタでReactパネルのビルドがある場合はレガシーHTML不要
+			$screen     = get_current_screen();
+			$asset_file = plugin_dir_path( __FILE__ ) . 'build/index.asset.php';
+			if ( $screen && method_exists( $screen, 'is_block_editor' ) && $screen->is_block_editor() && file_exists( $asset_file ) ) {
 				return;
 			}
 			if ( ! did_action( 'wp_enqueue_editor' ) ) {
