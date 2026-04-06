@@ -11,23 +11,23 @@
 import { registerPlugin } from '@wordpress/plugins';
 import { PluginDocumentSettingPanel } from '@wordpress/editor';
 import { CheckboxControl, Button } from '@wordpress/components';
-import { useDispatch, useSelect } from '@wordpress/data';
+import { useSelect } from '@wordpress/data';
+import { useEntityProp } from '@wordpress/core-data';
 import { __ } from '@wordpress/i18n';
 import { __experimentalLinkControl as LinkControl } from '@wordpress/block-editor';
 import { useState } from '@wordpress/element';
 import './editor.css';
 
 const VkLtcPanel = () => {
-	const { postType, meta, candidatePostTypes } = useSelect( ( select ) => {
+	const { postType, candidatePostTypes } = useSelect( ( select ) => {
 		const editor = select( 'core/editor' );
 		return {
 			postType: editor.getCurrentPostType(),
-			meta: editor.getEditedPostAttribute( 'meta' ) || {},
 			candidatePostTypes: window.vkLtcEditor?.postTypes || [],
 		};
 	}, [] );
 
-	const { editPost } = useDispatch( 'core/editor' );
+	const [ meta, setMeta ] = useEntityProp( 'postType', postType, 'meta' );
 
 	// State for toggling the link search popover.
 	// リンク検索ポップオーバーの表示切り替え用ステート
@@ -39,8 +39,8 @@ const VkLtcPanel = () => {
 		return null;
 	}
 
-	const link = meta[ 'vk-ltc-link' ] || '';
-	const target = meta[ 'vk-ltc-target' ];
+	const link = meta?.[ 'vk-ltc-link' ] ?? '';
+	const target = meta?.[ 'vk-ltc-target' ];
 	const isTargetBlank = target === '1' || target === 1;
 
 	/**
@@ -51,7 +51,7 @@ const VkLtcPanel = () => {
 	 * @param {*}      value Meta value.
 	 */
 	const updateMeta = ( key, value ) => {
-		editPost( { meta: { [ key ]: value } } );
+		setMeta( { ...meta, [ key ]: value } );
 	};
 
 	/**
@@ -67,11 +67,7 @@ const VkLtcPanel = () => {
 			multiple: false,
 		} );
 		uploader.on( 'select', () => {
-			const file = uploader
-				.state()
-				.get( 'selection' )
-				.first()
-				.toJSON();
+			const file = uploader.state().get( 'selection' ).first().toJSON();
 			updateMeta( 'vk-ltc-link', file.url );
 		} );
 		uploader.open();
@@ -97,10 +93,7 @@ const VkLtcPanel = () => {
 						value={ link ? { url: link } : undefined }
 						settings={ [] }
 						onChange={ ( nextValue ) => {
-							updateMeta(
-								'vk-ltc-link',
-								nextValue?.url || ''
-							);
+							updateMeta( 'vk-ltc-link', nextValue?.url || '' );
 							setIsLinkOpen( false );
 						} }
 						onRemove={ () => {
@@ -145,10 +138,7 @@ const VkLtcPanel = () => {
 							onClick={ () => setIsLinkOpen( true ) }
 						>
 							{ link
-								? __(
-										'Edit Link',
-										'vk-link-target-controller'
-								  )
+								? __( 'Edit Link', 'vk-link-target-controller' )
 								: __(
 										'Set Link',
 										'vk-link-target-controller'
@@ -158,10 +148,7 @@ const VkLtcPanel = () => {
 							variant="secondary"
 							onClick={ openMediaUploader }
 						>
-							{ __(
-								'File Link',
-								'vk-link-target-controller'
-							) }
+							{ __( 'File Link', 'vk-link-target-controller' ) }
 						</Button>
 						{ link && (
 							<Button
@@ -171,10 +158,7 @@ const VkLtcPanel = () => {
 									updateMeta( 'vk-ltc-link', '' )
 								}
 							>
-								{ __(
-									'Remove',
-									'vk-link-target-controller'
-								) }
+								{ __( 'Remove', 'vk-link-target-controller' ) }
 							</Button>
 						) }
 					</div>
@@ -189,10 +173,7 @@ const VkLtcPanel = () => {
 					) }
 					checked={ isTargetBlank }
 					onChange={ ( checked ) =>
-						updateMeta(
-							'vk-ltc-target',
-							checked ? '1' : '0'
-						)
+						updateMeta( 'vk-ltc-target', checked ? '1' : '0' )
 					}
 				/>
 			</div>
