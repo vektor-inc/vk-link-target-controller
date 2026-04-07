@@ -10,13 +10,15 @@
 
 import { registerPlugin } from '@wordpress/plugins';
 import { PluginDocumentSettingPanel } from '@wordpress/editor';
-import { CheckboxControl, Button } from '@wordpress/components';
+import {
+	TextControl,
+	CheckboxControl,
+	Button,
+} from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import { useEntityProp } from '@wordpress/core-data';
 import { __ } from '@wordpress/i18n';
-import { __experimentalLinkControl as LinkControl } from '@wordpress/block-editor';
-import { useState } from '@wordpress/element';
-import './editor.css';
+import { useEffect, useCallback } from '@wordpress/element';
 
 const VkLtcPanel = () => {
 	const { postType, candidatePostTypes } = useSelect( ( select ) => {
@@ -28,10 +30,6 @@ const VkLtcPanel = () => {
 	}, [] );
 
 	const [ meta, setMeta ] = useEntityProp( 'postType', postType, 'meta' );
-
-	// State for toggling the link search popover.
-	// リンク検索ポップオーバーの表示切り替え用ステート
-	const [ isLinkOpen, setIsLinkOpen ] = useState( false );
 
 	// Only show panel for enabled post types.
 	// 有効な投稿タイプでのみパネルを表示
@@ -50,9 +48,65 @@ const VkLtcPanel = () => {
 	 * @param {string} key   Meta key name.
 	 * @param {*}      value Meta value.
 	 */
-	const updateMeta = ( key, value ) => {
-		setMeta( { ...meta, [ key ]: value } );
-	};
+	const updateMeta = useCallback(
+		( key, value ) => {
+			setMeta( { ...meta, [ key ]: value } );
+		},
+		[ meta, setMeta ]
+	);
+
+	/**
+	 * Open the WordPress internal link search dialog (wpLink).
+	 * WordPress内部リンク検索ダイアログ（wpLink）を開く
+	 */
+	const openLinkDialog = useCallback( () => {
+		if ( typeof window.wpLink === 'undefined' ) {
+			return;
+		}
+		window.vkLtcLinkMode = true;
+		window.wpLink.open( 'vk-ltc-react-link', link, '' );
+	}, [ link ] );
+
+	// Intercept wp-link-submit click when opened from this panel.
+	// このパネルから開いた場合のwp-link-submitクリックをインターセプトする
+	useEffect( () => {
+		const handleSubmit = ( e ) => {
+			if ( ! window.vkLtcLinkMode ) {
+				return;
+			}
+			if ( ! e.target || e.target.id !== 'wp-link-submit' ) {
+				return;
+			}
+			if ( typeof window.wpLink === 'undefined' ) {
+				return;
+			}
+			e.preventDefault();
+			e.stopImmediatePropagation();
+
+			const attrs = window.wpLink.getAttrs();
+			if ( attrs.href ) {
+				updateMeta( 'vk-ltc-link', attrs.href );
+			}
+
+			window.wpLink.textarea = document.body;
+			window.wpLink.close( 'noReset' );
+			window.vkLtcLinkMode = false;
+		};
+
+		const handleClose = () => {
+			window.vkLtcLinkMode = false;
+		};
+
+		// Use capture phase to run before wpLink's own handler.
+		// wpLinkのハンドラより先に実行するためキャプチャフェーズを使用
+		document.addEventListener( 'click', handleSubmit, true );
+		jQuery( document ).on( 'wplink-close.vkltc', handleClose );
+
+		return () => {
+			document.removeEventListener( 'click', handleSubmit, true );
+			jQuery( document ).off( 'wplink-close.vkltc' );
+		};
+	}, [ updateMeta ] );
 
 	/**
 	 * Open the WordPress media uploader to select a file.
@@ -67,7 +121,11 @@ const VkLtcPanel = () => {
 			multiple: false,
 		} );
 		uploader.on( 'select', () => {
-			const file = uploader.state().get( 'selection' ).first().toJSON();
+			const file = uploader
+				.state()
+				.get( 'selection' )
+				.first()
+				.toJSON();
 			updateMeta( 'vk-ltc-link', file.url );
 		} );
 		uploader.open();
@@ -86,84 +144,32 @@ const VkLtcPanel = () => {
 				) }
 			</p>
 
-			{ /* URL input with internal link search / 内部リンク検索付きURL入力 */ }
-			{ isLinkOpen ? (
-				<div className="vk-ltc-link-control-wrapper">
-					<LinkControl
-						value={ link ? { url: link } : undefined }
-						settings={ [] }
-						onChange={ ( nextValue ) => {
-							updateMeta( 'vk-ltc-link', nextValue?.url || '' );
-							setIsLinkOpen( false );
-						} }
-						onRemove={ () => {
-							updateMeta( 'vk-ltc-link', '' );
-							setIsLinkOpen( false );
-						} }
-					/>
-				</div>
-			) : (
-				<div>
-					{ link && (
-						<div
-							style={ {
-								padding: '8px 12px',
-								background: '#f0f0f0',
-								borderRadius: '4px',
-								marginBottom: '8px',
-								overflow: 'hidden',
-								textOverflow: 'ellipsis',
-								whiteSpace: 'nowrap',
-								fontSize: '12px',
-							} }
-						>
-							<a
-								href={ link }
-								target="_blank"
-								rel="noopener noreferrer"
-							>
-								{ link }
-							</a>
-						</div>
+			<TextControl
+				label={ __( 'URL', 'vk-link-target-controller' ) }
+				value={ link }
+				onChange={ ( value ) => updateMeta( 'vk-ltc-link', value ) }
+				placeholder="https://"
+				__nextHasNoMarginBottom
+			/>
+
+			<div
+				style={ {
+					display: 'flex',
+					gap: '8px',
+					flexWrap: 'wrap',
+					marginTop: '8px',
+				} }
+			>
+				<Button variant="secondary" onClick={ openLinkDialog }>
+					{ __(
+						'Search internal link',
+						'vk-link-target-controller'
 					) }
-					<div
-						style={ {
-							display: 'flex',
-							gap: '8px',
-							flexWrap: 'wrap',
-						} }
-					>
-						<Button
-							variant="secondary"
-							onClick={ () => setIsLinkOpen( true ) }
-						>
-							{ link
-								? __( 'Edit Link', 'vk-link-target-controller' )
-								: __(
-										'Set Link',
-										'vk-link-target-controller'
-								  ) }
-						</Button>
-						<Button
-							variant="secondary"
-							onClick={ openMediaUploader }
-						>
-							{ __( 'File Link', 'vk-link-target-controller' ) }
-						</Button>
-						{ link && (
-							<Button
-								variant="tertiary"
-								isDestructive
-								onClick={ () =>
-									updateMeta( 'vk-ltc-link', '' )
-								}
-							>
-								{ __( 'Remove', 'vk-link-target-controller' ) }
-							</Button>
-						) }
-					</div>
-				</div>
-			) }
+				</Button>
+				<Button variant="secondary" onClick={ openMediaUploader }>
+					{ __( 'File Link', 'vk-link-target-controller' ) }
+				</Button>
+			</div>
 
 			<div style={ { marginTop: '16px' } }>
 				<CheckboxControl

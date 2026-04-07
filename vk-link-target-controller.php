@@ -180,12 +180,6 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			if ( ! $this->is_meta_box_screen() ) {
 				return;
 			}
-			// ブロックエディタでReactパネルのビルドがある場合はレガシーHTML不要
-			$screen     = get_current_screen();
-			$asset_file = plugin_dir_path( __FILE__ ) . 'build/index.asset.php';
-			if ( $screen && method_exists( $screen, 'is_block_editor' ) && $screen->is_block_editor() && file_exists( $asset_file ) ) {
-				return;
-			}
 			if ( ! did_action( 'wp_enqueue_editor' ) ) {
 				// Block Editor or no classic editor: output link dialog HTML manually.
 				if ( ! class_exists( '_WP_Editors', false ) ) {
@@ -737,11 +731,12 @@ jQuery(document).ready(function($){
 
 			$asset = include $asset_file;
 
-			// Add wp-media-utils dependency for wp.media() in the media uploader.
-			// メディアアップローダーの wp.media() に必要な依存を追加
+			// Add dependencies for wp.media() and wpLink dialog.
+			// メディアアップローダーの wp.media() と wpLink ダイアログに必要な依存を追加
 			$dependencies   = $asset['dependencies'];
 			$dependencies[] = 'media-upload';
 			$dependencies[] = 'wp-media-utils';
+			$dependencies[] = 'wplink';
 
 			wp_enqueue_script(
 				'vk-ltc-block-editor',
@@ -750,17 +745,6 @@ jQuery(document).ready(function($){
 				$asset['version'],
 				true
 			);
-
-			// Enqueue editor CSS / エディタ用CSSをエンキュー
-			$css_file = plugin_dir_path( __FILE__ ) . 'build/index.css';
-			if ( file_exists( $css_file ) ) {
-				wp_enqueue_style(
-					'vk-ltc-block-editor',
-					plugins_url( 'build/index.css', __FILE__ ),
-					array(),
-					$asset['version']
-				);
-			}
 
 			// Pass enabled post types to JS / 有効な投稿タイプをJSに渡す
 			// array_values() ensures a numeric-indexed array for JS includes().
