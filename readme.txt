@@ -119,6 +119,8 @@ But we have a .pot file available so feel free to translate it in your language 
 
 == Changelog ==
 
+* [ Specification change ] Migrate meta box to block editor native sidebar panel for WordPress 7.0 RTC (Real-Time Collaboration) compatibility.
+
 = 1.8.1 =
 * [ Other ] Add back compatibility flag to meta box for WordPress 7.0 RTC support.
 

@@ -7,7 +7,9 @@
 		"setup:agents": "node scripts/install-agent-skills.mjs",
 		"postinstall": "npm run setup:agents",
 		"wp-env": "wp-env",
-		"build": "gulp replace_text_domain && gulp jsmin",
+		"build": "wp-scripts build --webpack-src-dir=src --output-path=build && gulp replace_text_domain && gulp jsmin",
+		"build:block": "wp-scripts build --webpack-src-dir=src --output-path=build",
+		"start": "wp-scripts start --webpack-src-dir=src --output-path=build",
 		"jsmin": "gulp jsmin",
 		"test": "gulp test",
 		"dist": "composer install --optimize-autoloader --prefer-dist --no-dev && npm run build && bash bin/dist.sh",
@@ -25,6 +27,7 @@
 	"homepage": "https://wordpress.org/plugins/vk-link-target-controller/",
 	"devDependencies": {
 		"@wordpress/env": "10.38.0",
+		"@wordpress/scripts": "^28.4.0",
 		"gulp": "^4.0.2",
 		"gulp-jsmin": "^0.1.5",
 		"gulp-jsvalidate": "^5.0.0",
@@ -33,5 +36,8 @@
 	},
 	"volta": {
 		"node": "18.16.0"
+	},
+	"dependencies": {
+		"@babel/runtime": "^7.29.2"
 	}
 }
