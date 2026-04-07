@@ -4,7 +4,7 @@ Donate link:
 Tags: redirection,link,recent posts,list,page,post
 Requires at least: 5.3
 Tested up to: 6.9
-Stable tag: 1.8.1
+Stable tag: 1.9.0
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,7 @@ But we have a .pot file available so feel free to translate it in your language 
 
 == Changelog ==
 
+= 1.9.0 =
 * [ Specification change ] Migrate meta box to block editor native sidebar panel for WordPress 7.0 RTC (Real-Time Collaboration) compatibility.
 
 = 1.8.1 =
