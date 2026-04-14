@@ -78,18 +78,29 @@ document.addEventListener("DOMContentLoaded", function() {
 					// 権限がないユーザーや非ログインユーザーには空文字が返る。
 					var editUrl = ls.el || '';
 					if (editUrl) {
-						c.each(function() {
+						// タイトルリンク候補を特定する。
+						// DOM順序に依存しないよう、見出し要素内の非画像リンクを優先的に探す。
+						// 見出し内になければ最初の非画像リンクにフォールバックする。
+						var $titleLink = c.filter(function() {
 							// img要素を含むリンク（アイキャッチ画像リンク等）はスキップ
-							// テキスト判定ではなくimg判定にする理由：
 							// VK Blocks Pro等では画像リンク内にカテゴリラベルspanが含まれており、
-							// テキスト空チェックではスキップできないため。
+							// テキスト空チェックではスキップできないため、img要素の有無で判定する。
 							if ($(this).find('img').length > 0) {
-								return;
+								return false;
 							}
-							// 既に編集リンクが追加済みの場合はスキップ
-							if ($(this).next('.vk-ltc-edit-link').length > 0) {
-								return;
-							}
+							// h1〜h6内のリンクをタイトルリンクと判断する
+							return $(this).closest('h1,h2,h3,h4,h5,h6').length > 0;
+						}).first();
+
+						// 見出し内に見つからない場合は最初の非画像リンクを使用する
+						if (!$titleLink.length) {
+							$titleLink = c.filter(function() {
+								return $(this).find('img').length === 0;
+							}).first();
+						}
+
+						// 候補が存在し、かつ既に編集リンクが追加されていない場合のみ挿入する
+						if ($titleLink.length && $titleLink.next('.vk-ltc-edit-link').length === 0) {
 							var editLabel = (vkLtc.editLabel || 'Edit');
 							var $editLink = $('<a>')
 								.addClass('vk-ltc-edit-link')
@@ -100,11 +111,8 @@ document.addEventListener("DOMContentLoaded", function() {
 									'white-space': 'nowrap',
 								})
 								.text('[' + editLabel + ']');
-							$(this).after($editLink);
-							// 最初のテキストリンクにのみ挿入し、同じURLを持つ「続きを読む」等
-							// 他のリンクへの重複挿入を防ぐためにループを抜ける。
-							return false;
-						});
+							$titleLink.after($editLink);
+						}
 					}
 				}
 			} catch (e) {}
