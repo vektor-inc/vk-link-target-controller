@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function(e) {
+document.addEventListener("DOMContentLoaded", function() {
 	var $ = jQuery;
 	const pathToServer = vkLtc.ajaxurl;
 	const sendData = { action: 'ids' };
@@ -70,6 +70,37 @@ document.addEventListener("DOMContentLoaded", function(e) {
 							} else {
 								$(this).removeAttr('rel');
 							}
+						});
+					}
+
+					// リダイレクト設定済み投稿の編集リンクを追加（ログイン済みかつ編集権限がある場合）
+					// el フィールドはPHP側でget_edit_post_link()により生成され、
+					// 権限がないユーザーや非ログインユーザーには空文字が返る。
+					var editUrl = ls.el || '';
+					if (editUrl) {
+						c.each(function() {
+							// img要素を含むリンク（アイキャッチ画像リンク等）はスキップ
+							// テキスト判定ではなくimg判定にする理由：
+							// VK Blocks Pro等では画像リンク内にカテゴリラベルspanが含まれており、
+							// テキスト空チェックではスキップできないため。
+							if ($(this).find('img').length > 0) {
+								return;
+							}
+							// 既に編集リンクが追加済みの場合はスキップ
+							if ($(this).next('.vk-ltc-edit-link').length > 0) {
+								return;
+							}
+							var editLabel = (vkLtc.editLabel || 'Edit');
+							var $editLink = $('<a>')
+								.addClass('vk-ltc-edit-link')
+								.attr('href', editUrl)
+								.css({
+									'font-size': '0.75em',
+									'margin-left': '0.5em',
+									'white-space': 'nowrap',
+								})
+								.text('[' + editLabel + ']');
+							$(this).after($editLink);
 						});
 					}
 				}

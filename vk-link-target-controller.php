@@ -112,7 +112,15 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			wp_enqueue_script( 'vk-ltc-js' );
 
 			// Ajax.
-			wp_localize_script( 'vk-ltc-js', 'vkLtc', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
+			// editLabel: 編集リンクのラベルテキスト（翻訳対応）。
+			wp_localize_script(
+				'vk-ltc-js',
+				'vkLtc',
+				array(
+					'ajaxurl'   => admin_url( 'admin-ajax.php' ),
+					'editLabel' => __( 'Edit', 'vk-link-target-controller' ),
+				)
+			);
 			add_action( 'wp_ajax_ids', array( $this, 'ajax_rewrite_ids' ) );
 			add_action( 'wp_ajax_nopriv_ids', array( $this, 'ajax_rewrite_ids' ) );
 		}
@@ -801,10 +809,14 @@ jQuery(document).ready(function($){
 					// リダイレクト先のURLが空でない場合のみ情報を追加
 					if ( ! empty( $link ) ) {
 						$redirect_url = $this->rewrite_link( $post->ID );
+						// ログイン済みかつ編集権限がある場合のみ編集URLを含める。
+						// get_edit_post_link() はコンテキスト '' で raw URL を返す（JSON用）。
+						// 権限がないユーザーには空文字列が返る。
 						$ids[ $post->ID ] = array(
 							're' => $redirect_url,
 							'pl' => get_permalink( $post->ID ),
 							'tg' => (int) $target,
+							'el' => (string) get_edit_post_link( $post->ID, '' ),
 						);
 					}
 				}
