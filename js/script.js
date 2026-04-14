@@ -101,6 +101,9 @@ document.addEventListener("DOMContentLoaded", function() {
 								})
 								.text('[' + editLabel + ']');
 							$(this).after($editLink);
+							// 最初のテキストリンクにのみ挿入し、同じURLを持つ「続きを読む」等
+							// 他のリンクへの重複挿入を防ぐためにループを抜ける。
+							return false;
 						});
 					}
 				}
