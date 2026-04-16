@@ -30,9 +30,8 @@ phpunit.xml.dist
 webpack.config.js
 README.md
 node_modules/
-scripts/
+_dev/
 /src/
 tests/
 bin/
 dist/
-tools/
