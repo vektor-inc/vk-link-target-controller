@@ -1,0 +1,158 @@
+<?php
+/**
+ * Test uninstall cleanup functionality.
+ * アンインストール時のDB掃除機能のテスト。
+ *
+ * @package vk-link-target-controller
+ */
+
+/**
+ * Uninstall test case.
+ * アンインストールのテストケース。
+ */
+class UninstallTest extends WP_UnitTestCase {
+
+	/**
+	 * Test that uninstall.php removes post meta and options from the database.
+	 * uninstall.php が投稿メタとオプションをデータベースから削除することをテストする。
+	 */
+	function test_uninstall() {
+
+		// Test data setup: create posts and set plugin-specific post meta.
+		// テストデータの準備：投稿を作成し、プラグイン固有の投稿メタを設定する。
+		$post_id_1 = $this->factory->post->create();
+		$post_id_2 = $this->factory->post->create();
+
+		// テストケースの配列
+		// Test cases array.
+		$test_cases = array(
+			array(
+				'test_condition_name' => '投稿メタとオプションが設定されている状態でアンインストールを実行した場合 => 全て削除される',
+				'conditions'         => array(
+					'post_meta' => array(
+						$post_id_1 => array(
+							'vk-ltc-link'   => 'https://example.com/',
+							'vk-ltc-target' => '1',
+						),
+						$post_id_2 => array(
+							'vk-ltc-link'   => 'https://example.org/page',
+							'vk-ltc-target' => '0',
+						),
+					),
+					'options'   => array(
+						'custom-post-types' => array( 'post', 'page' ),
+					),
+				),
+				'expected'           => array(
+					'post_meta_link_1'   => '',
+					'post_meta_target_1' => '',
+					'post_meta_link_2'   => '',
+					'post_meta_target_2' => '',
+					'option'             => false,
+				),
+			),
+			array(
+				'test_condition_name' => '片方の投稿にのみメタが設定されている状態でアンインストールを実行した場合 => 全て削除される',
+				'conditions'         => array(
+					'post_meta' => array(
+						$post_id_1 => array(
+							'vk-ltc-link'   => 'https://example.com/single',
+							'vk-ltc-target' => '1',
+						),
+					),
+					'options'   => array(
+						'custom-post-types' => array( 'post' ),
+					),
+				),
+				'expected'           => array(
+					'post_meta_link_1'   => '',
+					'post_meta_target_1' => '',
+					'post_meta_link_2'   => '',
+					'post_meta_target_2' => '',
+					'option'             => false,
+				),
+			),
+			array(
+				'test_condition_name' => 'メタもオプションも存在しない状態でアンインストールを実行した場合 => エラーなく完了する',
+				'conditions'         => array(
+					'post_meta' => array(),
+					'options'   => array(),
+				),
+				'expected'           => array(
+					'post_meta_link_1'   => '',
+					'post_meta_target_1' => '',
+					'post_meta_link_2'   => '',
+					'post_meta_target_2' => '',
+					'option'             => false,
+				),
+			),
+		);
+
+		foreach ( $test_cases as $case ) {
+
+			// Set up conditions: post meta.
+			// 条件の設定：投稿メタ。
+			if ( ! empty( $case['conditions']['post_meta'] ) ) {
+				foreach ( $case['conditions']['post_meta'] as $pid => $metas ) {
+					foreach ( $metas as $meta_key => $meta_value ) {
+						update_post_meta( $pid, $meta_key, $meta_value );
+					}
+				}
+			}
+
+			// Set up conditions: options.
+			// 条件の設定：オプション。
+			if ( ! empty( $case['conditions']['options'] ) ) {
+				foreach ( $case['conditions']['options'] as $option_name => $option_value ) {
+					update_option( $option_name, $option_value );
+				}
+			}
+
+			// Define WP_UNINSTALL_PLUGIN if not already defined, then include uninstall.php.
+			// WP_UNINSTALL_PLUGIN が未定義の場合は定義し、uninstall.php を読み込む。
+			if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
+				define( 'WP_UNINSTALL_PLUGIN', true );
+			}
+			include dirname( dirname( __DIR__ ) ) . '/uninstall.php';
+
+			// Assert post meta is deleted.
+			// 投稿メタが削除されていることを確認する。
+			$this->assertSame(
+				$case['expected']['post_meta_link_1'],
+				get_post_meta( $post_id_1, 'vk-ltc-link', true ),
+				$case['test_condition_name'] . ' (vk-ltc-link post 1)'
+			);
+			$this->assertSame(
+				$case['expected']['post_meta_target_1'],
+				get_post_meta( $post_id_1, 'vk-ltc-target', true ),
+				$case['test_condition_name'] . ' (vk-ltc-target post 1)'
+			);
+			$this->assertSame(
+				$case['expected']['post_meta_link_2'],
+				get_post_meta( $post_id_2, 'vk-ltc-link', true ),
+				$case['test_condition_name'] . ' (vk-ltc-link post 2)'
+			);
+			$this->assertSame(
+				$case['expected']['post_meta_target_2'],
+				get_post_meta( $post_id_2, 'vk-ltc-target', true ),
+				$case['test_condition_name'] . ' (vk-ltc-target post 2)'
+			);
+
+			// Assert option is deleted.
+			// オプションが削除されていることを確認する。
+			$this->assertSame(
+				$case['expected']['option'],
+				get_option( 'custom-post-types', false ),
+				$case['test_condition_name'] . ' (custom-post-types option)'
+			);
+
+			// Clean up for next iteration: delete any remaining meta and options.
+			// 次のイテレーションのためにクリーンアップ：残っているメタとオプションを削除する。
+			delete_post_meta( $post_id_1, 'vk-ltc-link' );
+			delete_post_meta( $post_id_1, 'vk-ltc-target' );
+			delete_post_meta( $post_id_2, 'vk-ltc-link' );
+			delete_post_meta( $post_id_2, 'vk-ltc-target' );
+			delete_option( 'custom-post-types' );
+		}
+	}
+}
