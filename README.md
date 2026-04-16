@@ -62,7 +62,7 @@ In order to have the link opened in a new window VK Link Target Controller needs
 Your theme probably has it if it follows the WordPress Theme recommendations.
 
 Example:
-```
+```php
 <div class="post-item post-block front-page-list post-<?php the_ID(); ?>" id="post-<?php the_ID(); ?>">
  <a href="<?php the permalink(); ?>">
   <?php the_title(); ?>
