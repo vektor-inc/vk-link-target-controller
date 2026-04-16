@@ -37,8 +37,9 @@
 		"@babel/runtime": "^7.29.2"
 	},
 	"overrides": {
-		"serialize-javascript": "^7.0.5",
 		"webpack-dev-server": "^5.2.1",
-		"minimatch": "^10.0.1"
+		"markdownlint-cli": {
+			"minimatch": "3.1.5"
+		}
 	}
 }
