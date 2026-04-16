@@ -40,7 +40,8 @@ class UninstallTest extends WP_UnitTestCase {
 						),
 					),
 					'options'   => array(
-						'custom-post-types' => array( 'post', 'page' ),
+						'vk_ltc_custom_post_types' => array( 'post', 'page' ),
+						'custom-post-types'        => array( 'post' ),
 					),
 				),
 				'expected'           => array(
@@ -61,7 +62,7 @@ class UninstallTest extends WP_UnitTestCase {
 						),
 					),
 					'options'   => array(
-						'custom-post-types' => array( 'post' ),
+						'vk_ltc_custom_post_types' => array( 'post' ),
 					),
 				),
 				'expected'           => array(
@@ -154,12 +155,17 @@ class UninstallTest extends WP_UnitTestCase {
 				$case['test_condition_name'] . ' (vk-ltc-target post 2 should be deleted)'
 			);
 
-			// Assert option is deleted.
-			// オプションが削除されていることを確認する。
+			// Assert both new and legacy option keys are deleted.
+			// 新旧両方のオプションキーが削除されていることを確認する。
+			$this->assertSame(
+				$case['expected']['option'],
+				get_option( 'vk_ltc_custom_post_types', false ),
+				$case['test_condition_name'] . ' (vk_ltc_custom_post_types option)'
+			);
 			$this->assertSame(
 				$case['expected']['option'],
 				get_option( 'custom-post-types', false ),
-				$case['test_condition_name'] . ' (custom-post-types option)'
+				$case['test_condition_name'] . ' (legacy custom-post-types option)'
 			);
 
 			// Clean up for next iteration: delete any remaining meta and options.
@@ -168,6 +174,7 @@ class UninstallTest extends WP_UnitTestCase {
 			delete_post_meta( $post_id_1, 'vk-ltc-target' );
 			delete_post_meta( $post_id_2, 'vk-ltc-link' );
 			delete_post_meta( $post_id_2, 'vk-ltc-target' );
+			delete_option( 'vk_ltc_custom_post_types' );
 			delete_option( 'custom-post-types' );
 		}
 	}

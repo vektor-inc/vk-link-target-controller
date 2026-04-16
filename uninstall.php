@@ -9,7 +9,7 @@
  * Removes all plugin-specific data from the database:
  * データベースからプラグイン固有のデータを全て削除する:
  * - post meta: vk-ltc-link, vk-ltc-target
- * - option: custom-post-types
+ * - option: vk_ltc_custom_post_types (and legacy key: custom-post-types)
  *
  * @package vk-link-target-controller
  */
@@ -35,5 +35,11 @@ delete_post_meta_by_key( 'vk-ltc-target' );
 /**
  * Delete plugin options from the options table.
  * オプションテーブルからプラグインのオプションを削除する。
+ *
+ * Delete both the new prefixed key and the legacy key to ensure
+ * complete cleanup regardless of whether migration has occurred.
+ * 移行済みかどうかに関わらず完全にクリーンアップするため、
+ * 新しいプレフィックス付きキーとレガシーキーの両方を削除する。
  */
+delete_option( 'vk_ltc_custom_post_types' );
 delete_option( 'custom-post-types' );
