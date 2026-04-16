@@ -57,13 +57,13 @@ Japanese characters in urls are supported.
 
 VK Link Target Controller adds a filter on the `the_permalink()` WordPress function, which means the redirection won't work if your theme uses another function, for example `get_permalink()` to display the links.
 
-In order to have the link opened in a new window VK Link Target Controller needs a theme with the post id as id on the <a> parent element.
+In order to have the link opened in a new window VK Link Target Controller needs a theme with the post id as class on the <a> parent element.
 
 Your theme probably has it if it follows the WordPress Theme recommendations.
 
 Example:
 ```
-<div class="post-item post-block front-page-list" id="post-<?php the_ID(); ?>">
+<div class="post-item post-block front-page-list post-<?php the_ID(); ?>" id="post-<?php the_ID(); ?>">
  <a href="<?php the permalink(); ?>">
   <?php the_title(); ?>
  </a>
