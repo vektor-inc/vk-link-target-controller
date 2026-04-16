@@ -82,7 +82,7 @@ VK Link Target Controller supports Japanese in URLs so probably you can add othe
 = My link won't open on a new window. =
 
 VK Link Target Controller adds a filter on the `the_permalink()` WordPress function, which means the redirection won't work if your theme uses another function, for example `get_permalink()` to display the links.
-In order to have the link opened in a new window VK Link Target Controller needs a theme with the post id as id on the `<a>` parent element.
+In order to have the link opened in a new window VK Link Target Controller needs a theme with the post id as class on the `<a>` parent element.
 
 Your theme probably has it if it follows the WordPress Theme recommendations.
 
@@ -120,6 +120,7 @@ But we have a .pot file available so feel free to translate it in your language 
 == Changelog ==
 
 * [ Add Function ] Show an edit link next to post titles for logged-in users who have edit permission, when a redirect URL is set on the post.
+* [ Other ] Fix incorrect sample code in plugin description (class attribute is required, not id).
 
 = 1.9.0 =
 * [ Specification change ] Migrate meta box to block editor native sidebar panel for WordPress 7.0 RTC (Real-Time Collaboration) compatibility.
