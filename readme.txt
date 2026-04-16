@@ -119,6 +119,8 @@ But we have a .pot file available so feel free to translate it in your language 
 
 == Changelog ==
 
+* [ Add Function ] Show an edit link next to post titles for logged-in users who have edit permission, when a redirect URL is set on the post.
+
 = 1.9.0 =
 * [ Specification change ] Migrate meta box to block editor native sidebar panel for WordPress 7.0 RTC (Real-Time Collaboration) compatibility.
 

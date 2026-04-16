@@ -122,6 +122,10 @@ msgstr "ファイルを選択"
 msgid "Remove"
 msgstr "削除"
 
+#: vk-link-target-controller.php
+msgid "Edit"
+msgstr "編集"
+
 #~ msgid "Free Wordpress theme for businesses"
 #~ msgstr "ビジネス用の無料ワードプレステーマ"
 
