@@ -27,7 +27,7 @@
 	"homepage": "https://wordpress.org/plugins/vk-link-target-controller/",
 	"devDependencies": {
 		"@wordpress/env": "10.38.0",
-		"@wordpress/scripts": "^31.8.0",
+		"@wordpress/scripts": "^32.0.0",
 		"npm-check-updates": "^19.3.1"
 	},
 	"volta": {
@@ -35,5 +35,10 @@
 	},
 	"dependencies": {
 		"@babel/runtime": "^7.29.2"
+	},
+	"overrides": {
+		"serialize-javascript": "^7.0.5",
+		"webpack-dev-server": "^5.2.1",
+		"minimatch": "^10.0.1"
 	}
 }
