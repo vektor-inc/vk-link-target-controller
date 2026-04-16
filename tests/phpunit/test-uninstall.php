@@ -113,29 +113,45 @@ class UninstallTest extends WP_UnitTestCase {
 			if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 				define( 'WP_UNINSTALL_PLUGIN', true );
 			}
-			include dirname( dirname( __DIR__ ) ) . '/uninstall.php';
+			require dirname( dirname( __DIR__ ) ) . '/uninstall.php';
 
-			// Assert post meta is deleted.
-			// 投稿メタが削除されていることを確認する。
+			// Assert post meta is deleted using both get_post_meta and metadata_exists.
+			// get_post_meta と metadata_exists の両方を使って投稿メタが削除されていることを確認する。
 			$this->assertSame(
 				$case['expected']['post_meta_link_1'],
 				get_post_meta( $post_id_1, 'vk-ltc-link', true ),
 				$case['test_condition_name'] . ' (vk-ltc-link post 1)'
+			);
+			$this->assertFalse(
+				metadata_exists( 'post', $post_id_1, 'vk-ltc-link' ),
+				$case['test_condition_name'] . ' (vk-ltc-link post 1 should be deleted)'
 			);
 			$this->assertSame(
 				$case['expected']['post_meta_target_1'],
 				get_post_meta( $post_id_1, 'vk-ltc-target', true ),
 				$case['test_condition_name'] . ' (vk-ltc-target post 1)'
 			);
+			$this->assertFalse(
+				metadata_exists( 'post', $post_id_1, 'vk-ltc-target' ),
+				$case['test_condition_name'] . ' (vk-ltc-target post 1 should be deleted)'
+			);
 			$this->assertSame(
 				$case['expected']['post_meta_link_2'],
 				get_post_meta( $post_id_2, 'vk-ltc-link', true ),
 				$case['test_condition_name'] . ' (vk-ltc-link post 2)'
 			);
+			$this->assertFalse(
+				metadata_exists( 'post', $post_id_2, 'vk-ltc-link' ),
+				$case['test_condition_name'] . ' (vk-ltc-link post 2 should be deleted)'
+			);
 			$this->assertSame(
 				$case['expected']['post_meta_target_2'],
 				get_post_meta( $post_id_2, 'vk-ltc-target', true ),
 				$case['test_condition_name'] . ' (vk-ltc-target post 2)'
+			);
+			$this->assertFalse(
+				metadata_exists( 'post', $post_id_2, 'vk-ltc-target' ),
+				$case['test_condition_name'] . ' (vk-ltc-target post 2 should be deleted)'
 			);
 
 			// Assert option is deleted.
