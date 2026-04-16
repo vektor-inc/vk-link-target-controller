@@ -11,7 +11,7 @@
 		"build:block": "wp-scripts build --webpack-src-dir=src --output-path=build",
 		"start": "wp-scripts start --webpack-src-dir=src --output-path=build",
 		"jsmin": "terser js/script.js -o js/script.min.js -c -m",
-		"test": "node --check js/script.js js/admin-link-dialog.js",
+		"test": "node --check js/script.js && node --check js/admin-link-dialog.js",
 		"dist": "composer install --optimize-autoloader --prefer-dist --no-dev && npm run build && bash bin/dist.sh",
 		"phpunit": "composer install && wp-env run tests-cli --env-cwd='wp-content/plugins/vk-link-target-controller' vendor/bin/phpunit -c .phpunit.xml --verbose"
 	},
