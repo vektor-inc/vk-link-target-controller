@@ -62,7 +62,16 @@ class OptionTest extends WP_UnitTestCase {
 			),
 		);
 		foreach ( $test_array as $key => $value ) {
-			update_option( 'vk_ltc_custom_post_types', $value['options'] );
+			// Ensure the option does not exist before each iteration.
+			// 各イテレーション前にオプションが存在しない状態にする。
+			delete_option( 'vk_ltc_custom_post_types' );
+
+			// Only save the option when the test fixture provides a value (not false).
+			// テストフィクスチャが値を提供する場合（false でない場合）のみオプションを保存する。
+			if ( false !== $value['options'] ) {
+				update_option( 'vk_ltc_custom_post_types', $value['options'] );
+			}
+
 			$instanse = new VK_Link_Target_Controller();
 			$result   = $instanse->get_option();
 			$correct  = $value['correct'];
@@ -130,6 +139,33 @@ class OptionTest extends WP_UnitTestCase {
 					'new_key_value' => array( 'event' ),
 				),
 				'expected'            => array( 'event' ),
+			),
+			array(
+				'test_condition_name' => 'Only legacy key exists with empty array => should return empty array, not defaults',
+				// 旧キーに空配列が保存、新キーなし => デフォルトではなく空配列を返す。
+				'conditions'          => array(
+					'old_key_value' => array(),
+					'new_key_value' => null,
+				),
+				'expected'            => array(),
+			),
+			array(
+				'test_condition_name' => 'Only new key exists with empty array => should return empty array, not defaults',
+				// 新キーに空配列が保存、旧キーなし => デフォルトではなく空配列を返す。
+				'conditions'          => array(
+					'old_key_value' => null,
+					'new_key_value' => array(),
+				),
+				'expected'            => array(),
+			),
+			array(
+				'test_condition_name' => 'Both keys exist with empty arrays => should return new key empty array',
+				// 新旧両方に空配列が保存 => 新キーの空配列を返す。
+				'conditions'          => array(
+					'old_key_value' => array(),
+					'new_key_value' => array(),
+				),
+				'expected'            => array(),
 			),
 		);
 
@@ -215,6 +251,19 @@ class OptionTest extends WP_UnitTestCase {
 				),
 				'expected'           => array(
 					'new_key_value'    => array( 'event' ),
+					'old_key_exists'   => false,
+				),
+			),
+			array(
+				'test_condition_name' => '旧キーに空配列が保存されている場合 => 空配列のまま新キーへ移行される',
+				// Falsy value (empty array) should be migrated correctly, not treated as missing.
+				// falsy 値（空配列）は欠損として扱わず正しく移行される。
+				'conditions'         => array(
+					'old_key_value' => array(),
+					'new_key_value' => null,
+				),
+				'expected'           => array(
+					'new_key_value'    => array(),
 					'old_key_exists'   => false,
 				),
 			),
