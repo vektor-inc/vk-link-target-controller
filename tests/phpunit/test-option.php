@@ -65,6 +65,7 @@ class OptionTest extends WP_UnitTestCase {
 			// Ensure the option does not exist before each iteration.
 			// 各イテレーション前にオプションが存在しない状態にする。
 			delete_option( 'vk_ltc_custom_post_types' );
+			delete_option( 'custom-post-types' );
 
 			// Only save the option when the test fixture provides a value (not false).
 			// テストフィクスチャが値を提供する場合（false でない場合）のみオプションを保存する。
@@ -80,6 +81,7 @@ class OptionTest extends WP_UnitTestCase {
 			// Clean up option for next iteration.
 			// 次のイテレーションのためにオプションをクリーンアップする。
 			delete_option( 'vk_ltc_custom_post_types' );
+			delete_option( 'custom-post-types' );
 		}
 	}
 
