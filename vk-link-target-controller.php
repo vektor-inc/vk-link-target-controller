@@ -664,7 +664,28 @@ jQuery(document).ready(function($){
 			$post_types         = $this->get_public_post_types(); // array of post types to create a checkbox list
 			$post_types['page'] = __( 'Pages' );
 			$post_types_slugs   = array_keys( $post_types );
-			return get_option( 'vk_ltc_custom_post_types', $post_types_slugs );
+
+			// Use a sentinel value to distinguish "option not found" from a falsy stored value.
+			// センチネル値を使って「オプションが存在しない」と「falsy な保存値」を区別する。
+			$sentinel = 'vk_ltc_option_not_found';
+
+			// First, try the new option key.
+			// まず新しいオプションキーを試す。
+			$options = get_option( 'vk_ltc_custom_post_types', $sentinel );
+			if ( $sentinel !== $options ) {
+				return $options;
+			}
+
+			// Fall back to the legacy option key for environments where admin_init migration has not yet run.
+			// admin_init の移行処理がまだ実行されていない環境のために、旧オプションキーにフォールバックする。
+			$legacy_options = get_option( 'custom-post-types', $sentinel );
+			if ( $sentinel !== $legacy_options ) {
+				return $legacy_options;
+			}
+
+			// If neither key exists, return all public post type slugs as the default.
+			// どちらのキーも存在しない場合は、全公開投稿タイプのスラッグをデフォルトとして返す。
+			return $post_types_slugs;
 		}
 
 		/**
