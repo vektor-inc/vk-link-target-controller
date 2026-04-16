@@ -7,11 +7,11 @@
 		"setup:agents": "node scripts/install-agent-skills.mjs",
 		"postinstall": "npm run setup:agents",
 		"wp-env": "wp-env",
-		"build": "wp-scripts build --webpack-src-dir=src --output-path=build && gulp replace_text_domain && gulp jsmin",
+		"build": "wp-scripts build --webpack-src-dir=src --output-path=build && npm run jsmin",
 		"build:block": "wp-scripts build --webpack-src-dir=src --output-path=build",
 		"start": "wp-scripts start --webpack-src-dir=src --output-path=build",
-		"jsmin": "gulp jsmin",
-		"test": "gulp test",
+		"jsmin": "terser js/script.js -o js/script.min.js -c -m",
+		"test": "node --check js/script.js js/admin-link-dialog.js",
 		"dist": "composer install --optimize-autoloader --prefer-dist --no-dev && npm run build && bash bin/dist.sh",
 		"phpunit": "composer install && wp-env run tests-cli --env-cwd='wp-content/plugins/vk-link-target-controller' vendor/bin/phpunit -c .phpunit.xml --verbose"
 	},
@@ -28,10 +28,6 @@
 	"devDependencies": {
 		"@wordpress/env": "10.38.0",
 		"@wordpress/scripts": "^31.8.0",
-		"gulp": "^4.0.2",
-		"gulp-jsmin": "^0.1.5",
-		"gulp-jsvalidate": "^5.0.0",
-		"gulp-replace": "^1.1.4",
 		"npm-check-updates": "^19.3.1"
 	},
 	"volta": {
