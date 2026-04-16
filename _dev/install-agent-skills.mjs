@@ -92,7 +92,7 @@ function main() {
   const args = parseArgs(process.argv.slice(2));
   const scriptDir = path.dirname(fileURLToPath(import.meta.url));
   const repoRoot = path.resolve(scriptDir, "..");
-  const sourceRoot = path.join(repoRoot, "tools", "agent-skills", "skills");
+  const sourceRoot = path.join(repoRoot, "_dev", "agent-skills", "skills");
   const skills = listSkills(sourceRoot);
 
   if (skills.length === 0) {
