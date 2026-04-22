@@ -14,6 +14,11 @@
  */
 function vk_ltc_register_post_meta() {
 	$vk_ltc = new VK_Link_Target_Controller();
+	// カスタム投稿タイプが他プラグイン（CPT UI / ExUnit など）で登録済みであることを前提に、
+	// 有効化された投稿タイプ一覧を取得する。
+	// register_post_meta() は post_type 単位で呼び出す必要があるため、
+	// その post_type が登録されていないとブロックエディタ（REST API）側で
+	// 正しくメタが扱われず、リダイレクト用URLが保存・表示されない不具合となる。
 	$post_types = $vk_ltc->get_option();
 
 	if ( empty( $post_types ) || ! is_array( $post_types ) ) {
@@ -21,6 +26,15 @@ function vk_ltc_register_post_meta() {
 	}
 
 	foreach ( $post_types as $post_type ) {
+		// 対象の post_type が未登録の場合はスキップする。
+		// CPT UI や ExUnit のカスタム投稿タイプマネージャーで登録される投稿タイプは
+		// `init` フックで登録されるため、本関数の実行タイミングによっては
+		// 未登録の状態でここに到達する可能性がある。その場合 register_post_meta() を
+		// 呼んでも REST API 側で post_type に紐づくメタとして正しく機能しない。
+		if ( ! post_type_exists( $post_type ) ) {
+			continue;
+		}
+
 		register_post_meta(
 			$post_type,
 			'vk-ltc-link',
@@ -52,4 +66,10 @@ function vk_ltc_register_post_meta() {
 		);
 	}
 }
-add_action( 'init', 'vk_ltc_register_post_meta' );
+// CPT UI や ExUnit などで登録されるカスタム投稿タイプは `init` フックで
+// 登録されるため、それらの登録処理より後に本関数が実行されるよう
+// 優先度を遅らせる（デフォルト 10 → 99）。
+// これにより、カスタム投稿タイプに対しても register_post_meta() が
+// 確実に呼び出され、ブロックエディタ（REST API）経由のリダイレクト用URL
+// 保存・表示が正常に動作する。
+add_action( 'init', 'vk_ltc_register_post_meta', 99 );

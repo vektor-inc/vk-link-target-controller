@@ -119,6 +119,8 @@ But we have a .pot file available so feel free to translate it in your language 
 
 == Changelog ==
 
+* [ Bug Fix ] Fixed an issue where the redirect URL could not be saved, displayed or updated on custom post types, because post meta was registered before the custom post types had been registered by other plugins (e.g. CPT UI, ExUnit).
+
 = 1.10.0 =
 * [ Spec Change ] Rename option key from 'custom-post-types' to 'vk_ltc_custom_post_types' to avoid conflicts with other plugins. Existing data is automatically migrated. Added fallback to legacy key for frontend requests before admin_init migration runs.
 * [ Add Function ] Show an edit link next to post titles for logged-in users who have edit permission, when a redirect URL is set on the post.
