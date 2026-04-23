@@ -22,9 +22,10 @@
  * @return bool True if the current user can edit the post.
  */
 function vk_ltc_meta_auth_callback( $allowed, $meta_key, $object_id ) {
-	// 投稿IDが無い場合（一覧や作成前など）は、汎用的な edit_posts にフォールバックする。
+	// 投稿IDが無い、または数値として扱えない場合（一覧・作成前・WP 内部経路などで
+	// WP_Error 等の非整数が渡るケース）は、汎用的な edit_posts にフォールバックする。
 	// これは従来と同等の挙動で、post_id ベース判定ができない呼び出し経路への後方互換。
-	if ( empty( $object_id ) ) {
+	if ( empty( $object_id ) || ! is_numeric( $object_id ) ) {
 		return current_user_can( 'edit_posts' );
 	}
 	return current_user_can( 'edit_post', (int) $object_id );
