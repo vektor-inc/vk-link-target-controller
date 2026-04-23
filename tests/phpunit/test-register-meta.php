@@ -133,6 +133,138 @@ class registerMetaTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test that the init hook for vk_ltc_register_post_meta uses a late priority.
+	 * カスタム投稿タイプ（CPT UI / ExUnit 等）の `init` 登録より後に
+	 * register_post_meta() が実行されるよう、十分遅い優先度で init にフックされていることを確認する。
+	 */
+	public function test_vk_ltc_register_post_meta_init_priority() {
+		// init フックで vk_ltc_register_post_meta が登録されている優先度を取得する。
+		$priority = has_action( 'init', 'vk_ltc_register_post_meta' );
+
+		$test_cases = array(
+			array(
+				'test_condition_name' => 'init への登録が存在する場合 => false 以外',
+				'actual'             => ( false !== $priority ),
+				'expected'           => true,
+			),
+			array(
+				'test_condition_name' => 'init の優先度が 99 に固定されている場合 => true',
+				'actual'             => ( 99 === $priority ),
+				'expected'           => true,
+			),
+		);
+
+		foreach ( $test_cases as $case ) {
+			$this->assertEquals( $case['expected'], $case['actual'], $case['test_condition_name'] );
+		}
+	}
+
+	/**
+	 * Test that register_post_meta is skipped for unregistered post types.
+	 * 未登録の投稿タイプに対しては register_post_meta が呼ばれない（スキップされる）ことを確認する。
+	 */
+	public function test_vk_ltc_register_post_meta_skips_unregistered_post_type() {
+		// 存在しない投稿タイプを有効化した状態をシミュレートする。
+		$unregistered_slug = 'vk_ltc_nonexistent_cpt';
+		update_option( 'vk_ltc_custom_post_types', array( 'post', $unregistered_slug ) );
+
+		// 途中のアサーション失敗でもクリーンアップが実行されるよう try/finally で保証する。
+		try {
+			// 事前条件: 対象の post_type が未登録であることを確認する。
+			$this->assertFalse( post_type_exists( $unregistered_slug ), '未登録投稿タイプであることの前提確認' );
+
+			// 登録関数を実行する（例外や警告が出ないこと）。
+			vk_ltc_register_post_meta();
+
+			// 未登録の投稿タイプには meta が登録されていないはずである。
+			$registered = registered_meta_key_exists( 'post', 'vk-ltc-link', $unregistered_slug );
+			$this->assertFalse( $registered, '未登録の投稿タイプに対しては vk-ltc-link が登録されていない' );
+
+			// 登録済みの投稿タイプに対しては従来通り登録されていること。
+			$this->assertTrue(
+				registered_meta_key_exists( 'post', 'vk-ltc-link', 'post' ),
+				'登録済みの post タイプには vk-ltc-link が登録されている'
+			);
+		} finally {
+			// クリーンアップ。
+			delete_option( 'vk_ltc_custom_post_types' );
+		}
+	}
+
+	/**
+	 * Test that the meta auth_callback uses a post_id-aware capability check.
+	 * meta の auth_callback が投稿ID単位の capability チェックを行うことを確認する。
+	 *
+	 * 投稿が存在し編集権限があるユーザでは true、権限のないユーザでは false を返す。
+	 */
+	public function test_vk_ltc_meta_auth_callback_with_post_id() {
+		// 編集権限を持つエディタユーザを作成
+		$editor_user_id = $this->factory->user->create( array( 'role' => 'editor' ) );
+		// 編集権限を持たない subscriber ユーザを作成
+		$subscriber_user_id = $this->factory->user->create( array( 'role' => 'subscriber' ) );
+
+		// 投稿を作成
+		$post_id = $this->factory->post->create(
+			array(
+				'post_title'  => 'Auth Callback Test',
+				'post_status' => 'publish',
+			)
+		);
+
+		$test_cases = array(
+			array(
+				'test_condition_name' => 'editor ユーザでは true => true',
+				'user_id'             => $editor_user_id,
+				'expected'            => true,
+			),
+			array(
+				'test_condition_name' => 'subscriber ユーザでは false => false',
+				'user_id'             => $subscriber_user_id,
+				'expected'            => false,
+			),
+		);
+
+		foreach ( $test_cases as $case ) {
+			wp_set_current_user( $case['user_id'] );
+			$actual = vk_ltc_meta_auth_callback( false, 'vk-ltc-link', $post_id );
+			$this->assertEquals( $case['expected'], $actual, $case['test_condition_name'] );
+		}
+
+		// クリーンアップ
+		wp_delete_post( $post_id, true );
+	}
+
+	/**
+	 * Test that the meta auth_callback falls back to edit_posts when object_id is empty.
+	 * 投稿IDが無い場合は汎用の edit_posts にフォールバックすることを確認する。
+	 */
+	public function test_vk_ltc_meta_auth_callback_fallback_when_no_object_id() {
+		$editor_user_id     = $this->factory->user->create( array( 'role' => 'editor' ) );
+		$subscriber_user_id = $this->factory->user->create( array( 'role' => 'subscriber' ) );
+
+		$test_cases = array(
+			array(
+				'test_condition_name' => 'object_id が 0 でも editor は true => true',
+				'user_id'             => $editor_user_id,
+				'object_id'           => 0,
+				'expected'            => true,
+			),
+			array(
+				'test_condition_name' => 'object_id が 0 で subscriber は false => false',
+				'user_id'             => $subscriber_user_id,
+				'object_id'           => 0,
+				'expected'            => false,
+			),
+		);
+
+		foreach ( $test_cases as $case ) {
+			wp_set_current_user( $case['user_id'] );
+			$actual = vk_ltc_meta_auth_callback( false, 'vk-ltc-link', $case['object_id'] );
+			$this->assertEquals( $case['expected'], $actual, $case['test_condition_name'] );
+		}
+	}
+
+	/**
 	 * Test that vk-ltc-link sanitize_callback works correctly.
 	 * vk-ltc-link の sanitize_callback が正しく動作することを確認する。
 	 */
