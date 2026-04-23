@@ -192,6 +192,153 @@ class registerMetaTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test that the meta auth_callback uses a post_id-aware capability check.
+	 * meta の auth_callback が投稿ID単位の capability チェックを行うことを確認する。
+	 *
+	 * 投稿が存在し編集権限があるユーザでは true、権限のないユーザでは false を返す。
+	 */
+	public function test_vk_ltc_meta_auth_callback_with_post_id() {
+		// 編集権限を持つエディタユーザを作成
+		$editor_user_id = $this->factory->user->create( array( 'role' => 'editor' ) );
+		// 編集権限を持たない subscriber ユーザを作成
+		$subscriber_user_id = $this->factory->user->create( array( 'role' => 'subscriber' ) );
+
+		// 投稿を作成
+		$post_id = $this->factory->post->create(
+			array(
+				'post_title'  => 'Auth Callback Test',
+				'post_status' => 'publish',
+			)
+		);
+
+		$test_cases = array(
+			array(
+				'test_condition_name' => 'editor ユーザでは true => true',
+				'user_id'             => $editor_user_id,
+				'expected'            => true,
+			),
+			array(
+				'test_condition_name' => 'subscriber ユーザでは false => false',
+				'user_id'             => $subscriber_user_id,
+				'expected'            => false,
+			),
+		);
+
+		foreach ( $test_cases as $case ) {
+			wp_set_current_user( $case['user_id'] );
+			$actual = vk_ltc_meta_auth_callback( false, 'vk-ltc-link', $post_id );
+			$this->assertEquals( $case['expected'], $actual, $case['test_condition_name'] );
+		}
+
+		// クリーンアップ
+		wp_delete_post( $post_id, true );
+	}
+
+	/**
+	 * Test that the meta auth_callback resolves custom capability_type via map_meta_cap.
+	 * カスタム capability_type を持つ CPT に対して、`edit_post` 経由で
+	 * 正しくマッピング先の capability（例: `edit_custom`）に解決されることを確認する。
+	 */
+	public function test_vk_ltc_meta_auth_callback_with_custom_capability_type() {
+		// カスタム capability_type を持つ CPT を一時的に登録する。
+		// `site` CPT と同じ構造（capability_type + map_meta_cap + capabilities 配列）を再現。
+		$custom_cpt = 'vk_ltc_test_custom_cap_cpt';
+		register_post_type(
+			$custom_cpt,
+			array(
+				'public'          => true,
+				'show_in_rest'    => true,
+				'capability_type' => 'vk_ltc_test_cap',
+				'map_meta_cap'    => true,
+				'capabilities'    => array(
+					'edit_post'            => 'edit_vk_ltc_test_cap',
+					'edit_posts'           => 'edit_vk_ltc_test_caps',
+					'edit_others_posts'    => 'edit_others_vk_ltc_test_caps',
+					'publish_posts'        => 'publish_vk_ltc_test_caps',
+					'read_post'            => 'read_vk_ltc_test_cap',
+					'delete_post'          => 'delete_vk_ltc_test_cap',
+					'delete_posts'         => 'delete_vk_ltc_test_caps',
+				),
+			)
+		);
+
+		// エディタユーザを作成し、カスタム CPT 編集権限を付与する。
+		$user_id = $this->factory->user->create( array( 'role' => 'editor' ) );
+		$user    = new WP_User( $user_id );
+		$user->add_cap( 'edit_vk_ltc_test_caps' );
+		$user->add_cap( 'edit_vk_ltc_test_cap' );
+		$user->add_cap( 'edit_published_vk_ltc_test_caps' );
+
+		// 権限のないユーザを作成
+		$subscriber_id = $this->factory->user->create( array( 'role' => 'subscriber' ) );
+
+		// カスタム CPT の投稿を作成
+		$post_id = $this->factory->post->create(
+			array(
+				'post_title'  => 'Custom Cap CPT Post',
+				'post_type'   => $custom_cpt,
+				'post_status' => 'publish',
+				'post_author' => $user_id,
+			)
+		);
+
+		try {
+			$test_cases = array(
+				array(
+					'test_condition_name' => 'カスタム cap を持つユーザでは true => true',
+					'user_id'             => $user_id,
+					'expected'            => true,
+				),
+				array(
+					'test_condition_name' => 'カスタム cap を持たない subscriber では false => false',
+					'user_id'             => $subscriber_id,
+					'expected'            => false,
+				),
+			);
+
+			foreach ( $test_cases as $case ) {
+				wp_set_current_user( $case['user_id'] );
+				$actual = vk_ltc_meta_auth_callback( false, 'vk-ltc-link', $post_id );
+				$this->assertEquals( $case['expected'], $actual, $case['test_condition_name'] );
+			}
+		} finally {
+			// クリーンアップ（例外時も post_type の登録解除を保証）
+			wp_delete_post( $post_id, true );
+			unregister_post_type( $custom_cpt );
+		}
+	}
+
+	/**
+	 * Test that the meta auth_callback falls back to edit_posts when object_id is empty.
+	 * 投稿IDが無い場合は汎用の edit_posts にフォールバックすることを確認する。
+	 */
+	public function test_vk_ltc_meta_auth_callback_fallback_when_no_object_id() {
+		$editor_user_id     = $this->factory->user->create( array( 'role' => 'editor' ) );
+		$subscriber_user_id = $this->factory->user->create( array( 'role' => 'subscriber' ) );
+
+		$test_cases = array(
+			array(
+				'test_condition_name' => 'object_id が 0 でも editor は true => true',
+				'user_id'             => $editor_user_id,
+				'object_id'           => 0,
+				'expected'            => true,
+			),
+			array(
+				'test_condition_name' => 'object_id が 0 で subscriber は false => false',
+				'user_id'             => $subscriber_user_id,
+				'object_id'           => 0,
+				'expected'            => false,
+			),
+		);
+
+		foreach ( $test_cases as $case ) {
+			wp_set_current_user( $case['user_id'] );
+			$actual = vk_ltc_meta_auth_callback( false, 'vk-ltc-link', $case['object_id'] );
+			$this->assertEquals( $case['expected'], $actual, $case['test_condition_name'] );
+		}
+	}
+
+	/**
 	 * Test that vk-ltc-link sanitize_callback works correctly.
 	 * vk-ltc-link の sanitize_callback が正しく動作することを確認する。
 	 */

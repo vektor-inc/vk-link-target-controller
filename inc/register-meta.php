@@ -7,6 +7,30 @@
  */
 
 /**
+ * Authorization callback for vk-ltc-* post meta.
+ * vk-ltc-* メタキーの編集権限チェック。
+ *
+ * register_meta の auth_callback シグネチャに従い、対象投稿に対する
+ * `edit_post` キャパビリティで判定する。`edit_post`（単数形）は WordPress の
+ * map_meta_cap により各 CPT の capabilities マッピング（例: `site` CPT では
+ * `edit_site`）に解決されるため、capability_type をカスタマイズした CPT でも
+ * 正しく権限判定される。
+ *
+ * @param bool   $allowed   Whether the user is allowed to edit the meta (default from core).
+ * @param string $meta_key  Meta key being checked.
+ * @param int    $object_id Post ID.
+ * @return bool True if the current user can edit the post.
+ */
+function vk_ltc_meta_auth_callback( $allowed, $meta_key, $object_id ) {
+	// 投稿IDが無い場合（一覧や作成前など）は、汎用的な edit_posts にフォールバックする。
+	// これは従来と同等の挙動で、post_id ベース判定ができない呼び出し経路への後方互換。
+	if ( empty( $object_id ) ) {
+		return current_user_can( 'edit_posts' );
+	}
+	return current_user_can( 'edit_post', (int) $object_id );
+}
+
+/**
  * Register vk-ltc-link and vk-ltc-target meta keys for the REST API.
  * vk-ltc-link と vk-ltc-target メタキーをREST APIに登録する。
  *
@@ -44,9 +68,11 @@ function vk_ltc_register_post_meta() {
 				'single'            => true,
 				'sanitize_callback' => 'esc_url_raw',
 				'show_in_rest'      => true,
-				'auth_callback'     => function () {
-					return current_user_can( 'edit_posts' );
-				},
+				// 投稿ID単位で capability を判定する。
+				// `edit_post`（単数形）は `map_meta_cap` により各 CPT の実 cap
+				// （例: `site` CPT の `edit_site`）に解決されるため、
+				// capability_type をカスタマイズした CPT でも正しく権限判定される。
+				'auth_callback'     => 'vk_ltc_meta_auth_callback',
 			)
 		);
 
@@ -59,9 +85,7 @@ function vk_ltc_register_post_meta() {
 				'single'            => true,
 				'sanitize_callback' => 'sanitize_text_field',
 				'show_in_rest'      => true,
-				'auth_callback'     => function () {
-					return current_user_can( 'edit_posts' );
-				},
+				'auth_callback'     => 'vk_ltc_meta_auth_callback',
 			)
 		);
 	}
