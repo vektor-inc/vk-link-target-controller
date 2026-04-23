@@ -60,6 +60,14 @@ function vk_ltc_register_post_meta() {
 			continue;
 		}
 
+		// REST API のレスポンスに `meta` フィールドが含まれるためには、対象 post_type が
+		// `custom-fields` をサポートしている必要がある（WP_REST_Posts_Controller が
+		// `post_type_supports( $post_type, 'custom-fields' )` をチェックする）。
+		// 他プラグインやテーマ側の register_post_type() に `custom-fields` が
+		// 含まれていない CPT でも、本プラグインが対象とするなら REST 経由で
+		// vk-ltc-link / vk-ltc-target を扱えるよう、ここで明示的に有効化する。
+		add_post_type_support( $post_type, 'custom-fields' );
+
 		register_post_meta(
 			$post_type,
 			'vk-ltc-link',
