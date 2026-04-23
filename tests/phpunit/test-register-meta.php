@@ -168,24 +168,27 @@ class registerMetaTest extends WP_UnitTestCase {
 		$unregistered_slug = 'vk_ltc_nonexistent_cpt';
 		update_option( 'vk_ltc_custom_post_types', array( 'post', $unregistered_slug ) );
 
-		// 事前条件: 対象の post_type が未登録であることを確認する。
-		$this->assertFalse( post_type_exists( $unregistered_slug ), '未登録投稿タイプであることの前提確認' );
+		// 途中のアサーション失敗でもクリーンアップが実行されるよう try/finally で保証する。
+		try {
+			// 事前条件: 対象の post_type が未登録であることを確認する。
+			$this->assertFalse( post_type_exists( $unregistered_slug ), '未登録投稿タイプであることの前提確認' );
 
-		// 登録関数を実行する（例外や警告が出ないこと）。
-		vk_ltc_register_post_meta();
+			// 登録関数を実行する（例外や警告が出ないこと）。
+			vk_ltc_register_post_meta();
 
-		// 未登録の投稿タイプには meta が登録されていないはずである。
-		$registered = registered_meta_key_exists( 'post', 'vk-ltc-link', $unregistered_slug );
-		$this->assertFalse( $registered, '未登録の投稿タイプに対しては vk-ltc-link が登録されていない' );
+			// 未登録の投稿タイプには meta が登録されていないはずである。
+			$registered = registered_meta_key_exists( 'post', 'vk-ltc-link', $unregistered_slug );
+			$this->assertFalse( $registered, '未登録の投稿タイプに対しては vk-ltc-link が登録されていない' );
 
-		// 登録済みの投稿タイプに対しては従来通り登録されていること。
-		$this->assertTrue(
-			registered_meta_key_exists( 'post', 'vk-ltc-link', 'post' ),
-			'登録済みの post タイプには vk-ltc-link が登録されている'
-		);
-
-		// クリーンアップ。
-		delete_option( 'vk_ltc_custom_post_types' );
+			// 登録済みの投稿タイプに対しては従来通り登録されていること。
+			$this->assertTrue(
+				registered_meta_key_exists( 'post', 'vk-ltc-link', 'post' ),
+				'登録済みの post タイプには vk-ltc-link が登録されている'
+			);
+		} finally {
+			// クリーンアップ。
+			delete_option( 'vk_ltc_custom_post_types' );
+		}
 	}
 
 	/**
