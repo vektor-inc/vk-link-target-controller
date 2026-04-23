@@ -263,8 +263,6 @@ class registerMetaTest extends WP_UnitTestCase {
 		);
 
 		// エディタユーザを作成し、カスタム CPT 編集権限を付与する。
-		// 投稿を publish 状態で作成するため、publish 系 cap も付与する（WP 6.7 等の環境で
-		// factory->post->create() の内部 wp_insert_post() が WP_Error を返さないようにするため）。
 		$user_id = $this->factory->user->create( array( 'role' => 'editor' ) );
 		$user    = new WP_User( $user_id );
 		$user->add_cap( 'edit_vk_ltc_test_caps' );
@@ -277,16 +275,19 @@ class registerMetaTest extends WP_UnitTestCase {
 
 		// factory->post->create() は内部的に wp_insert_post() を呼ぶ。
 		// map_meta_cap + カスタム capability_type の post_type では current_user が
-		// 権限を持っていないと WP_Error になる環境（WP 6.7 等）があるため、
-		// 作成中は一時的に cap 付与済みユーザを current_user に設定する。
+		// 権限を持っていないと WP_Error になる環境があるため、作成中は一時的に
+		// cap 付与済みユーザを current_user に設定する。
 		wp_set_current_user( $user_id );
 
-		// カスタム CPT の投稿を作成
+		// カスタム CPT の投稿を作成する。
+		// auth_callback のテスト対象は `edit_post` の map_meta_cap 解決であり、
+		// post_status は publish/draft どちらでも resolve 経路は同じ。draft にすることで
+		// 環境（WP 6.9 / PHP 8.4 等）に依存した publish 時の追加 cap 要件を回避する。
 		$post_id = $this->factory->post->create(
 			array(
 				'post_title'  => 'Custom Cap CPT Post',
 				'post_type'   => $custom_cpt,
-				'post_status' => 'publish',
+				'post_status' => 'draft',
 				'post_author' => $user_id,
 			)
 		);
