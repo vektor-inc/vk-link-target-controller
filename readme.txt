@@ -119,8 +119,7 @@ But we have a .pot file available so feel free to translate it in your language 
 
 == Changelog ==
 
-* [ Bug Fix ] Fixed an issue where the redirect URL could not be saved, displayed or updated on custom post types, because post meta was registered before the custom post types had been registered by other plugins (e.g. CPT UI, ExUnit).
-* [ Bug Fix ] Fixed an issue where the redirect URL could not be saved or displayed on custom post types with a customized capability_type (e.g. a CPT using `edit_sites` instead of `edit_posts`), because the meta auth_callback used a fixed `edit_posts` capability check that did not take the per-post capability mapping into account.
+* [ Bug Fix ] Fixed an issue where the redirect URL could not be saved, displayed, or updated on custom post types. The fix covers CPTs registered later by other plugins (e.g. CPT UI, ExUnit), CPTs with a customized `capability_type` (e.g. a CPT using `edit_sites` instead of `edit_posts`), and CPTs that do not declare `custom-fields` post_type support.
 
 = 1.10.0 =
 * [ Spec Change ] Rename option key from 'custom-post-types' to 'vk_ltc_custom_post_types' to avoid conflicts with other plugins. Existing data is automatically migrated. Added fallback to legacy key for frontend requests before admin_init migration runs.
