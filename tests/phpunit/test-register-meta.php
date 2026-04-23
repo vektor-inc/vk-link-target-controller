@@ -263,14 +263,23 @@ class registerMetaTest extends WP_UnitTestCase {
 		);
 
 		// エディタユーザを作成し、カスタム CPT 編集権限を付与する。
+		// 投稿を publish 状態で作成するため、publish 系 cap も付与する（WP 6.7 等の環境で
+		// factory->post->create() の内部 wp_insert_post() が WP_Error を返さないようにするため）。
 		$user_id = $this->factory->user->create( array( 'role' => 'editor' ) );
 		$user    = new WP_User( $user_id );
 		$user->add_cap( 'edit_vk_ltc_test_caps' );
 		$user->add_cap( 'edit_vk_ltc_test_cap' );
 		$user->add_cap( 'edit_published_vk_ltc_test_caps' );
+		$user->add_cap( 'publish_vk_ltc_test_caps' );
 
 		// 権限のないユーザを作成
 		$subscriber_id = $this->factory->user->create( array( 'role' => 'subscriber' ) );
+
+		// factory->post->create() は内部的に wp_insert_post() を呼ぶ。
+		// map_meta_cap + カスタム capability_type の post_type では current_user が
+		// 権限を持っていないと WP_Error になる環境（WP 6.7 等）があるため、
+		// 作成中は一時的に cap 付与済みユーザを current_user に設定する。
+		wp_set_current_user( $user_id );
 
 		// カスタム CPT の投稿を作成
 		$post_id = $this->factory->post->create(
