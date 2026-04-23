@@ -16,3 +16,7 @@ dist/
 .claude/
 .cursor/
 .github/skills/
+
+# Playwright
+test-results/
+playwright-report/
