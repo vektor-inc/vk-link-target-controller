@@ -148,8 +148,8 @@ class registerMetaTest extends WP_UnitTestCase {
 				'expected'           => true,
 			),
 			array(
-				'test_condition_name' => 'デフォルト(10)より遅い優先度で登録されている場合 => true',
-				'actual'             => ( is_int( $priority ) && $priority > 10 ),
+				'test_condition_name' => 'init の優先度が 99 に固定されている場合 => true',
+				'actual'             => ( 99 === $priority ),
 				'expected'           => true,
 			),
 		);
