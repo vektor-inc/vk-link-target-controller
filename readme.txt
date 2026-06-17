@@ -119,6 +119,8 @@ But we have a .pot file available so feel free to translate it in your language 
 
 == Changelog ==
 
+* [ Bug Fix ] Fixed an issue on the settings screen where styles and scripts could fail to update due to caching after an update, and an issue where the left side navigation could be cut off when notices were displayed.
+
 = 1.10.1 =
 * [ Bug Fix ] Fixed an issue where the redirect URL could not be saved, displayed, or updated on custom post types. The fix covers CPTs registered later by other plugins (e.g. CPT UI, ExUnit), CPTs with a customized `capability_type` (e.g. a CPT using `edit_sites` instead of `edit_posts`), and CPTs that do not declare `custom-fields` post_type support.
 
