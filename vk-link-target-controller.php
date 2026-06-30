@@ -507,7 +507,7 @@ jQuery(document).ready(function($){
 			} else {
 				// check form.
 				if ( isset( $_POST['vk-ltc-link-field'] )
-					&& wp_verify_nonce( $_POST['vk-ltc-link-nonce'], 'vk-ltc-link' ) ) {
+					&& wp_verify_nonce( $_POST['vk-ltc-link-nonce'] ?? '', 'vk-ltc-link' ) ) {
 
 					// link field.
 					if ( isset( $_POST['vk-ltc-link-field'] ) ) {
