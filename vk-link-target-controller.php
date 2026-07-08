@@ -820,6 +820,7 @@ jQuery(document).ready(function($){
 				'posts_per_page' => -1,
 				'paged'          => 0,
 				'post_type'      => $post_types_slugs,
+				'post_status'    => 'publish',
 				'meta_key'       => 'vk-ltc-link',
 			);
 			$query = new WP_Query( $args );

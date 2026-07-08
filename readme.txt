@@ -119,6 +119,7 @@ But we have a .pot file available so feel free to translate it in your language 
 
 == Changelog ==
 
+* [ Security Fix ] Fixed an issue where the AJAX link target endpoint (`action=ids`) could expose link settings for non-published posts (e.g. drafts) to unauthenticated users. The query now explicitly limits results to published posts.
 * [ Bug Fix ] Fixed an undefined array key PHP warning on PHP 8.x when the nonce field is absent from the post save request.
 * [ Bug Fix ] Fixed an issue on the settings screen where styles and scripts could fail to update due to caching after an update, and an issue where the left side navigation could be cut off when notices were displayed.
 
