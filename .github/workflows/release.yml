@@ -85,7 +85,7 @@ jobs:
         strategy:
             matrix:
                 php-versions: ['7.4', '8.1']
-                wp-versions: ['6.7', '6.8', '6.9']
+                wp-versions: ['6.8', '6.9', '7.0']
         name: PHP Unit Test on PHP ${{ matrix.php-versions }} / WP ${{ matrix.wp-versions }} Test
         services:
             mysql:
@@ -128,6 +128,7 @@ jobs:
                   path: dist/
             - name: Copy test dependencies into dist for phpunit
               run: |
+                  rm -rf dist/${{ env.plugin_name }}/vendor
                   cp -r vendor dist/${{ env.plugin_name }}/vendor
                   for f in .phpunit.xml phpunit.xml phpunit.xml.dist; do
                     [ -f "$f" ] && cp "$f" "dist/${{ env.plugin_name }}/$f" || true
