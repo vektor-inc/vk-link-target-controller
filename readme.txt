@@ -3,8 +3,8 @@ Contributors: vektor-inc,kurudrive,dswebstudio,bizvektor,nc30,catherine8007,rick
 Donate link:
 Tags: redirection,link,recent posts,list,page,post
 Requires at least: 5.3
-Tested up to: 7.0
-Stable tag: 1.10.3
+Tested up to: 7.1
+Stable tag: 1.10.4
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -118,6 +118,9 @@ But we have a .pot file available so feel free to translate it in your language 
 4. A relative url that refer to a page of your website: **note slash "/" at the beginning**.
 
 == Changelog ==
+
+= 1.10.4 =
+* [ Other ] Updated "Tested up to" to 7.1, verified against the WordPress 7.1 release candidate.
 
 = 1.10.3 =
 * [ Other ] Corrected "Tested up to" from 7.1 to 7.0, matching the WordPress versions actually verified in CI (the 7.1 core tag was not yet available for testing).
