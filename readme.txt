@@ -4,7 +4,7 @@ Donate link:
 Tags: redirection,link,recent posts,list,page,post
 Requires at least: 5.3
 Tested up to: 7.1
-Stable tag: 1.10.1
+Stable tag: 1.10.2
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -27,7 +27,7 @@ Fast redirection to the product you want to sell!.
 = GitHub repository =
 
 VK Link Target Controller official repository on GitHub.
-[https://github.com/kurudrive/vk-link-target-controller](https://github.com/kurudrive/vk-link-target-controller)
+[https://github.com/vektor-inc/vk-link-target-controller](https://github.com/vektor-inc/vk-link-target-controller)
 Latest plugin version is always on GitHub.
 
 == Installation ==
@@ -89,7 +89,7 @@ Your theme probably has it if it follows the WordPress Theme recommendations.
 Example A:
 `
 <div class="post-item post-block front-page-list post-<?php the_ID(); ?>" id="post-<?php the_ID(); ?>">
-	<a href="<?php the permalink(); ?>">
+	<a href="<?php the_permalink(); ?>">
  		<?php the_title(); ?>
 	</a>
 </div>
@@ -119,9 +119,11 @@ But we have a .pot file available so feel free to translate it in your language 
 
 == Changelog ==
 
+= 1.10.2 =
 * [ Security Fix ] Fixed an issue where the AJAX link target endpoint (`action=ids`) could expose link settings for non-published posts (e.g. drafts) to unauthenticated users. The query now explicitly limits results to published posts.
 * [ Bug Fix ] Fixed an undefined array key PHP warning on PHP 8.x when the nonce field is absent from the post save request.
 * [ Bug Fix ] Fixed an issue on the settings screen where styles and scripts could fail to update due to caching after an update, and an issue where the left side navigation could be cut off when notices were displayed.
+* [ Other ] Tested up to WordPress 7.1.
 
 = 1.10.1 =
 * [ Bug Fix ] Fixed an issue where the redirect URL could not be saved, displayed, or updated on custom post types. The fix covers CPTs registered later by other plugins (e.g. CPT UI, ExUnit), CPTs with a customized `capability_type` (e.g. a CPT using `edit_sites` instead of `edit_posts`), and CPTs that do not declare `custom-fields` post_type support.
