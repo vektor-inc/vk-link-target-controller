@@ -30,14 +30,13 @@
 	"homepage": "https://wordpress.org/plugins/vk-link-target-controller/",
 	"devDependencies": {
 		"@wordpress/env": "10.38.0",
-		"@wordpress/scripts": "^32.0.0",
+		"@wordpress/scripts": "^34.0.0",
 		"npm-check-updates": "^19.3.1"
 	},
 	"dependencies": {
 		"@babel/runtime": "^7.29.2"
 	},
 	"overrides": {
-		"webpack-dev-server": "^5.2.1",
 		"serialize-javascript": "^7.0.5",
 		"markdownlint-cli": {
 			"minimatch": "3.1.5"
