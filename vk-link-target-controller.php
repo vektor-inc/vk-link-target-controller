@@ -834,7 +834,9 @@ jQuery(document).ready(function($){
 
 					// リダイレクト先のURLが空でない場合のみ情報を追加
 					if ( ! empty( $link ) ) {
-						$redirect_url = $this->rewrite_link( $post->ID );
+						// rewrite_link() は表示用に esc_url() でエンティティ化されているため、
+						// JSON経由でJavaScriptへ渡しhrefへ直接設定する際は html_entity_decode() で復元する。
+						$redirect_url = html_entity_decode( $this->rewrite_link( $post->ID ) );
 						// ログイン済みかつ編集権限がある場合のみ編集URLを含める。
 						// get_edit_post_link() はコンテキスト '' で raw URL を返す（JSON用）。
 						// 権限がないユーザーには空文字列が返る。
@@ -854,7 +856,9 @@ jQuery(document).ready(function($){
 			// Send data to the front.
 			header( 'Content-Type: application/json' );
 			echo $json_ids;
-			exit;
+			// wp_die() (not a raw exit) so that WP_Ajax_UnitTestCase can intercept
+			// termination and make this handler unit-testable.
+			wp_die();
 		}
 	}
 
