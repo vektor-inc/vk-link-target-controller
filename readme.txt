@@ -1,5 +1,5 @@
 === VK Link Target Controller ===
-Contributors: vektor-inc,kurudrive,dswebstudio,bizvektor,nc30,catherine8007,rickaddison7634,sysbird,una9
+Contributors: vektor-inc,kurudrive,dswebstudio,bizvektor,nc30,catherine8007,rickaddison7634,sysbird,una9,mypacecreator
 Donate link:
 Tags: redirection,link,recent posts,list,page,post
 Requires at least: 5.3
@@ -118,6 +118,9 @@ But we have a .pot file available so feel free to translate it in your language 
 4. A relative url that refer to a page of your website: **note slash "/" at the beginning**.
 
 == Changelog ==
+
+* [ Bug Fix ] Fixed an issue where redirect URLs delivered via Ajax kept HTML-encoded ampersands ( &#038; ), breaking external URLs with multiple query parameters.
+* [ Bug Fix ] Fixed an issue on PHP 8.0 or earlier where redirect URLs containing single quotes were left partially HTML-encoded, resulting in broken links.
 
 = 1.10.4 =
 * [ Other ] Updated "Tested up to" to 7.1, verified against the WordPress 7.1 release candidate.

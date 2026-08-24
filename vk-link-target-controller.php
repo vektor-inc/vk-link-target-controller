@@ -222,8 +222,10 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			if ( isset( $post ) && ( is_single() || is_page() ) ) {
 				$redirect = $this->has_redirection( $post->ID );
 				// redirect to the associated link.
+				// Specify ENT_QUOTES and UTF-8 explicitly because on PHP 8.0 or earlier the default flags ( ENT_COMPAT ) leave single quotes ( &#039; ) undecoded.
+				// PHP 8.0 以前はデフォルトフラグ（ ENT_COMPAT ）ではシングルクォート（ &#039; ）が復元されないため、ENT_QUOTES と UTF-8 を明示する。
 				if ( false != $redirect && $this->candidate_post_type() ) {
-					wp_redirect( html_entity_decode( esc_url( $redirect ) ) );
+					wp_redirect( html_entity_decode( esc_url( $redirect ), ENT_QUOTES, 'UTF-8' ) );
 					exit;
 				}
 			}
@@ -836,7 +838,9 @@ jQuery(document).ready(function($){
 					if ( ! empty( $link ) ) {
 						// rewrite_link() は表示用に esc_url() でエンティティ化されているため、
 						// JSON経由でJavaScriptへ渡しhrefへ直接設定する際は html_entity_decode() で復元する。
-						$redirect_url = html_entity_decode( $this->rewrite_link( $post->ID ) );
+						// Specify ENT_QUOTES and UTF-8 explicitly because on PHP 8.0 or earlier the default flags ( ENT_COMPAT ) leave single quotes ( &#039; ) undecoded.
+						// PHP 8.0 以前はデフォルトフラグ（ ENT_COMPAT ）ではシングルクォート（ &#039; ）が復元されないため、ENT_QUOTES と UTF-8 を明示する。
+						$redirect_url = html_entity_decode( $this->rewrite_link( $post->ID ), ENT_QUOTES, 'UTF-8' );
 						// ログイン済みかつ編集権限がある場合のみ編集URLを含める。
 						// get_edit_post_link() はコンテキスト '' で raw URL を返す（JSON用）。
 						// 権限がないユーザーには空文字列が返る。
