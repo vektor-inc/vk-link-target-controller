@@ -4,7 +4,7 @@ Donate link:
 Tags: redirection,link,recent posts,list,page,post
 Requires at least: 5.3
 Tested up to: 7.1
-Stable tag: 1.10.4
+Stable tag: 1.10.5
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,7 @@ But we have a .pot file available so feel free to translate it in your language 
 
 == Changelog ==
 
+= 1.10.5 =
 * [ Bug Fix ] Fixed an issue where redirect URLs delivered via Ajax kept HTML-encoded ampersands ( &#038; ), breaking external URLs with multiple query parameters.
 * [ Bug Fix ] Fixed an issue on PHP 8.0 or earlier where redirect URLs containing single quotes were left partially HTML-encoded, resulting in broken links.
 
