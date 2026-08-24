@@ -41,6 +41,7 @@
 		"serialize-javascript": "^7.0.5",
 		"markdownlint-cli": {
 			"minimatch": "3.1.5"
-		}
+		},
+		"adm-zip": "^0.6.0"
 	}
 }
