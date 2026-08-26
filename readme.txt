@@ -110,6 +110,10 @@ get_post_class() returns a value that includes the post ID.
 For now the plugin is available in English and Japanese only.
 But we have a .pot file available so feel free to translate it in your language if you have some time.
 
+= What happens to my data if I delete the plugin on a multisite network? =
+
+If VK Link Target Controller is deleted on a WordPress multisite network, its settings and post meta are removed from every site in the network, not only from the site where the deletion was performed.
+
 == Screenshots ==
 
 1. Localisation for VK Link Target Controller settings page.
@@ -118,6 +122,8 @@ But we have a .pot file available so feel free to translate it in your language 
 4. A relative url that refer to a page of your website: **note slash "/" at the beginning**.
 
 == Changelog ==
+
+* [ Bug Fix ] Fixed an issue where deleting the plugin on a multisite network left post meta and settings behind on subsites other than the one where the deletion was performed.
 
 = 1.10.5 =
 * [ Bug Fix ] Fixed an issue where redirect URLs delivered via Ajax kept HTML-encoded ampersands ( &#038; ), breaking external URLs with multiple query parameters.

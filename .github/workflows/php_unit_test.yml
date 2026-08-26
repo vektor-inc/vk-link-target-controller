@@ -76,3 +76,52 @@ jobs:
               run: npx wp-env start && sudo chmod -R 777 ~/wp-env
             - name: Run PHP Unit Test
               run: npm run phpunit
+
+    php_unit_multisite:
+        if: contains(github.event.pull_request.labels.*.name, 'run-ci')
+        runs-on: ubuntu-latest
+        name: PHP Unit Test (Multisite)
+        services:
+            mysql:
+                image: mysql:5.7
+                ports:
+                    - 3306
+                env:
+                    MYSQL_ROOT_PASSWORD: wordpress
+                    MYSQL_DATABASE: wordpress
+                    MYSQL_USER: wordpress
+                    MYSQL_PASSWORD: wordpress
+        steps:
+            - uses: actions/checkout@v3
+            - name: Read .node-version
+              run: echo "{NODEVERSION}={$(cat .node-version)}" >> $GITHUB_OUTPUT
+              id: nodenv
+            - name: Setup Node.js (.node-version)
+              uses: actions/setup-node@v3
+              with:
+                  node-version: '${{ steps.nodenv.outputs.NODEVERSION }}'
+            - name: Cache multiple paths
+              uses: actions/cache@v3
+              with:
+                  path: vendor
+                  key: ${{ runner.os }}-php-multisite-${{ hashFiles('**/composer.lock') }}
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.4'
+            - name: install npm scripts
+              run: npm install
+            - name: Install Composer Packages
+              run: composer install
+            - name: Build
+              run: npm run build
+            - name: Set Permissions for Theme Directory
+              run: |
+                  sudo mkdir -p tests/themes
+                  sudo chmod -R 777 tests/themes
+            - name: Install Themes
+              run: bash bin/install-theme.sh
+            - name: Start Environment
+              run: npx wp-env start && sudo chmod -R 777 ~/wp-env
+            - name: Run PHP Unit Test (Multisite)
+              run: npm run phpunit:multisite
