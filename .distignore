@@ -14,6 +14,9 @@
 .wp-env.override.json
 .wp-env.override.example.json
 playwright.config.js
+# Playwright e2e の実行結果・ログイン状態など（.gitignore と同じ理由で除外）。
+# 手元で e2e を実行した状態のまま `npm run dist` すると取り込まれてしまうため。
+artifacts/
 .phpunit.result.cache
 .editorconfig
 .phpunit.xml

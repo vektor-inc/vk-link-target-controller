@@ -19,6 +19,12 @@ dist/
 
 # Playwright e2e の実行結果・ログイン状態など（コミット対象外）
 # Playwright e2e run artifacts (test results, storage state, etc.)
+#
+# playwright.config.js は @wordpress/scripts のデフォルト設定を継承しており、
+# テスト結果（outputDir）・storageState は WP_ARTIFACTS_PATH 配下、
+# すなわち既定では artifacts/ 配下（例: artifacts/test-results/,
+# artifacts/storage-states/）にまとめて出力される。reporter も現状
+# list/github のみで HTML レポート（playwright-report/）は生成されないため、
+# 実際に生成されるパスと一致させて artifacts/ のみを除外対象にしている。
+# 将来 HTML reporter 等を追加して出力先が変わった場合は、ここも合わせて見直すこと。
 artifacts/
-test-results/
-playwright-report/

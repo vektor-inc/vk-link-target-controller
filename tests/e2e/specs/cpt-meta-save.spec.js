@@ -28,6 +28,8 @@ const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 
 // tests/e2e/mu-plugins/register-test-cpt.php で登録しているCPTのスラッグ。
 // 値をずらすとテストが対象のCPTを見つけられなくなるため、双方をそろえること。
+// REST base（/wp/v2/<slug>）も register_post_type() で明示していないため
+// このスラッグそのものになる（後始末の deleteAllPosts() でも使用）。
 const TEST_CPT_SLUG = 'vk_ltc_e2e_cpt';
 
 // 保存確認用のダミーのリダイレクト先URL。実在URLである必要はない。
@@ -49,26 +51,42 @@ const TEST_REDIRECT_URL = 'https://example.com/vk-ltc-e2e-test/';
  * @return {Promise<void>}
  */
 async function expandMetaBoxesPanel( page ) {
-	const toggle = page.getByRole( 'button', { name: /meta boxes/i } );
+	// アクセシブルネームは実測で "Meta Boxes"（完全一致）の1件のみであることを
+	// 確認済み。広い正規表現 + .first() の組み合わせは、将来ボタンが増えた際に
+	// 「別のボタンを黙って操作してしまう」失敗を招きやすいため、exact指定にして
+	// 単一要素であることをロケータ自体に保証させる（複数マッチ時は strict エラーで
+	// 気づける状態にしておく）。
+	const toggle = page.getByRole( 'button', { name: 'Meta Boxes', exact: true } );
 	// 「Meta Boxes」パネルの見出しは、エディタ本体の初期表示より少し遅れて
 	// 非同期にマウントされることがあるため、先にDOMへの出現を待ってから
 	// 状態（aria-expanded）を読む。ここを待たずに読むと、マウント前の
 	// タイミングに当たった場合だけ稀に失敗する（flaky になる）。
-	await toggle.first().waitFor();
+	await toggle.waitFor();
 	// 既に開いている場合は何もしない（aria-expanded="true"）。
-	const isExpanded = await toggle
-		.first()
-		.getAttribute( 'aria-expanded' );
+	const isExpanded = await toggle.getAttribute( 'aria-expanded' );
 	if ( 'true' === isExpanded ) {
 		return;
 	}
-	await toggle.first().focus();
+	await toggle.focus();
 	await page.keyboard.press( 'Enter' );
 	// パネルのアニメーション・中身のマウントを待つ。
 	await expect( page.locator( '#vk-ltc-link-field' ) ).toBeVisible();
 }
 
 test.describe( 'VK Link Target Controller: CPTでのmeta保存（issue #140 回帰）', () => {
+	// tests 環境のDBはPHPUnitとも共有しているため、このテストが作成したCPT投稿を
+	// 実行のたびに残さない。beforeAll では（前回異常終了時などの）残存データも
+	// 含めて掃除し、afterAll ではこの実行で作成した投稿を掃除する。
+	// あくまで「テストが作った投稿（コンテンツ）」をREST API経由で削除するだけで、
+	// DBそのものを作り直す操作（wp db reset 等）ではない。
+	test.beforeAll( async ( { requestUtils } ) => {
+		await requestUtils.deleteAllPosts( TEST_CPT_SLUG );
+	} );
+
+	test.afterAll( async ( { requestUtils } ) => {
+		await requestUtils.deleteAllPosts( TEST_CPT_SLUG );
+	} );
+
 	test( 'CPT編集画面でリダイレクト先URLと別ウィンドウ設定を保存し、再読み込み後も値が保持される', async ( {
 		admin,
 		editor,
@@ -97,8 +115,22 @@ test.describe( 'VK Link Target Controller: CPTでのmeta保存（issue #140 回�
 		const targetCheckbox = page.locator( '#vk-ltc-target-check' );
 		await targetCheckbox.check();
 
-		// 4. 投稿を公開する（block editor の2段階Publishフローを内部で処理する）。
+		// 4. 投稿を公開する。
+		//    classic meta box（本プラグインの「URL to redirect to」）の保存は、
+		//    ブロックエディタ本体の REST 保存（/wp/v2/<post_type>）とは別に、
+		//    `wp-admin/post.php?...&meta-box-loader=1` への非同期POSTで行われる
+		//    （WordPressコアの meta box 互換レイヤー）。
+		//    editor.publishPost() は「公開しました」の通知が出た時点で解決するが、
+		//    この meta-box-loader へのPOSTが完了している保証はない
+		//    （実測でも公開の通知より後にこのPOSTが飛ぶことを確認済み）。
+		//    そのため publish の前に待ち受けを仕込み、公開後に必ず完了を待ってから
+		//    reload する。これを待たずに reload すると、リクエストがキャンセルされ
+		//    値が保存されないまま「保存されていない」という誤検知（flaky）になり得る。
+		const metaBoxSaveResponse = page.waitForResponse( ( response ) =>
+			response.url().includes( 'meta-box-loader' )
+		);
 		await editor.publishPost();
+		await metaBoxSaveResponse;
 
 		// 5. 公開後の編集画面をそのままリロードし、サーバーに保存された値が
 		//    再表示されるかを確認する（絶対URLを使わず現在のページを再読み込み）。
