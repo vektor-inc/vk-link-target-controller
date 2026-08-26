@@ -4,12 +4,21 @@
  * Regression test for issue #140 (custom post type (CPT) meta save bug).
  * issue #140（カスタム投稿タイプ（CPT）でのmeta保存不具合）の回帰テスト。
  *
- * VK Link Target Controller keeps the following meta per post (see
- * render_meta_box() / save_link() in inc/register-meta.php and
- * vk-link-target-controller.php).
- * VK Link Target Controller は投稿ごとに以下のメタを保持する
- * （inc/register-meta.php・vk-link-target-controller.php の render_meta_box() /
- * save_link() 参照）。
+ * VK Link Target Controller keeps the following meta per post. What this
+ * test actually exercises is `vk_ltc_register_post_meta()` in
+ * inc/register-meta.php (which registers these meta keys for the REST API)
+ * together with the React panel in src/index.js that reads/writes them via
+ * that REST-registered meta. `render_meta_box()` / `save_link()` in
+ * vk-link-target-controller.php are the *classic meta box fallback* side
+ * (used only when no build exists — see "IMPORTANT" below) and are NOT
+ * what this test targets.
+ * VK Link Target Controller は投稿ごとに以下のメタを保持する。このテストが
+ * 実際に検証しているのは、inc/register-meta.php の `vk_ltc_register_post_meta()`
+ * （これらのmetaキーをREST APIに登録する処理）と、そのREST登録済みmetaを
+ * 読み書きする src/index.js のReactパネルの組み合わせである。
+ * vk-link-target-controller.php の `render_meta_box()` / `save_link()` は
+ * *classic meta box フォールバック側*（ビルドが無い場合にのみ使われる。
+ * 下記「IMPORTANT」参照）の関数であり、このテストの検証対象ではない。
  *   - `vk-ltc-link`   : Redirect URL / リダイレクト先URL
  *   - `vk-ltc-target` : Open-in-new-window flag / 別ウィンドウで開くフラグ
  *
@@ -125,14 +134,54 @@ const BUILD_ASSET_FILE = path.join(
  * もとで既に開いた状態になっていることがある。そのため、先に aria-expanded
  * を確認し、実際に必要な場合のみクリックする。
  *
- * @param {import('@playwright/test').Page} page Playwright's page object. / Playwright の page オブジェクト。
+ * IMPORTANT: this panel only renders inside the "Post" tab of the Document
+ * Settings sidebar. That sidebar's own open/closed state is *also* a
+ * per-user preference (`wp_persisted_preferences` user meta), persisted
+ * across requests under the same shared admin session (storageState). If
+ * anyone (a developer poking at the tests site, another test file, etc.)
+ * ever closes it, this test would start failing with "panel not found"
+ * from then on — indistinguishable from a real regression, and entirely
+ * dependent on environment state rather than the code under test. This is
+ * exactly the class of problem this test already got burned by once
+ * (build/ presence silently changing which UI was exercised), so we close
+ * that door here too by explicitly (re)opening the sidebar every time via
+ * the official `editor.openDocumentSettingsSidebar()` utility, which is
+ * itself idempotent (checks aria-expanded and only clicks when closed).
+ * 重要: このパネルは Document Settings サイドバーの「Post」タブの中にしか
+ * 描画されない。そしてそのサイドバー自体の開閉状態も、ユーザーごとの
+ * プリファレンス（`wp_persisted_preferences` ユーザーメタ）として、共有している
+ * 管理者セッション（storageState）をまたいで永続化される。誰か（tests サイトを
+ * 触った開発者、他のテストファイルなど）が一度でもサイドバーを閉じると、
+ * このテストはそれ以降「パネルが見つからない」で落ち続ける ― 本物の回帰と
+ * 見分けがつかず、しかも検証対象のコードではなく環境の状態に依存した失敗になる。
+ * これはこのテストが一度実際に踏んだ罠（build/ の有無で検証対象のUIが
+ * 黙って変わっていたこと）と同じ形の依存であるため、ここでも公式ユーティリティ
+ * `editor.openDocumentSettingsSidebar()`（aria-expanded を見て閉じている時だけ
+ * クリックする冪等な実装）で毎回明示的に開き直すことで塞いでおく。
+ *
+ * @param {import('@playwright/test').Page}   page   Playwright's page object. / Playwright の page オブジェクト。
+ * @param {import('@wordpress/e2e-test-utils-playwright').Editor} editor Editor utils (for openDocumentSettingsSidebar). / editor ユーティリティ（openDocumentSettingsSidebar 用）。
  * @return {Promise<void>}
  */
-async function expandRedirectUrlPanel( page ) {
-	const toggle = page.getByRole( 'button', {
-		name: 'URL to redirect to',
-		exact: true,
-	} );
+async function expandRedirectUrlPanel( page, editor ) {
+	// See the IMPORTANT note above: guarantee the sidebar itself is open
+	// before looking for a panel that only exists inside it.
+	// 上記IMPORTANTの通り、その中にしか存在しないパネルを探す前に、
+	// サイドバー自体が開いていることを保証する。
+	await editor.openDocumentSettingsSidebar();
+
+	// Scope the toggle to `.vk-ltc-panel` (the panel's own className), not
+	// just the page, so that if the panel itself is ever absent, the
+	// failure points at the panel rather than a same-named button
+	// elsewhere on the page (defense in depth — the visibility assertion
+	// below already catches this case regardless).
+	// ページ全体ではなく `.vk-ltc-panel`（パネル自身のclassName）にスコープする。
+	// こうしておくと、万一パネル自体が存在しない場合に、ページ上の同名の
+	// 別ボタンではなく「パネルが無い」ことを指す失敗になる（下の可視性
+	// アサーションが最終的な関門にはなっているが、念のための多重の安全策）。
+	const toggle = page
+		.locator( '.vk-ltc-panel' )
+		.getByRole( 'button', { name: 'URL to redirect to', exact: true } );
 	await toggle.waitFor();
 	const isExpanded = await toggle.getAttribute( 'aria-expanded' );
 	if ( 'true' !== isExpanded ) {
@@ -216,7 +265,7 @@ test.describe( 'VK Link Target Controller: CPTでのmeta保存（issue #140 回�
 		//    ページ内の非表示のwpLinkダイアログにも "URL" ラベルの入力欄が
 		//    存在し、ロケータが曖昧になってしまうため、両フィールドとも
 		//    `.vk-ltc-panel`（パネル自身のclassName）にスコープしている。
-		await expandRedirectUrlPanel( page );
+		await expandRedirectUrlPanel( page, editor );
 		const panel = page.locator( '.vk-ltc-panel' );
 		const linkField = panel.getByLabel( 'URL', { exact: true } );
 		await expect( linkField ).toBeVisible();
@@ -269,7 +318,7 @@ test.describe( 'VK Link Target Controller: CPTでのmeta保存（issue #140 回�
 		//    リロード後もパネルが折りたたまれた状態に戻ることがある（状態の
 		//    永続化の挙動は一定しないため）ため、念のため再度展開してから
 		//    値が保持されていることを確認する。
-		await expandRedirectUrlPanel( page );
+		await expandRedirectUrlPanel( page, editor );
 		const reloadedPanel = page.locator( '.vk-ltc-panel' );
 		const reloadedLinkField = reloadedPanel.getByLabel( 'URL', {
 			exact: true,
