@@ -84,17 +84,30 @@ if ( ! is_multisite() ) {
 	 * Multisite: delete data from every site in the network.
 	 * マルチサイト：ネットワーク内の全サイトからデータを削除する。
 	 *
-	 * Sites are fetched in batches via get_sites() (not a direct query on
-	 * $wpdb->blogs) so that deleted / archived / spam / deactivated sites
-	 * are correctly excluded, matching what get_sites() would return by
-	 * default. No wp_is_large_network() branch is used; instead sites are
-	 * simply processed in batches using number/offset so memory use stays
-	 * bounded even on large networks.
+	 * Sites are fetched in batches via get_sites() rather than a direct
+	 * query on $wpdb->blogs so that site enumeration is delegated to
+	 * WordPress's own API, instead of this plugin having to handle the
+	 * underlying table structure (and multi-network setups) itself.
+	 * By default get_sites() does NOT filter out archived, spam, or
+	 * deleted-flagged sites (those args default to null, which means
+	 * "no filter" in WP_Site_Query) - it simply returns every site in
+	 * the network. That is intentional here: uninstall must remove this
+	 * plugin's data everywhere, so sites in any of those states are
+	 * deliberately included rather than skipped. No wp_is_large_network()
+	 * branch is used; instead sites are simply processed in batches using
+	 * number/offset so memory use stays bounded even on large networks.
 	 * get_sites() を使ってサイトIDをバッチ取得する（$wpdb->blogs への直接
-	 * クエリは使わない）。これにより、削除済み・アーカイブ・スパム・停止中の
-	 * サイトが get_sites() の既定挙動どおり正しく除外される。
-	 * wp_is_large_network() による分岐は行わず、number/offset でバッチ処理
-	 * することで、大規模ネットワークでもメモリ使用量を一定範囲に抑える。
+	 * クエリは使わない）。これは、対象を絞り込むためではなく、サイト一覧の
+	 * 取得を WordPress 標準の API に任せ、テーブル構造やマルチネットワーク
+	 * 構成の違いをこのプラグイン側で個別に扱わずに済ませるため。
+	 * get_sites() は既定では archived・spam・削除済みフラグの立ったサイトを
+	 * 除外しない（これらの引数は既定値が null で、WP_Site_Query 上は
+	 * 「絞り込みなし」を意味する）。つまりネットワーク内の全サイトがそのまま
+	 * 返る。アンインストールはこのプラグインのデータをどこにも残さず消す
+	 * ための処理なので、これらの状態のサイトもあえて除外せず削除対象に
+	 * 含めている。wp_is_large_network() による分岐は行わず、number/offset
+	 * でバッチ処理することで、大規模ネットワークでもメモリ使用量を一定範囲に
+	 * 抑える。
 	 */
 	$batch_size = 100;
 	$offset     = 0;
