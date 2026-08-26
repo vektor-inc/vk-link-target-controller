@@ -64,14 +64,46 @@ if ( ! function_exists( 'vk_ltc_uninstall_delete_site_data' ) ) {
 		delete_post_meta_by_key( 'vk-ltc-link' );
 		delete_post_meta_by_key( 'vk-ltc-target' );
 
-		// Delete plugin options from the options table.
-		// オプションテーブルからプラグインのオプションを削除する。
-		// Delete both the new prefixed key and the legacy key to ensure
-		// complete cleanup regardless of whether migration has occurred.
-		// 移行済みかどうかに関わらず完全にクリーンアップするため、
-		// 新しいプレフィックス付きキーとレガシーキーの両方を削除する。
+		// Delete the new, plugin-prefixed option unconditionally: its name
+		// is specific enough to this plugin that no ownership check is
+		// needed here.
+		// 新しいプレフィックス付きオプションは無条件で削除する。この名前は
+		// このプラグイン専用と分かるため、所有権の確認は不要。
 		delete_option( 'vk_ltc_custom_post_types' );
-		delete_option( 'custom-post-types' );
+
+		// The legacy option key `custom-post-types` has no plugin-specific
+		// prefix, so another plugin could plausibly be using the exact same
+		// option name for something unrelated. On single site this was
+		// never a real risk in practice, because uninstall.php only ran
+		// against the one site an admin chose to delete the plugin from.
+		// On multisite this loop now runs the same delete on every site in
+		// the network, including sites that may never have had this plugin
+		// installed - so an unguarded delete_option() here would newly risk
+		// wiping another plugin's same-named option on those sites.
+		// Guard it by checking the stored value looks like what this plugin
+		// would have saved (an array of post type slugs - see
+		// VK_Link_Target_Controller::sanitize_settings()). This is not
+		// proof of ownership (another plugin could coincidentally also
+		// store an array under this name), but it is strictly safer than
+		// no check at all, and costs nothing since deleting a non-existent
+		// option is already a no-op.
+		// レガシーキー `custom-post-types` はこのプラグイン専用のプレフィックスが
+		// 無いため、他のプラグインが全く別の用途で同名のオプションキーを使って
+		// いる可能性がある。シングルサイトでは uninstall.php は管理者が削除を
+		// 選んだ1サイトに対してしか実行されなかったため、実質的なリスクには
+		// なっていなかった。マルチサイトでは同じ削除処理がネットワーク内の
+		// 全サイト（このプラグインを一度も導入していないサイトを含む）に対して
+		// 走るようになったため、無条件の delete_option() はそれらのサイトで
+		// 他プラグインの同名オプションを消してしまう新たなリスクになる。
+		// 保存値がこのプラグインが保存する形（投稿タイプスラッグの配列。
+		// VK_Link_Target_Controller::sanitize_settings() を参照）かどうかで
+		// 絞り込む。これは所有権の証明にはならない（他プラグインが偶然同名で
+		// 配列を保存している可能性は残る）が、ノーガードよりは確実に安全側で
+		// あり、存在しないオプションの削除はもともと no-op なのでコストも無い。
+		$legacy_option = get_option( 'custom-post-types', null );
+		if ( is_array( $legacy_option ) ) {
+			delete_option( 'custom-post-types' );
+		}
 	}
 }
 
@@ -115,9 +147,24 @@ if ( ! is_multisite() ) {
 	do {
 		$site_ids = get_sites(
 			array(
-				'fields' => 'ids',
-				'number' => $batch_size,
-				'offset' => $offset,
+				'fields'                 => 'ids',
+				'number'                 => $batch_size,
+				'offset'                 => $offset,
+				// update_site_cache / update_site_meta_cache default to true,
+				// which would otherwise prime the site and blogmeta caches
+				// (_prime_site_caches()) for every batch even though
+				// 'fields' => 'ids' only needs the IDs, and this data is
+				// discarded immediately after the delete loop below runs.
+				// Disable both so uninstall doesn't pay for cache warming
+				// that has no one left to benefit from it.
+				// update_site_cache / update_site_meta_cache は既定で true の
+				// ため、'fields' => 'ids' で ID しか使わないにもかかわらず、
+				// バッチ毎にサイト・blogmeta キャッシュ（_prime_site_caches()）
+				// が投入されてしまう。しかもこのデータは直後の削除ループが
+				// 終わればすぐ捨てられる。恩恵を受ける相手がいないキャッシュ
+				// 投入のコストを払わずに済むよう、両方無効化する。
+				'update_site_cache'      => false,
+				'update_site_meta_cache' => false,
 			)
 		);
 
@@ -127,15 +174,22 @@ if ( ! is_multisite() ) {
 			try {
 				vk_ltc_uninstall_delete_site_data();
 			} finally {
-				// Always restore the previous blog, even if an exception
-				// or fatal-triggering condition occurs during deletion,
-				// so that a failure on one site never leaves subsequent
-				// sites (or the rest of the uninstall process) operating
-				// against the wrong site's context.
-				// 削除処理中に例外が発生しても必ず元のサイトへ戻す。
-				// 1サイトでの失敗が、以降のサイト（やアンインストール処理の
-				// 残り）を誤ったサイトのコンテキストのまま動かす原因になる
-				// ことを防ぐ。
+				// What this `finally` guarantees is narrower than "the loop
+				// keeps going": if deletion on this site throws, the
+				// exception still propagates and the loop stops - the
+				// remaining sites in this and later batches are NOT
+				// processed. What `finally` does guarantee is that, even
+				// when that happens, we always restore the blog context we
+				// switched away from before the exception is allowed to
+				// propagate further, instead of leaving PHP's blog stack in
+				// whatever state switch_to_blog() left it in.
+				// この finally が保証しているのは「ループが止まらない」ことでは
+				// ない。このサイトでの削除処理が例外を投げた場合、例外はその
+				// まま伝播してループは止まり、このバッチ・以降のバッチに残って
+				// いるサイトは処理されない。finally が保証しているのは、その
+				// 場合でも、例外がさらに外へ伝播する前に、switch_to_blog() で
+				// 切り替える前の元のサイトのコンテキストへ必ず戻すということ
+				// （switch_to_blog() が残したままの状態でスタックを放置しない）。
 				restore_current_blog();
 			}
 		}

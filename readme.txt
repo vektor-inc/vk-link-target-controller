@@ -112,7 +112,7 @@ But we have a .pot file available so feel free to translate it in your language 
 
 = What happens to my data if I delete the plugin on a multisite network? =
 
-If VK Link Target Controller is deleted on a WordPress multisite network, its settings and post meta are removed from every site in the network, not only from the site where the deletion was performed.
+If VK Link Target Controller is deleted on a WordPress multisite network, its settings and the redirect URLs you've set on individual posts are removed from every site in the network, not only from the site where the deletion was performed. Back up any redirect settings you still need before deleting the plugin.
 
 == Screenshots ==
 

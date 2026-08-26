@@ -80,17 +80,17 @@ jobs:
     php_unit_multisite:
         if: contains(github.event.pull_request.labels.*.name, 'run-ci')
         runs-on: ubuntu-latest
-        name: PHP Unit Test (Multisite)
-        services:
-            mysql:
-                image: mysql:5.7
-                ports:
-                    - 3306
-                env:
-                    MYSQL_ROOT_PASSWORD: wordpress
-                    MYSQL_DATABASE: wordpress
-                    MYSQL_USER: wordpress
-                    MYSQL_PASSWORD: wordpress
+        # Single PHP/WP version only (not a matrix like php_unit above): this
+        # job exists to catch multisite-specific regressions in uninstall.php
+        # (switch_to_blog()/get_sites() looping), not to cover the same
+        # PHP/WP compatibility grid a second time. Keep the "Setup PHP" step
+        # (host, used by `composer install`) and WP_ENV_PHP_VERSION (container,
+        # used by `vendor/bin/phpunit`) in sync so the job name below stays
+        # accurate about which PHP version actually ran the tests.
+        name: PHP Unit Test (Multisite) on PHP 8.4
+        # No services.mysql block here: wp-env provisions its own MySQL
+        # container, so a separate GitHub Actions MySQL service is unused
+        # (this was a leftover copy from the php_unit job above it).
         steps:
             - uses: actions/checkout@v3
             - name: Read .node-version
@@ -122,6 +122,6 @@ jobs:
             - name: Install Themes
               run: bash bin/install-theme.sh
             - name: Start Environment
-              run: npx wp-env start && sudo chmod -R 777 ~/wp-env
+              run: WP_ENV_PHP_VERSION=8.4 npx wp-env start && sudo chmod -R 777 ~/wp-env
             - name: Run PHP Unit Test (Multisite)
               run: npm run phpunit:multisite

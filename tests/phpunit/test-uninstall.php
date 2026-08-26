@@ -49,7 +49,8 @@ class UninstallTest extends WP_UnitTestCase {
 					'post_meta_target_1' => '',
 					'post_meta_link_2'   => '',
 					'post_meta_target_2' => '',
-					'option'             => false,
+					'option_new'         => false,
+					'option_legacy'      => false,
 				),
 			),
 			array(
@@ -70,7 +71,8 @@ class UninstallTest extends WP_UnitTestCase {
 					'post_meta_target_1' => '',
 					'post_meta_link_2'   => '',
 					'post_meta_target_2' => '',
-					'option'             => false,
+					'option_new'         => false,
+					'option_legacy'      => false,
 				),
 			),
 			array(
@@ -84,7 +86,26 @@ class UninstallTest extends WP_UnitTestCase {
 					'post_meta_target_1' => '',
 					'post_meta_link_2'   => '',
 					'post_meta_target_2' => '',
-					'option'             => false,
+					'option_new'         => false,
+					'option_legacy'      => false,
+				),
+			),
+			array(
+				'test_condition_name' => 'レガシーオプション custom-post-types が投稿タイプ配列ではない値（他プラグインが同名で使っている可能性がある値）の場合 => レガシーオプションは削除されず残り、新オプションのみ削除される',
+				'conditions'         => array(
+					'post_meta' => array(),
+					'options'   => array(
+						'vk_ltc_custom_post_types' => array( 'post' ),
+						'custom-post-types'        => 'not-an-array-value',
+					),
+				),
+				'expected'           => array(
+					'post_meta_link_1'   => '',
+					'post_meta_target_1' => '',
+					'post_meta_link_2'   => '',
+					'post_meta_target_2' => '',
+					'option_new'         => false,
+					'option_legacy'      => 'not-an-array-value',
 				),
 			),
 		);
@@ -155,15 +176,24 @@ class UninstallTest extends WP_UnitTestCase {
 				$case['test_condition_name'] . ' (vk-ltc-target post 2 should be deleted)'
 			);
 
-			// Assert both new and legacy option keys are deleted.
-			// 新旧両方のオプションキーが削除されていることを確認する。
+			// Assert the new (prefixed) option key is always deleted, and the
+			// legacy option key is deleted only when its stored value looked
+			// like something this plugin would have saved (an array of post
+			// type slugs). A non-array legacy value must be left untouched,
+			// since it may belong to another plugin using the same option name.
+			// 新しい（プレフィックス付き）オプションキーは常に削除されることを
+			// 確認する。レガシーオプションキーは、保存値がこのプラグインの
+			// 保存形式（投稿タイプスラッグの配列）に見える場合のみ削除される
+			// ことを確認する。配列でないレガシー値は、他プラグインが同名の
+			// オプションを使っている可能性があるため、変更されずに残らなければ
+			// ならない。
 			$this->assertSame(
-				$case['expected']['option'],
+				$case['expected']['option_new'],
 				get_option( 'vk_ltc_custom_post_types', false ),
 				$case['test_condition_name'] . ' (vk_ltc_custom_post_types option)'
 			);
 			$this->assertSame(
-				$case['expected']['option'],
+				$case['expected']['option_legacy'],
 				get_option( 'custom-post-types', false ),
 				$case['test_condition_name'] . ' (legacy custom-post-types option)'
 			);
