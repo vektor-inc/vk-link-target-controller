@@ -10,5 +10,12 @@
 	],
 	"mappings":{
 		"wp-content/themes": "./tests/themes/"
+	},
+	"env": {
+		"tests": {
+			"mappings": {
+				"wp-content/mu-plugins": "./tests/e2e/mu-plugins"
+			}
+		}
 	}
 }

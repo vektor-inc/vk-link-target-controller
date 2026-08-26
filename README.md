@@ -69,3 +69,79 @@ Example:
  </a>
 </div>
 ```
+
+## Development: e2e tests (開発者向け: e2e テストの実行)
+
+Playwright を使ったブラウザ e2e テストを `tests/e2e/specs` に用意しています。
+（何をするテストかは各 spec ファイル冒頭のコメントを参照してください）
+
+### 事前準備 (Setup)
+
+1. 依存関係をインストールする。
+   ```sh
+   npm install
+   ```
+2. `.wp-env.override.json` を用意する（**開発者ごとのポート衝突を避けるため gitignore 済み**）。
+   雛形 `.wp-env.override.example.json` をコピーして、必要ならポート番号を自分の環境用に書き換える。
+   ```sh
+   cp .wp-env.override.example.json .wp-env.override.json
+   ```
+3. Playwright が使うブラウザ（Chromium）をインストールする（初回のみ）。
+   ```sh
+   npx playwright install chromium
+   ```
+4. wp-env を起動する。
+   ```sh
+   npx wp-env start
+   ```
+   e2e テストは wp-env の「tests」環境（`.wp-env.override.example.json` の
+   `env.tests.port`）に対して実行する想定です。テスト専用のカスタム投稿タイプ
+   （`tests/e2e/mu-plugins/register-test-cpt.php`）は、`.wp-env.json` の
+   `env.tests.mappings` 設定により **tests 環境にのみ mu-plugin としてマウント** され、
+   通常の開発用サイト（development 環境）には表示されません。
+5. **ブロックエディタ用パネル（`src/index.js`）をビルドする。**
+   ```sh
+   npm run build:block
+   ```
+   `npm run build` ではなく **`npm run build:block`** を使うこと。
+   `build`（`package.json`）は `build:block` の後に `jsmin`（`terser` で
+   `js/script.min.js` を生成する処理）まで実行するが、`js/script.min.js` は
+   `.gitignore` されておらず **git の追跡対象**であり、e2e が必要とするのは
+   `build/index.asset.php` と `build/index.js` だけで `js/script.min.js` とは
+   無関係。`build` で e2e を回すと、terser のバージョン差などで
+   `js/script.min.js` に意図しない差分が生じ、テストを実行しただけで
+   作業ツリーが汚れる可能性があるため、e2e 用には `build:block` に限定する。
+
+   `vk-link-target-controller.php` の `add_link_meta_box()` は、`build/index.asset.php`
+   が存在する場合のみ、レガシーの classic meta box を非表示化して React サイドバー
+   パネル（`src/index.js`）に切り替える。**ビルドが無い状態で e2e を実行すると、
+   テストが検証すべき React パネルではなく別の UI（classic meta box）に対して
+   操作してしまい、それでもテストが緑になる**という罠があるため、
+   `tests/e2e/specs/cpt-meta-save.spec.js` は実行前にビルド成果物の有無を
+   チェックし、無ければ理由を添えて即座に失敗するようになっている。
+   `npm run test:e2e`（後述）はこのビルドを自動的に実行するが、
+   `npx playwright test` を直接叩く場合は事前に必ず `npm run build:block` を
+   実行すること。
+
+### 実行 (Run)
+
+`npm run test:e2e` は実行のたびに `npm run build:block`（`jsmin` を含まない、
+軽量なパネル1ファイルのビルドで数百ミリ秒程度）を先に実行してからテストを
+走らせるため、ビルドし忘れによる誤検知を心配する必要はありません。`tests` 環境の
+URL（既定は `http://localhost:8889` ですが、`.wp-env.override.json` で変更している
+場合はそのポートに合わせる）を `WP_BASE_URL` として指定して実行します。
+
+```sh
+WP_BASE_URL=http://localhost:8889 npm run test:e2e
+```
+
+`.wp-env.override.example.json` の設定例（`env.tests.port: 8897`）を使っている場合は、
+以下のように実行します。
+
+```sh
+WP_BASE_URL=http://localhost:8897 npm run test:e2e
+```
+
+`WP_BASE_URL` を省略した場合は `playwright.config.js` のフォールバック値
+（`http://localhost:8889`）が使われますが、環境依存でテストが失敗しやすいため
+明示することを推奨します。
