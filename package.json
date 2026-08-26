@@ -17,7 +17,7 @@
 		"test": "node --check js/script.js && node --check js/admin-link-dialog.js",
 		"dist": "composer install --optimize-autoloader --prefer-dist --no-dev && npm run build && bash bin/dist.sh",
 		"phpunit": "composer install && wp-env run tests-cli --env-cwd='wp-content/plugins/vk-link-target-controller' vendor/bin/phpunit -c .phpunit.xml --verbose",
-		"test:e2e": "playwright test"
+		"test:e2e": "npm run build && playwright test"
 	},
 	"repository": {
 		"type": "git",

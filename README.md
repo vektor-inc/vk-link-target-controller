@@ -99,11 +99,28 @@ Playwright を使ったブラウザ e2e テストを `tests/e2e/specs` に用意
    （`tests/e2e/mu-plugins/register-test-cpt.php`）は、`.wp-env.json` の
    `env.tests.mappings` 設定により **tests 環境にのみ mu-plugin としてマウント** され、
    通常の開発用サイト（development 環境）には表示されません。
+5. **ブロックエディタ用パネル（`src/index.js`）をビルドする。**
+   ```sh
+   npm run build
+   ```
+   `vk-link-target-controller.php` の `add_link_meta_box()` は、`build/index.asset.php`
+   が存在する場合のみ、レガシーの classic meta box を非表示化して React サイドバー
+   パネル（`src/index.js`）に切り替える。**ビルドが無い状態で e2e を実行すると、
+   テストが検証すべき React パネルではなく別の UI（classic meta box）に対して
+   操作してしまい、それでもテストが緑になる**という罠があるため、
+   `tests/e2e/specs/cpt-meta-save.spec.js` は実行前にビルド成果物の有無を
+   チェックし、無ければ理由を添えて即座に失敗するようになっている。
+   `npm run test:e2e`（後述）はこのビルドを自動的に実行するが、
+   `npx playwright test` を直接叩く場合は事前に必ず `npm run build` を
+   実行すること。
 
 ### 実行 (Run)
 
-`tests` 環境のURL（既定は `http://localhost:8889` ですが、`.wp-env.override.json` で
-変更している場合はそのポートに合わせる）を `WP_BASE_URL` として指定して実行します。
+`npm run test:e2e` は実行のたびに `npm run build`（軽量なパネル1ファイルのビルドで
+数秒未満）を先に実行してからテストを走らせるため、ビルドし忘れによる誤検知を
+心配する必要はありません。`tests` 環境のURL（既定は `http://localhost:8889` ですが、
+`.wp-env.override.json` で変更している場合はそのポートに合わせる）を `WP_BASE_URL`
+として指定して実行します。
 
 ```sh
 WP_BASE_URL=http://localhost:8889 npm run test:e2e
