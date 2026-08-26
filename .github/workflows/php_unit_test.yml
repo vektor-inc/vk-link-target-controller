@@ -76,3 +76,66 @@ jobs:
               run: npx wp-env start && sudo chmod -R 777 ~/wp-env
             - name: Run PHP Unit Test
               run: npm run phpunit
+
+    php_unit_multisite:
+        if: contains(github.event.pull_request.labels.*.name, 'run-ci')
+        runs-on: ubuntu-latest
+        # Single PHP/WP version only (not a matrix like php_unit above): this
+        # job exists to catch multisite-specific regressions in uninstall.php
+        # (switch_to_blog()/get_sites() looping), not to cover the same
+        # PHP/WP compatibility grid a second time. Keep the "Setup PHP" step
+        # (host, used by `composer install`) and WP_ENV_PHP_VERSION (container,
+        # used by `vendor/bin/phpunit`) in sync so the job name below stays
+        # accurate about which PHP version actually ran the tests.
+        name: PHP Unit Test (Multisite) on PHP 8.4
+        # No services.mysql block here: wp-env provisions its own MySQL
+        # container, so a separate GitHub Actions MySQL service is unused
+        # (this was a leftover copy from the php_unit job above it).
+        steps:
+            - uses: actions/checkout@v3
+            - name: Read .node-version
+              run: echo "{NODEVERSION}={$(cat .node-version)}" >> $GITHUB_OUTPUT
+              id: nodenv
+            - name: Setup Node.js (.node-version)
+              uses: actions/setup-node@v3
+              with:
+                  node-version: '${{ steps.nodenv.outputs.NODEVERSION }}'
+            - name: Cache multiple paths
+              uses: actions/cache@v3
+              with:
+                  path: vendor
+                  key: ${{ runner.os }}-php-multisite-${{ hashFiles('**/composer.lock') }}
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.4'
+            - name: install npm scripts
+              run: npm install
+            - name: Install Composer Packages
+              run: composer install
+            - name: Build
+              run: npm run build
+            - name: Set Permissions for Theme Directory
+              run: |
+                  sudo mkdir -p tests/themes
+                  sudo chmod -R 777 tests/themes
+            - name: Install Themes
+              run: bash bin/install-theme.sh
+            - name: Start Environment
+              run: WP_ENV_PHP_VERSION=8.4 npx wp-env start && sudo chmod -R 777 ~/wp-env
+            - name: Run PHP Unit Test (Multisite)
+              # Verify the run actually happened in multisite mode, not just
+              # that phpunit exited 0. A skipped test suite also exits 0, so
+              # a green run here does not by itself prove WP_MULTISITE=1
+              # reached the phpunit process inside the tests-cli container
+              # (see the comment on UninstallMultisiteTest::set_up() in
+              # tests/phpunit/test-uninstall-multisite.php for why that
+              # can't reliably be caught from inside the test itself).
+              # WordPress's own test bootstrap prints "Running as
+              # multisite..." to stdout when it installs as multisite, so
+              # grep for that line; `set -o pipefail` makes the `tee`
+              # pipeline still fail the step if phpunit itself fails.
+              run: |
+                  set -o pipefail
+                  npm run phpunit:multisite 2>&1 | tee /tmp/multisite.log
+                  grep -q 'Running as multisite' /tmp/multisite.log
