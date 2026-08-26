@@ -125,9 +125,7 @@ if ( ! is_multisite() ) {
 	 * "no filter" in WP_Site_Query) - it simply returns every site in
 	 * the network. That is intentional here: uninstall must remove this
 	 * plugin's data everywhere, so sites in any of those states are
-	 * deliberately included rather than skipped. No wp_is_large_network()
-	 * branch is used; instead sites are simply processed in batches using
-	 * number/offset so memory use stays bounded even on large networks.
+	 * deliberately included rather than skipped.
 	 * get_sites() を使ってサイトIDをバッチ取得する（$wpdb->blogs への直接
 	 * クエリは使わない）。これは、対象を絞り込むためではなく、サイト一覧の
 	 * 取得を WordPress 標準の API に任せ、テーブル構造やマルチネットワーク
@@ -137,9 +135,54 @@ if ( ! is_multisite() ) {
 	 * 「絞り込みなし」を意味する）。つまりネットワーク内の全サイトがそのまま
 	 * 返る。アンインストールはこのプラグインのデータをどこにも残さず消す
 	 * ための処理なので、これらの状態のサイトもあえて除外せず削除対象に
-	 * 含めている。wp_is_large_network() による分岐は行わず、number/offset
-	 * でバッチ処理することで、大規模ネットワークでもメモリ使用量を一定範囲に
-	 * 抑える。
+	 * 含めている。
+	 *
+	 * Note on scope: "network" here is a loose description, not a literal
+	 * one. WP_Site_Query only adds a `site_id = %d` (network) restriction
+	 * when its `network_id` arg is non-empty, and we don't pass one (it
+	 * defaults to 0 / "no restriction"), so on a multi-network install this
+	 * actually returns every site across ALL networks, not just the one
+	 * the currently active network happens to be. That matches reality
+	 * though: this plugin's files are shared install-wide (not per
+	 * network), and deleting it removes those files for the whole install,
+	 * so cleaning up data install-wide here is the correct scope, not an
+	 * accidental over-reach.
+	 * スコープについての注記: ここで言う「ネットワーク」は正確な表現ではない。
+	 * WP_Site_Query は `network_id` 引数を渡した場合のみ `site_id = %d`
+	 * （ネットワーク）による絞り込みを追加する。今回はこの引数を渡していない
+	 * （既定値は 0 で「絞り込みなし」を意味する）ため、マルチネットワーク構成
+	 * では現在のネットワークだけでなく、**インストール全体（全ネットワーク）の
+	 * 全サイト**が対象になる。ただしこれは実態として正しい範囲でもある。この
+	 * プラグインのファイルはネットワーク単位ではなくインストール全体で共有
+	 * されており、削除するとインストール全体からファイルが消えるため、データの
+	 * 後始末もインストール全体を対象にするのが妥当な範囲であり、意図しない
+	 * 過剰な範囲ではない。
+	 *
+	 * No wp_is_large_network() branch is used; instead sites are simply
+	 * processed in batches using number/offset so memory use stays bounded
+	 * even on large networks. Note, though, that batching only bounds
+	 * memory - it does not change the fact that this whole loop still runs
+	 * inside a single HTTP request (delete_plugins() calls
+	 * uninstall_plugin() synchronously, before it deletes the plugin
+	 * files). On an install with thousands of sites, the constraint that
+	 * actually bites first in practice is PHP's max_execution_time, not
+	 * memory: if the request times out partway through this loop, it dies
+	 * before ever reaching the plugin file deletion, so from the admin's
+	 * point of view the plugin still appears installed and clicking
+	 * "Delete" again restarts this whole loop from site 1, re-deleting
+	 * already-clean sites' (already absent) data along the way.
+	 * wp_is_large_network() による分岐は行わず、number/offset でバッチ処理
+	 * することで、大規模ネットワークでもメモリ使用量を一定範囲に抑える。
+	 * ただし、バッチ処理が抑えるのはメモリ使用量だけであり、このループ全体が
+	 * 1回の HTTP リクエスト内で完結する処理であること自体は変わらない
+	 * （delete_plugins() はプラグインファイルを削除する前に、同期的に
+	 * uninstall_plugin() を呼び出す）。数千サイト規模のインストールでは、
+	 * 実際に先に効いてくる制約はメモリではなく PHP の max_execution_time で
+	 * ある。ループの途中でリクエストがタイムアウトすると、プラグインファイルの
+	 * 削除まで到達せずに処理が落ちるため、管理者から見るとプラグインは
+	 * インストールされたままに見え、再度「削除」を押すたびにこのループが
+	 * サイト1件目からやり直しになる（既にクリーンなサイトに対しても、既に
+	 * 存在しないデータの削除を再度試みることになる）。
 	 */
 	$batch_size = 100;
 	$offset     = 0;

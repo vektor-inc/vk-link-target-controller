@@ -21,29 +21,63 @@
 class UninstallMultisiteTest extends WP_UnitTestCase {
 
 	/**
-	 * Skip the whole class when the test run is not multisite - unless
-	 * WP_MULTISITE=1 was explicitly requested for this run, in which case
-	 * fail loudly instead. A silent skip would let the CI job that exists
-	 * specifically to run this test finish green while testing nothing at
-	 * all, e.g. if the env var never reached the phpunit process inside
-	 * the container. A skip is only safe when multisite genuinely was not
-	 * requested (the normal single-site job).
-	 * テスト実行がマルチサイトでない場合はクラス全体をスキップする。ただし
-	 * WP_MULTISITE=1 が明示的に指定されていた場合はスキップせず失敗させる。
-	 * 無条件にスキップすると、このテストを走らせるためだけに存在する CI
-	 * ジョブが、何も検証しないまま緑で終わってしまう（例: コンテナ内の
-	 * phpunit プロセスまで環境変数が届かなかった場合）。スキップが安全
-	 * なのは、そもそもマルチサイトが要求されていない通常のシングルサイト
-	 * ジョブのときだけである。
+	 * Skip the whole class when the test run is not multisite.
+	 *
+	 * This is intentionally just a skip, not a skip-or-fail based on
+	 * getenv( 'WP_MULTISITE' ): WordPress's own test bootstrap
+	 * (vendor/wp-phpunit/wp-phpunit/includes/bootstrap.php) decides
+	 * whether to install as multisite using that exact same
+	 * '1' === getenv( 'WP_MULTISITE' ) check. Reading it again here can
+	 * only ever agree with what the bootstrap already decided - if the
+	 * env var reached this PHP process, multisite is already active and
+	 * this branch isn't taken at all; if it didn't reach this process, it
+	 * didn't reach the bootstrap either, so `getenv()` here reads exactly
+	 * as empty as it did there. There is no scenario where this check
+	 * would see '1' while is_multisite() is still false, so a fail()
+	 * based on it would be dead code.
+	 *
+	 * The failure mode this is actually guarding against - the
+	 * "PHP Unit Test (Multisite)" CI job finishing green while never
+	 * actually running in multisite mode (e.g. WP_MULTISITE=1 never
+	 * reaching the phpunit process inside the container) - is instead
+	 * caught at the CI job level, by grepping the multisite job's test
+	 * output for the "Running as multisite..." line that bootstrap.php
+	 * prints when it does install as multisite (see the
+	 * "Run PHP Unit Test (Multisite)" step in
+	 * .github/workflows/php_unit_test.yml). That check has access to
+	 * bootstrap's actual decision as it happened; this test does not.
+	 *
+	 * テスト実行がマルチサイトでない場合はクラス全体をスキップする。
+	 *
+	 * ここであえて単純な skip のみとし、getenv( 'WP_MULTISITE' ) を見て
+	 * skip か fail かを切り替えることはしていない。WordPress 本体のテスト
+	 * ブートストラップ（vendor/wp-phpunit/wp-phpunit/includes/bootstrap.php）
+	 * 自体が、マルチサイトとしてインストールするかどうかを全く同じ
+	 * '1' === getenv( 'WP_MULTISITE' ) という式で判定している。ここで
+	 * もう一度読んでも、ブートストラップが既に下した判定と一致する結果
+	 * にしかならない。環境変数がこの PHP プロセスに届いていれば、その時点で
+	 * 既にマルチサイトが有効になっており、このブロック自体に入らない。届いて
+	 * いなければ、ブートストラップにも届いていないということなので、ここでの
+	 * getenv() もブートストラップ側と同じく空を返す。つまり
+	 * is_multisite() が false のまま getenv() が '1' を返すケースは存在
+	 * せず、それを根拠にした fail() はデッドコードになってしまう。
+	 *
+	 * ここで実際に防ぎたい失敗モード ――「PHP Unit Test (Multisite)」
+	 * ジョブが、実際にはマルチサイトで一度も走らないまま緑で終わってしまう
+	 * こと（例: コンテナ内の phpunit プロセスまで WP_MULTISITE=1 が届かない
+	 * 場合）―― は、代わりに CI ジョブ側で担保している。マルチサイトジョブの
+	 * テスト出力に対して、bootstrap.php が実際にマルチサイトとしてインストール
+	 * した際に出力する "Running as multisite..." という行を grep で確認する
+	 * （.github/workflows/php_unit_test.yml の
+	 * "Run PHP Unit Test (Multisite)" ステップを参照）。この検証はブート
+	 * ストラップが実際に下した判定そのものにアクセスできるが、このテスト側の
+	 * getenv() には見えない。
 	 */
 	public function set_up() {
 		parent::set_up();
 
 		if ( ! is_multisite() ) {
-			if ( '1' === getenv( 'WP_MULTISITE' ) ) {
-				$this->fail( 'WP_MULTISITE=1 was requested but the test run is not multisite.' );
-			}
-			$this->markTestSkipped( 'This test only runs in multisite mode (WP_MULTISITE=1).' );
+			$this->markTestSkipped( 'This test only runs in multisite mode (WP_MULTISITE=1). See .github/workflows/php_unit_test.yml for the CI-side check that this actually ran in multisite mode.' );
 		}
 	}
 
@@ -217,5 +251,76 @@ class UninstallMultisiteTest extends WP_UnitTestCase {
 			'all',
 			'サブサイトが1つも無く、メインサイトのみでデータがある状態でアンインストールを実行した場合 => メインサイトのデータが削除される'
 		);
+	}
+
+	/**
+	 * Test: a subsite that never had this plugin's data, but happens to
+	 * have a non-array value stored under the legacy option name
+	 * `custom-post-types` (as another plugin might, since that name has no
+	 * plugin-specific prefix) => uninstall must NOT delete that value on
+	 * that site. This pins down the actual reason
+	 * vk_ltc_uninstall_delete_site_data()'s is_array() guard exists:
+	 * without it, running uninstall network-wide would delete data that
+	 * never belonged to this plugin, on a site that never installed it.
+	 * The other uninstall tests only ever seed `custom-post-types` with
+	 * arrays, so they could not have caught a regression that removed or
+	 * weakened this guard.
+	 * テスト: このプラグインを一度も導入していないサブサイトに、レガシー
+	 * オプション名 custom-post-types で配列でない値が入っている場合（この
+	 * 名前にはプレフィックスが無いため、他プラグインが同名で使っている
+	 * 想定）=> アンインストールを実行してもその値は削除されない。これは
+	 * vk_ltc_uninstall_delete_site_data() の is_array() ガードが実際に
+	 * 存在する理由そのものを固定するテストである。ガードが無ければ、
+	 * ネットワーク全体でのアンインストール実行が、このプラグインを一度も
+	 * 導入していないサイト上の、このプラグインとは無関係なデータまで
+	 * 消してしまう。他のアンインストールテストは custom-post-types に
+	 * 配列しか投入していないため、このガードが失われる・弱まる regression
+	 * を検知できなかった。
+	 */
+	function test_uninstall_multisite_preserves_non_array_legacy_option_on_untouched_site() {
+		$main_blog_id = get_current_blog_id();
+
+		// Main site: seeded with real plugin data, to prove normal cleanup
+		// still works correctly alongside the untouched-site scenario below.
+		// メインサイト：実際のプラグインデータを投入し、以下の「導入していない
+		// サイト」のシナリオと同時に走っても通常の削除が問題なく動くことを
+		// 確認する。
+		$main_post_id = $this->create_site_data( $main_blog_id, true );
+
+		// Subsite that never had this plugin installed: no post meta, no
+		// plugin-prefixed option - only a non-array value under the legacy
+		// option name, simulating another plugin's unrelated use of it.
+		// このプラグインを一度も導入していないサブサイト：投稿メタも新オプション
+		// も無く、レガシーオプション名にのみ配列でない値が入っている（他
+		// プラグインが無関係な用途で同名を使っている状態を想定）。
+		$untouched_blog_id = $this->factory->blog->create();
+		switch_to_blog( $untouched_blog_id );
+		$foreign_legacy_value = 'not-an-array-value-from-another-plugin';
+		update_option( 'custom-post-types', $foreign_legacy_value );
+		restore_current_blog();
+
+		// Define WP_UNINSTALL_PLUGIN if not already defined, then include uninstall.php.
+		// WP_UNINSTALL_PLUGIN が未定義の場合は定義し、uninstall.php を読み込む。
+		if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
+			define( 'WP_UNINSTALL_PLUGIN', true );
+		}
+		require dirname( __DIR__, 2 ) . '/uninstall.php';
+
+		// The main site's real plugin data is still cleaned up as normal.
+		// メインサイトの実際のプラグインデータは通常どおり削除される。
+		$this->assert_site_data_deleted( $main_blog_id, $main_post_id, 'メインサイトの実データ' );
+
+		// The untouched site's foreign-looking legacy value must survive
+		// completely unchanged: this is the guard's whole reason for existing.
+		// 「導入していないサイト」の他プラグイン由来に見えるレガシー値は、
+		// 一切変更されずに残らなければならない：これがガードの存在理由そのもの
+		// である。
+		switch_to_blog( $untouched_blog_id );
+		$this->assertSame(
+			$foreign_legacy_value,
+			get_option( 'custom-post-types', false ),
+			'このプラグインを導入していないサイトの custom-post-types（配列でない値）は削除されずに残る'
+		);
+		restore_current_blog();
 	}
 }

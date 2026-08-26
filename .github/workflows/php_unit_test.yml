@@ -124,4 +124,18 @@ jobs:
             - name: Start Environment
               run: WP_ENV_PHP_VERSION=8.4 npx wp-env start && sudo chmod -R 777 ~/wp-env
             - name: Run PHP Unit Test (Multisite)
-              run: npm run phpunit:multisite
+              # Verify the run actually happened in multisite mode, not just
+              # that phpunit exited 0. A skipped test suite also exits 0, so
+              # a green run here does not by itself prove WP_MULTISITE=1
+              # reached the phpunit process inside the tests-cli container
+              # (see the comment on UninstallMultisiteTest::set_up() in
+              # tests/phpunit/test-uninstall-multisite.php for why that
+              # can't reliably be caught from inside the test itself).
+              # WordPress's own test bootstrap prints "Running as
+              # multisite..." to stdout when it installs as multisite, so
+              # grep for that line; `set -o pipefail` makes the `tee`
+              # pipeline still fail the step if phpunit itself fails.
+              run: |
+                  set -o pipefail
+                  npm run phpunit:multisite 2>&1 | tee /tmp/multisite.log
+                  grep -q 'Running as multisite' /tmp/multisite.log
