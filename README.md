@@ -69,3 +69,53 @@ Example:
  </a>
 </div>
 ```
+
+## Development: e2e tests (開発者向け: e2e テストの実行)
+
+Playwright を使ったブラウザ e2e テストを `tests/e2e/specs` に用意しています。
+（何をするテストかは各 spec ファイル冒頭のコメントを参照してください）
+
+### 事前準備 (Setup)
+
+1. 依存関係をインストールする。
+   ```sh
+   npm install
+   ```
+2. `.wp-env.override.json` を用意する（**開発者ごとのポート衝突を避けるため gitignore 済み**）。
+   雛形 `.wp-env.override.example.json` をコピーして、必要ならポート番号を自分の環境用に書き換える。
+   ```sh
+   cp .wp-env.override.example.json .wp-env.override.json
+   ```
+3. Playwright が使うブラウザ（Chromium）をインストールする（初回のみ）。
+   ```sh
+   npx playwright install chromium
+   ```
+4. wp-env を起動する。
+   ```sh
+   npx wp-env start
+   ```
+   e2e テストは wp-env の「tests」環境（`.wp-env.override.example.json` の
+   `env.tests.port`）に対して実行する想定です。テスト専用のカスタム投稿タイプ
+   （`tests/e2e/mu-plugins/register-test-cpt.php`）は、`.wp-env.json` の
+   `env.tests.mappings` 設定により **tests 環境にのみ mu-plugin としてマウント** され、
+   通常の開発用サイト（development 環境）には表示されません。
+
+### 実行 (Run)
+
+`tests` 環境のURL（既定は `http://localhost:8889` ですが、`.wp-env.override.json` で
+変更している場合はそのポートに合わせる）を `WP_BASE_URL` として指定して実行します。
+
+```sh
+WP_BASE_URL=http://localhost:8889 npm run test:e2e
+```
+
+`.wp-env.override.example.json` の設定例（`env.tests.port: 8897`）を使っている場合は、
+以下のように実行します。
+
+```sh
+WP_BASE_URL=http://localhost:8897 npm run test:e2e
+```
+
+`WP_BASE_URL` を省略した場合は `playwright.config.js` のフォールバック値
+（`http://localhost:8889`）が使われますが、環境依存でテストが失敗しやすいため
+明示することを推奨します。

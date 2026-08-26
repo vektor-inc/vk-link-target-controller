@@ -1,0 +1,9 @@
+{
+	"core": null,
+	"port": 8896,
+	"env": {
+		"tests": {
+			"port": 8897
+		}
+	}
+}

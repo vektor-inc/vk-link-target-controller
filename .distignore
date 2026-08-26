@@ -12,6 +12,8 @@
 .svnignore
 .wp-env.json
 .wp-env.override.json
+.wp-env.override.example.json
+playwright.config.js
 .phpunit.result.cache
 .editorconfig
 .phpunit.xml

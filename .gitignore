@@ -16,3 +16,9 @@ dist/
 .claude/
 .cursor/
 .github/skills/
+
+# Playwright e2e の実行結果・ログイン状態など（コミット対象外）
+# Playwright e2e run artifacts (test results, storage state, etc.)
+artifacts/
+test-results/
+playwright-report/
