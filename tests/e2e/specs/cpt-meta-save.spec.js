@@ -50,6 +50,11 @@ const TEST_REDIRECT_URL = 'https://example.com/vk-ltc-e2e-test/';
  */
 async function expandMetaBoxesPanel( page ) {
 	const toggle = page.getByRole( 'button', { name: /meta boxes/i } );
+	// 「Meta Boxes」パネルの見出しは、エディタ本体の初期表示より少し遅れて
+	// 非同期にマウントされることがあるため、先にDOMへの出現を待ってから
+	// 状態（aria-expanded）を読む。ここを待たずに読むと、マウント前の
+	// タイミングに当たった場合だけ稀に失敗する（flaky になる）。
+	await toggle.first().waitFor();
 	// 既に開いている場合は何もしない（aria-expanded="true"）。
 	const isExpanded = await toggle
 		.first()
