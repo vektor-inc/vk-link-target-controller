@@ -38,7 +38,7 @@
 		"npm-check-updates": "^19.3.1"
 	},
 	"dependencies": {
-		"@babel/runtime": "^7.29.2"
+		"@babel/runtime": "^8.0.0"
 	},
 	"overrides": {
 		"serialize-javascript": "^7.0.5",
