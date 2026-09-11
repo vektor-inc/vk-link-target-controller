@@ -35,7 +35,7 @@
 		"@wordpress/e2e-test-utils-playwright": "^1.54.0",
 		"@wordpress/env": "10.38.0",
 		"@wordpress/scripts": "^34.2.0",
-		"npm-check-updates": "^19.3.1"
+		"npm-check-updates": "^23.1.0"
 	},
 	"dependencies": {
 		"@babel/runtime": "^7.29.2"
