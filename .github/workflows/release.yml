@@ -23,7 +23,7 @@ jobs:
         steps:
             - uses: actions/checkout@v4
             - name: Setup Node.js
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v7
               with:
                   node-version: 20.x
             - name: Setup PHP 7.4
@@ -47,7 +47,7 @@ jobs:
         steps:
             - uses: actions/checkout@v4
             - name: Setup Node.js
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v7
               with:
                   node-version: 20.x
             - name: Install NPM Scripts
@@ -100,7 +100,7 @@ jobs:
         steps:
             - uses: actions/checkout@v4
             - name: Setup Node.js
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v7
               with:
                   node-version: 20.x
             - name: Cache vendor
