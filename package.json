@@ -32,7 +32,7 @@
 	"homepage": "https://wordpress.org/plugins/vk-link-target-controller/",
 	"devDependencies": {
 		"@playwright/test": "^1.63.0",
-		"@wordpress/e2e-test-utils-playwright": "^1.54.0",
+		"@wordpress/e2e-test-utils-playwright": "^2.0.0",
 		"@wordpress/env": "11.15.0",
 		"@wordpress/scripts": "^34.2.0",
 		"npm-check-updates": "^23.1.0"
