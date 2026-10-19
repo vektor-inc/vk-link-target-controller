@@ -30,8 +30,8 @@ class registerMetaTest extends WP_UnitTestCase {
 	private $original_user_id = 0;
 
 	/**
-	 * Post IDs whose redirect meta must be restored after each test.
-	 * 各テスト終了後にリダイレクトメタを復元する投稿 ID。
+	 * Original redirect meta values keyed by post ID, restored after each test (null means the meta did not exist).
+	 * 投稿 ID をキーにしたリダイレクトメタの元の値。各テスト終了後に復元する（null は元々メタが無かったことを表す）。
 	 *
 	 * @var array
 	 */
@@ -149,9 +149,10 @@ class registerMetaTest extends WP_UnitTestCase {
 				'expected'            => '',
 			),
 			array(
-				'test_condition_name' => 'javascript スキームを画面から保存した場合 => 空文字になる',
-				'saved'               => 'javascript:alert(1)',
-				'request_mode'        => 'round_trip',
+				'test_condition_name' => 'javascript スキームが POST で直接送られた場合 => 空文字になる',
+				'saved'               => 'https://example.com/before',
+				'request_mode'        => 'direct',
+				'request_value'       => 'javascript:alert(1)',
 				'expected'            => '',
 			),
 			array(
@@ -167,6 +168,9 @@ class registerMetaTest extends WP_UnitTestCase {
 				'expected'            => 'https://example.com/unchanged-array',
 			),
 		);
+
+		// Unregister the meta key because its sanitize_callback also formats URLs in update_post_meta(); this leaves the sanitizing under test to save_link(). / 登録済みの sanitize_callback が update_post_meta() でも URL を整形するため、save_link() 自身の整形を検証するには登録を外す.
+		unregister_meta_key( 'post', 'vk-ltc-link', 'post' );
 
 		$instance         = new VK_Link_Target_Controller();
 		$expected_results = array();
@@ -196,6 +200,9 @@ class registerMetaTest extends WP_UnitTestCase {
 				$field_value = html_entity_decode( $matches[1], ENT_QUOTES, 'UTF-8' );
 
 				$_POST['vk-ltc-link-field'] = wp_slash( $field_value );
+			} elseif ( 'direct' === $case['request_mode'] ) {
+				// Send the value to save_link() as is, without going through the meta box. / メタボックスを経由せず、値をそのまま save_link() へ送る.
+				$_POST['vk-ltc-link-field'] = wp_slash( $case['request_value'] );
 			} elseif ( 'array' === $case['request_mode'] ) {
 				$_POST['vk-ltc-link-field'] = array( 'https://example.com/untrusted' );
 			}
