@@ -101,6 +101,94 @@ class rewriteTest extends WP_Ajax_UnitTestCase {
 	}
 
 	/**
+	 * Test that redirection() sends the same destination for raw and legacy ampersands.
+	 * redirection() が生のアンパサンドと旧形式のアンパサンドで同じ遷移先へリダイレクトすることを確認する。
+	 *
+	 * redirection() calls exit after wp_redirect(), so the wp_redirect filter captures the destination and aborts the call.
+	 * redirection() は wp_redirect() の後に exit するため、wp_redirect フィルターで遷移先を捕まえて処理を中断する。
+	 *
+	 * @return void
+	 */
+	public function test_redirection() {
+
+		$test_posts = self::create_test_posts();
+		$post_id    = $test_posts['post_id'];
+		$instance   = new VK_Link_Target_Controller();
+
+		// Preserve the global post that redirection() reads. / redirection() が参照するグローバルの投稿を退避する.
+		$original_post = isset( $GLOBALS['post'] ) ? $GLOBALS['post'] : null;
+
+		$test_cases = array(
+			array(
+				'test_condition_name' => '生の & を含む URL が保存されている場合 => 生の & の遷移先へリダイレクトする',
+				'saved_url'           => 'https://example.com/?a=1&b=2',
+				'expected'            => 'https://example.com/?a=1&b=2',
+			),
+			array(
+				'test_condition_name' => '旧 &#038; を含む URL が保存されている場合 => 生の & と同じ遷移先へリダイレクトする',
+				'saved_url'           => 'https://example.com/?a=1&#038;b=2',
+				'expected'            => 'https://example.com/?a=1&b=2',
+			),
+			array(
+				'test_condition_name' => '入れ子の %XX URL が保存されている場合 => %XX のまま遷移先になる',
+				'saved_url'           => 'https://outer.example/?url=https%3A%2F%2Finner.example%2Fa%3Fb%3D2%26c%3D3',
+				'expected'            => 'https://outer.example/?url=https%3A%2F%2Finner.example%2Fa%3Fb%3D2%26c%3D3',
+			),
+			array(
+				'test_condition_name' => 'シングルクォートを含む URL が保存されている場合 => クォートが復元された遷移先になる',
+				'saved_url'           => 'https://example.com/O\'Reilly',
+				'expected'            => 'https://example.com/O\'Reilly',
+			),
+			array(
+				'test_condition_name' => '空文字が保存されている場合 => リダイレクトしない',
+				'saved_url'           => '',
+				'expected'            => null,
+			),
+		);
+
+		/**
+		 * Abort redirection() by throwing the destination passed to wp_redirect().
+		 * wp_redirect() に渡された遷移先を例外で投げて redirection() を中断する。
+		 *
+		 * @param string $location Redirect destination. / リダイレクト先。
+		 * @throws RuntimeException Always thrown with the destination as its message. / 遷移先をメッセージにして必ず投げる。
+		 */
+		$capture_redirect = function ( $location ) {
+			throw new RuntimeException( $location );
+		};
+
+		foreach ( $test_cases as $case ) {
+			// Open the post before saving the URL because go_to() fires the wp action, which runs redirection() with exit. / go_to() は exit を伴う redirection() を wp アクションで実行するため、URL を保存する前に投稿を開く.
+			delete_post_meta( $post_id, 'vk-ltc-link' );
+			$this->go_to( get_permalink( $post_id ) );
+			$GLOBALS['post'] = get_post( $post_id );
+			update_post_meta( $post_id, 'vk-ltc-link', $case['saved_url'] );
+
+			// Record the destination that redirection() sends, or null when it does not redirect. / redirection() の遷移先を記録する（リダイレクトしない場合は null）.
+			$actual = null;
+			add_filter( 'wp_redirect', $capture_redirect );
+			try {
+				$instance->redirection();
+			} catch ( RuntimeException $redirect ) {
+				$actual = $redirect->getMessage();
+			} finally {
+				remove_filter( 'wp_redirect', $capture_redirect );
+			}
+
+			$this->assertSame( $case['expected'], $actual, $case['test_condition_name'] );
+		}
+
+		// Restore the global post. / グローバルの投稿を復元する.
+		if ( null === $original_post ) {
+			unset( $GLOBALS['post'] );
+		} else {
+			$GLOBALS['post'] = $original_post;
+		}
+
+		wp_delete_post( $post_id, true );
+	}
+
+	/**
 	 * Test that ajax_rewrite_ids() returns URLs with HTML entities decoded back to raw characters.
 	 * ajax_rewrite_ids() が HTML エンティティを元の文字へ復元した URL を返すことをテストする。
 	 *
