@@ -106,6 +106,8 @@ class rewriteTest extends WP_Ajax_UnitTestCase {
 	 *
 	 * redirection() calls exit after wp_redirect(), so the wp_redirect filter captures the destination and aborts the call.
 	 * redirection() は wp_redirect() の後に exit するため、wp_redirect フィルターで遷移先を捕まえて処理を中断する。
+	 * The captured value is what wp_redirect() receives, before WordPress core's wp_sanitize_redirect() runs, so the actual Location can differ (e.g. a single quote is removed; existing core behavior, out of scope for this fix).
+	 * 捕まえるのは wp_redirect() に渡される値で、WordPress 本体の wp_sanitize_redirect() による整形の前のため、実際の Location とは異なりうる（例: シングルクォートは除去される。本体の既存の挙動で、この修正の対象外）。
 	 *
 	 * @return void
 	 */
@@ -135,7 +137,7 @@ class rewriteTest extends WP_Ajax_UnitTestCase {
 				'expected'            => 'https://outer.example/?url=https%3A%2F%2Finner.example%2Fa%3Fb%3D2%26c%3D3',
 			),
 			array(
-				'test_condition_name' => 'シングルクォートを含む URL が保存されている場合 => クォートが復元された遷移先になる',
+				'test_condition_name' => 'シングルクォートを含む URL が保存されている場合 => wp_redirect() に渡す値はクォートを保持している（実際の Location からは WordPress 本体が後段で除去する）',
 				'saved_url'           => 'https://example.com/O\'Reilly',
 				'expected'            => 'https://example.com/O\'Reilly',
 			),
