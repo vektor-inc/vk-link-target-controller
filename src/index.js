@@ -68,6 +68,12 @@ const VkLtcPanel = () => {
 
 	const [ meta, setMeta ] = useEntityProp( 'postType', postType, 'meta' );
 
+	// Only show panel for enabled post types.
+	// 有効な投稿タイプでのみパネルを表示
+	if ( ! candidatePostTypes.includes( postType ) ) {
+		return null;
+	}
+
 	const link = meta?.[ 'vk-ltc-link' ] ?? '';
 	const displayLink = getDisplayLink( link );
 	const target = meta?.[ 'vk-ltc-target' ];
@@ -139,12 +145,6 @@ const VkLtcPanel = () => {
 			jQuery( document ).off( 'wplink-close.vkltc' );
 		};
 	}, [ updateMeta ] );
-
-	// Only show panel for enabled post types.
-	// 有効な投稿タイプでのみパネルを表示
-	if ( ! candidatePostTypes.includes( postType ) ) {
-		return null;
-	}
 
 	/**
 	 * Open the WordPress media uploader to select a file.
