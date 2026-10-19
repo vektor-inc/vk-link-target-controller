@@ -78,10 +78,14 @@ msgid "If you want to link to the file, please upload select the file from the \
 msgstr ""
 
 #: vk-link-target-controller.php:422
+#: build/index.js:1
+#: src/index.js:157
 msgid "URL"
 msgstr ""
 
 #: vk-link-target-controller.php:424
+#: build/index.js:1
+#: src/index.js:173
 msgid "Search internal link"
 msgstr ""
 

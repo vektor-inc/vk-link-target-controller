@@ -20,6 +20,14 @@ import { useEntityProp } from '@wordpress/core-data';
 import { __ } from '@wordpress/i18n';
 import { useEffect, useCallback } from '@wordpress/element';
 
+// ID of the URL field in the panel. wpLink.open() receives this same ID and
+// keeps the element as "the field being edited", so use this one constant
+// for both the TextControl and the open() call.
+// パネルのURL欄のID。wpLink.open() に同じIDを渡し、wpLink はその要素を
+// 「編集中の入力欄」として保持するため、TextControl と open() の両方で
+// この定数を使うこと。
+const LINK_FIELD_ID = 'vk-ltc-react-link';
+
 const VkLtcPanel = () => {
 	const { postType, candidatePostTypes } = useSelect( ( select ) => {
 		const editor = select( 'core/editor' );
@@ -64,7 +72,7 @@ const VkLtcPanel = () => {
 			return;
 		}
 		window.vkLtcLinkMode = true;
-		window.wpLink.open( 'vk-ltc-react-link', link, '' );
+		window.wpLink.open( LINK_FIELD_ID, link, '' );
 	}, [ link ] );
 
 	// Intercept wp-link-submit click when opened from this panel.
@@ -145,6 +153,7 @@ const VkLtcPanel = () => {
 			</p>
 
 			<TextControl
+				id={ LINK_FIELD_ID }
 				label={ __( 'URL', 'vk-link-target-controller' ) }
 				value={ link }
 				onChange={ ( value ) => updateMeta( 'vk-ltc-link', value ) }
