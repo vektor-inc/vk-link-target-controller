@@ -14,14 +14,204 @@
 class registerMetaTest extends WP_UnitTestCase {
 
 	/**
+	 * Original POST data before each test.
+	 * 各テスト開始前の POST データ。
+	 *
+	 * @var array
+	 */
+	private $original_post_data = array();
+
+	/**
+	 * Original current user ID before each test.
+	 * 各テスト開始前のログインユーザー ID。
+	 *
+	 * @var int
+	 */
+	private $original_user_id = 0;
+
+	/**
+	 * Post IDs whose redirect meta must be restored after each test.
+	 * 各テスト終了後にリダイレクトメタを復元する投稿 ID。
+	 *
+	 * @var array
+	 */
+	private $original_post_meta = array();
+
+	/**
 	 * Set up test environment.
 	 * テスト環境のセットアップ。init フックが発火済みでない場合に備えて手動で登録する。
 	 */
 	public function set_up() {
 		parent::set_up();
+
+		// Preserve globals that save_link() changes during form-save simulations. / フォーム保存の再現で save_link() が変更するグローバル状態を退避する.
+		$this->original_post_data = $_POST;
+		$this->original_user_id   = get_current_user_id();
+		$this->original_post_meta = array();
+
 		// Ensure post meta is registered for tests.
 		// テスト用にメタを確実に登録する。
 		vk_ltc_register_post_meta();
+	}
+
+	/**
+	 * Restore POST data, the current user, and redirect meta after each test.
+	 * 各テスト終了後に POST データ、ログインユーザー、リダイレクトメタを復元する。
+	 *
+	 * @return void
+	 */
+	public function tear_down() {
+		// Restore every redirect meta value recorded by test_save_link(). / test_save_link() が記録した各リダイレクトメタを復元する.
+		foreach ( $this->original_post_meta as $post_id => $meta_value ) {
+			if ( null === $meta_value ) {
+				delete_post_meta( $post_id, 'vk-ltc-link' );
+			} else {
+				update_post_meta( $post_id, 'vk-ltc-link', $meta_value );
+			}
+		}
+
+		$_POST = $this->original_post_data;
+		wp_set_current_user( $this->original_user_id );
+
+		parent::tear_down();
+	}
+
+	/**
+	 * Test that a classic editor display-and-save round trip preserves redirect URLs.
+	 * クラシックエディタで表示して保存した際にリダイレクト URL が保持されることを確認する。
+	 *
+	 * @return void
+	 */
+	public function test_save_link() {
+		// Create a user with the capability required by save_link() and a post to update. / save_link() に必要な権限を持つユーザーと更新対象の投稿を作成する.
+		$user_id = $this->factory->user->create( array( 'role' => 'editor' ) );
+		wp_set_current_user( $user_id );
+		$post_id = $this->factory->post->create();
+		$post    = get_post( $post_id );
+
+		$this->original_post_meta[ $post_id ] = metadata_exists( 'post', $post_id, 'vk-ltc-link' )
+			? get_post_meta( $post_id, 'vk-ltc-link', true )
+			: null;
+
+		$test_cases = array(
+			array(
+				'test_condition_name' => '入れ子の %XX URL を開いて更新した場合 => 保存値が完全一致する',
+				'saved'               => 'https://outer.example/?url=https%3A%2F%2Finner.example%2Fa%3Fb%3D2%26c%3D3',
+				'request_mode'        => 'round_trip',
+				'expected'            => 'https://outer.example/?url=https%3A%2F%2Finner.example%2Fa%3Fb%3D2%26c%3D3',
+			),
+			array(
+				'test_condition_name' => '+ を含む URL を開いて更新した場合 => 保存値が完全一致する',
+				'saved'               => 'https://example.com/c++/',
+				'request_mode'        => 'round_trip',
+				'expected'            => 'https://example.com/c++/',
+			),
+			array(
+				'test_condition_name' => '生の & を含む URL を開いて更新した場合 => 生の & のまま保存される',
+				'saved'               => 'https://example.com/?a=1&b=2',
+				'request_mode'        => 'round_trip',
+				'expected'            => 'https://example.com/?a=1&b=2',
+			),
+			array(
+				'test_condition_name' => '旧 &#038; を含む URL を開いて更新した場合 => 生の & に収束する',
+				'saved'               => 'https://example.com/?a=1&#038;b=2',
+				'request_mode'        => 'round_trip',
+				'expected'            => 'https://example.com/?a=1&b=2',
+			),
+			array(
+				'test_condition_name' => '生の日本語 URL を開いて更新した場合 => 保存値が完全一致する',
+				'saved'               => 'https://example.com/日本語/',
+				'request_mode'        => 'round_trip',
+				'expected'            => 'https://example.com/日本語/',
+			),
+			array(
+				'test_condition_name' => '%E6 形式の日本語 URL を開いて更新した場合 => 保存値が完全一致する',
+				'saved'               => 'https://example.com/%E6%97%A5%E6%9C%AC%E8%AA%9E/',
+				'request_mode'        => 'round_trip',
+				'expected'            => 'https://example.com/%E6%97%A5%E6%9C%AC%E8%AA%9E/',
+			),
+			array(
+				'test_condition_name' => '相対パスとフラグメントを開いて更新した場合 => 保存値が完全一致する',
+				'saved'               => '/about/page#section',
+				'request_mode'        => 'round_trip',
+				'expected'            => '/about/page#section',
+			),
+			array(
+				'test_condition_name' => 'シングルクォートを含む URL を開いて更新した場合 => クォートが保持される',
+				'saved'               => 'https://example.com/O\'Reilly',
+				'request_mode'        => 'round_trip',
+				'expected'            => 'https://example.com/O\'Reilly',
+			),
+			array(
+				'test_condition_name' => '空文字を開いて更新した場合 => 空文字のまま保存される',
+				'saved'               => '',
+				'request_mode'        => 'round_trip',
+				'expected'            => '',
+			),
+			array(
+				'test_condition_name' => 'javascript スキームを画面から保存した場合 => 空文字になる',
+				'saved'               => 'javascript:alert(1)',
+				'request_mode'        => 'round_trip',
+				'expected'            => '',
+			),
+			array(
+				'test_condition_name' => 'POST に URL 欄がない場合 => 既存のメタを変更しない',
+				'saved'               => 'https://example.com/unchanged-missing',
+				'request_mode'        => 'missing',
+				'expected'            => 'https://example.com/unchanged-missing',
+			),
+			array(
+				'test_condition_name' => 'POST に配列の URL 欄がある場合 => 既存のメタを変更しない',
+				'saved'               => 'https://example.com/unchanged-array',
+				'request_mode'        => 'array',
+				'expected'            => 'https://example.com/unchanged-array',
+			),
+		);
+
+		$instance         = new VK_Link_Target_Controller();
+		$expected_results = array();
+		$actual_results   = array();
+
+		foreach ( $test_cases as $case ) {
+			// Begin each case from the specified database value. / 各ケースを指定した DB 保存値から開始する.
+			update_post_meta( $post_id, 'vk-ltc-link', $case['saved'] );
+
+			$_POST = array(
+				'vk-ltc-link-nonce' => wp_create_nonce( 'vk-ltc-link' ),
+			);
+
+			if ( 'round_trip' === $case['request_mode'] ) {
+				// Reproduce the value the browser places in the classic editor field. / クラシックエディタの入力欄へブラウザが設定する値を再現する.
+				ob_start();
+				$instance->render_meta_box( $post );
+				$meta_box_html = ob_get_clean();
+				$matched       = preg_match( '/id="vk-ltc-link-field"[^>]*value="([^"]*)"/', $meta_box_html, $matches );
+
+				if ( 1 !== $matched ) {
+					$expected_results[ $case['test_condition_name'] ] = $case['expected'];
+					$actual_results[ $case['test_condition_name'] ]   = 'URL field was not found in the meta box HTML.';
+					continue;
+				}
+
+				$field_value = html_entity_decode( $matches[1], ENT_QUOTES, 'UTF-8' );
+
+				$_POST['vk-ltc-link-field'] = wp_slash( $field_value );
+			} elseif ( 'array' === $case['request_mode'] ) {
+				$_POST['vk-ltc-link-field'] = array( 'https://example.com/untrusted' );
+			}
+
+			try {
+				$instance->save_link( $post_id );
+				$actual = get_post_meta( $post_id, 'vk-ltc-link', true );
+			} catch ( TypeError $error ) {
+				$actual = 'TypeError: ' . $error->getMessage();
+			}
+
+			$expected_results[ $case['test_condition_name'] ] = $case['expected'];
+			$actual_results[ $case['test_condition_name'] ]   = $actual;
+		}
+
+		$this->assertSame( $expected_results, $actual_results );
 	}
 
 	/**

@@ -34,9 +34,12 @@ class rewriteTest extends WP_Ajax_UnitTestCase {
 
 
 	/**
+	 * Test that rewrite_link_filter() returns equivalent HTML URLs for raw and legacy ampersands.
+	 * rewrite_link_filter() が生のアンパサンドと旧形式のアンパサンドで同等の HTML URL を返すことを確認する。
 	 *
+	 * @return void
 	 */
-	function test_rewrite() {
+	public function test_rewrite() {
 
 		print PHP_EOL;
 		print '------------------------------------' . PHP_EOL;
@@ -50,15 +53,33 @@ class rewriteTest extends WP_Ajax_UnitTestCase {
 
 		$test_array = array(
 			array(
-				'original' => get_permalink( $test_posts['post_id'] ),
-				'expected' => get_permalink( $test_posts['post_id'] ),
+				'test_condition_name' => 'リダイレクト URL がない場合 => 元のパーマリンクを返す',
+				'original'            => get_permalink( $test_posts['post_id'] ),
+				'expected'            => get_permalink( $test_posts['post_id'] ),
 			),
 			array(
-				'original'  => get_permalink( $test_posts['post_id'] ),
-				'post_meta' => array(
+				'test_condition_name' => '外部 URL が保存されている場合 => 外部 URL を返す',
+				'original'            => get_permalink( $test_posts['post_id'] ),
+				'post_meta'           => array(
 					'vk-ltc-link' => 'https://google.com',
 				),
-				'expected'  => 'https://google.com',
+				'expected'            => 'https://google.com',
+			),
+			array(
+				'test_condition_name' => '生の & を含む URL が保存されている場合 => HTML 用の &#038; を返す',
+				'original'            => get_permalink( $test_posts['post_id'] ),
+				'post_meta'           => array(
+					'vk-ltc-link' => 'https://example.com/?a=1&b=2',
+				),
+				'expected'            => 'https://example.com/?a=1&#038;b=2',
+			),
+			array(
+				'test_condition_name' => '旧 &#038; を含む URL が保存されている場合 => 生の & と同じ HTML URL を返す',
+				'original'            => get_permalink( $test_posts['post_id'] ),
+				'post_meta'           => array(
+					'vk-ltc-link' => 'https://example.com/?a=1&#038;b=2',
+				),
+				'expected'            => 'https://example.com/?a=1&#038;b=2',
 			),
 		);
 		$instance   = new VK_Link_Target_Controller();
@@ -73,7 +94,7 @@ class rewriteTest extends WP_Ajax_UnitTestCase {
 			print 'actual   :' . $actual . PHP_EOL;
 			print 'expected :' . $value['expected'] . PHP_EOL;
 
-			$this->assertEquals( $value['expected'], $actual );
+			$this->assertEquals( $value['expected'], $actual, $value['test_condition_name'] );
 		}
 
 		wp_delete_post( $test_posts['post_id'], true );
@@ -96,7 +117,7 @@ class rewriteTest extends WP_Ajax_UnitTestCase {
 	 * Fires the wp_ajax_ids action for real to verify the actual JSON response.
 	 * wp_ajax_ids アクションを実際に発火させて実レスポンスを確認する。
 	 */
-	function test_ajax_rewrite_ids() {
+	public function test_ajax_rewrite_ids() {
 
 		$test_posts = self::create_test_posts();
 
@@ -105,22 +126,30 @@ class rewriteTest extends WP_Ajax_UnitTestCase {
 		$test_cases = array(
 			array(
 				'test_condition_name' => '複数クエリパラメータを含む URL の場合 => & がエンティティ化されずそのまま返る',
-				'url'                 => 'https://example.com/page.php?foo=1&bar=2',
+				'saved_url'           => 'https://example.com/page.php?foo=1&bar=2',
+				'expected'            => 'https://example.com/page.php?foo=1&bar=2',
+			),
+			array(
+				'test_condition_name' => '旧 &#038; を含む URL の場合 => 生の & と同じ URL が返る',
+				'saved_url'           => 'https://example.com/page.php?foo=1&#038;bar=2',
+				'expected'            => 'https://example.com/page.php?foo=1&bar=2',
 			),
 			array(
 				'test_condition_name' => 'シングルクォートを含む URL の場合 => \' がエンティティ化されずそのまま返る（PHP 8.0 以前の回帰テスト）',
-				'url'                 => 'https://example.com/page.php?q=O\'Reilly',
+				'saved_url'           => 'https://example.com/page.php?q=O\'Reilly',
+				'expected'            => 'https://example.com/page.php?q=O\'Reilly',
 			),
 			array(
 				'test_condition_name' => 'シングルクォートと & の両方を含む URL の場合 => どちらもエンティティ化されずそのまま返る',
-				'url'                 => 'https://example.com/page.php?q=O\'Reilly&x=1',
+				'saved_url'           => 'https://example.com/page.php?q=O\'Reilly&x=1',
+				'expected'            => 'https://example.com/page.php?q=O\'Reilly&x=1',
 			),
 		);
 
 		foreach ( $test_cases as $case ) {
 
 			// Save the URL to redirect to. / リダイレクト先 URL を保存する。
-			update_post_meta( $test_posts['post_id'], 'vk-ltc-link', $case['url'] );
+			update_post_meta( $test_posts['post_id'], 'vk-ltc-link', $case['saved_url'] );
 
 			// Reset the response buffer because the Ajax die handler appends to it.
 			// Ajax の die ハンドラはレスポンスを追記するため、実行前にバッファをリセットする。
@@ -138,7 +167,7 @@ class rewriteTest extends WP_Ajax_UnitTestCase {
 			$this->assertIsArray( $response, $case['test_condition_name'] );
 			$this->assertArrayHasKey( $test_posts['post_id'], $response, $case['test_condition_name'] );
 			// The URL must be returned exactly as saved. / URL が保存時のまま返ること。
-			$this->assertSame( $case['url'], $response[ $test_posts['post_id'] ]['re'], $case['test_condition_name'] );
+			$this->assertSame( $case['expected'], $response[ $test_posts['post_id'] ]['re'], $case['test_condition_name'] );
 			// No HTML entities may remain in the raw response. / 生レスポンスに HTML エンティティが残らないこと。
 			$this->assertStringNotContainsString( '&#038;', $this->_last_response, $case['test_condition_name'] );
 			$this->assertStringNotContainsString( '&#039;', $this->_last_response, $case['test_condition_name'] );
