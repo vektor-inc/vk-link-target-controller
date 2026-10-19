@@ -123,6 +123,9 @@ If VK Link Target Controller is deleted on a WordPress multisite network, its se
 
 == Changelog ==
 
+* [ Bug Fix ] Fixed an issue in the classic editor where opening and updating a post could change a redirect URL containing percent-encoded components (such as `%3A`) or `+`. The URL field now displays the stored URL without decoding it.
+* [ Bug Fix ] Fixed an issue where the block editor redirect URL panel displayed `&` from URLs saved in the classic editor as `&#038;`.
+
 * [ Bug Fix ] Fixed an issue where deleting the plugin on a multisite network left post meta and settings behind on subsites other than the one where the deletion was performed.
 * [ Bug Fix ] Fixed an issue where the internal link search dialog opened from the redirect URL panel in the block editor could not be closed until the page was reloaded.
 * [ Bug Fix ] Fixed an issue where the "Search internal link" button in the redirect URL panel of the block editor was displayed in English on Japanese sites.
