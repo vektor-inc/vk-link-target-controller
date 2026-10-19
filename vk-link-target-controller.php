@@ -429,6 +429,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 			$checked = $target > 0 ? 'checked="checked"' : '';
 
+			// Display the stored URL as is; urldecode() would change the destination on open-and-update. / 保存値をそのまま表示する。urldecode() すると開いて更新しただけで遷移先が変わる。
 			// display form
 			?>
 			<p>
