@@ -99,6 +99,9 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		/**
 		 * Initialize_front_script function
 		 * Load plugin script on front-end
+		 * This is hooked to wp_enqueue_scripts, which WordPress does not fire on admin screens. The script rewrites links inside any element that has a post-{ID} class, and WordPress core gives that class to each row of the admin posts list, so it must not be loaded there.
+		 * フロントエンド用のスクリプトを読み込む。
+		 * 管理画面では実行されない wp_enqueue_scripts に登録している。このスクリプトは post-{ID} クラスを持つ要素内のリンクを書き換え、WordPress 本体は管理画面の投稿一覧の各行にそのクラスを付けるため、管理画面で読み込んではならない。
 		 *
 		 * @access public
 		 * @return void
@@ -121,6 +124,18 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 					'editLabel' => __( 'Edit', 'vk-link-target-controller' ),
 				)
 			);
+		}
+
+		/**
+		 * Register the Ajax handlers that return the posts with a redirect URL.
+		 * These are hooked to init instead of wp_enqueue_scripts, because requests to admin-ajax.php never fire wp_enqueue_scripts, while the front script calls these handlers from public pages (logged-in and logged-out visitors).
+		 * リダイレクト URL を設定した投稿の一覧を返す Ajax 受け口を登録する。
+		 * admin-ajax.php へのリクエストでは wp_enqueue_scripts が実行されず、一方で公開ページのフロント用スクリプトがこの受け口を呼ぶ（ログイン中・未ログインの両方）ため、wp_enqueue_scripts ではなく init に登録している。
+		 *
+		 * @access public
+		 * @return void
+		 */
+		public function register_ajax_ids_actions() {
 			add_action( 'wp_ajax_ids', array( $this, 'ajax_rewrite_ids' ) );
 			add_action( 'wp_ajax_nopriv_ids', array( $this, 'ajax_rewrite_ids' ) );
 		}
@@ -876,7 +891,8 @@ $vk_link_target_controller = new VK_Link_Target_Controller();
 if ( isset( $vk_link_target_controller ) ) {
 	// Activate on front.
 	add_action( 'the_post', array( $vk_link_target_controller, 'initialize_front' ), 1 );
-	add_action( 'init', array( $vk_link_target_controller, 'initialize_front_script' ) );
+	add_action( 'wp_enqueue_scripts', array( $vk_link_target_controller, 'initialize_front_script' ) );
+	add_action( 'init', array( $vk_link_target_controller, 'register_ajax_ids_actions' ) );
 	add_action( 'wp', array( $vk_link_target_controller, 'redirection' ) );
 	add_action( 'get_header', array( $vk_link_target_controller, 'robots' ) );
 	// Set up admin.
