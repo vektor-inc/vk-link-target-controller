@@ -128,6 +128,7 @@ If VK Link Target Controller is deleted on a WordPress multisite network, its se
 * [ Bug Fix ] Fixed an issue where the "Search internal link" button in the redirect URL panel of the block editor was displayed in English on Japanese sites.
 * [ Bug Fix ] Fixed an issue in the classic editor where opening and updating a post could change a redirect URL containing percent-encoded components (such as `%3A`) or `+`. The URL field now displays the stored URL without decoding it.
 * [ Bug Fix ] Fixed an issue where `&` in redirect URLs saved in the classic editor was displayed as `&#038;` in the block editor panel.
+* [ Bug Fix ] Fixed an issue where the "View" link in the admin posts list pointed to the redirect URL instead of the post page for posts with a redirect URL set.
 
 = 1.10.5 =
 * [ Bug Fix ] Fixed an issue where redirect URLs delivered via Ajax kept HTML-encoded ampersands ( &#038; ), breaking external URLs with multiple query parameters.
