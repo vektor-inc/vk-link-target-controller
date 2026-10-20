@@ -101,13 +101,20 @@ class rewriteTest extends WP_Ajax_UnitTestCase {
 	}
 
 	/**
-	 * Test that redirection() sends the same destination for raw and legacy ampersands.
-	 * redirection() が生のアンパサンドと旧形式のアンパサンドで同じ遷移先へリダイレクトすることを確認する。
+	 * Test that redirection() sends the expected destination for each saved URL and each home URL.
+	 * redirection() が、保存された URL とホーム URL の組み合わせごとに想定どおりの遷移先へリダイレクトすることを確認する。
 	 *
 	 * redirection() calls exit after wp_redirect(), so the wp_redirect filter captures the destination and aborts the call.
 	 * redirection() は wp_redirect() の後に exit するため、wp_redirect フィルターで遷移先を捕まえて処理を中断する。
 	 * The captured value is what wp_redirect() receives, before WordPress core's wp_sanitize_redirect() runs, so the actual Location can differ (e.g. a single quote is removed; existing core behavior, out of scope for this fix).
 	 * 捕まえるのは wp_redirect() に渡される値で、WordPress 本体の wp_sanitize_redirect() による整形の前のため、実際の Location とは異なりうる（例: シングルクォートは除去される。本体の既存の挙動で、この修正の対象外）。
+	 *
+	 * Case keys: 'home_url' overrides the home URL with the pre_option_home filter (default home URL when omitted),
+	 * 'via_wp_action' goes through the wp action fired by go_to() like a real direct access instead of calling redirection() itself,
+	 * and 'expected_list_link' also checks that the list link (rewrite_link_filter()) and the direct access lead to the same destination.
+	 * ケースのキー: 'home_url' は pre_option_home フィルターでホーム URL を上書きする（省略時は既定のホーム URL）。
+	 * 'via_wp_action' は redirection() を直接呼ばず、go_to() が発火する wp アクション経由で実際の直接アクセスと同じ経路を通る。
+	 * 'expected_list_link' は、一覧のリンク（rewrite_link_filter()）と直接アクセスが同じ遷移先になることも確認する。
 	 *
 	 * @return void
 	 */
@@ -119,6 +126,9 @@ class rewriteTest extends WP_Ajax_UnitTestCase {
 
 		// Preserve the global post that redirection() reads. / redirection() が参照するグローバルの投稿を退避する.
 		$original_post = isset( $GLOBALS['post'] ) ? $GLOBALS['post'] : null;
+
+		// Open the post with the default home URL in every case, so that only redirection() sees the overridden home URL. / redirection() だけが上書きしたホーム URL を見るよう、投稿は常に既定のホーム URL で開く.
+		$post_url = get_permalink( $post_id );
 
 		$test_cases = array(
 			array(
@@ -146,6 +156,96 @@ class rewriteTest extends WP_Ajax_UnitTestCase {
 				'saved_url'           => '',
 				'expected'            => null,
 			),
+			array(
+				'test_condition_name' => 'サブディレクトリ設置（ホーム URL が /blog 付き）で相対パス /about/ が保存されている場合 => ホームのパスを補った /blog/about/ へリダイレクトし、一覧リンクと同じ遷移先になる',
+				'home_url'            => 'https://example.com/blog',
+				'saved_url'           => '/about/',
+				'expected'            => '/blog/about/',
+				'expected_list_link'  => 'https://example.com/blog/about/',
+			),
+			array(
+				'test_condition_name' => 'サブディレクトリ設置で wp アクション経由（実際の直接アクセスと同じ経路）の場合 => /blog/about/ へリダイレクトする',
+				'home_url'            => 'https://example.com/blog',
+				'via_wp_action'       => true,
+				'saved_url'           => '/about/',
+				'expected'            => '/blog/about/',
+			),
+			array(
+				'test_condition_name' => 'サブディレクトリ設置でクエリとフラグメントを含む相対パスの場合 => パスだけにホームのパスを補い、クエリとフラグメントはそのまま残す',
+				'home_url'            => 'https://example.com/blog',
+				'saved_url'           => '/about/?a=1&b=2#top',
+				'expected'            => '/blog/about/?a=1&b=2#top',
+				'expected_list_link'  => 'https://example.com/blog/about/?a=1&b=2#top',
+			),
+			array(
+				'test_condition_name' => 'サブディレクトリ設置でサイトのトップ / が保存されている場合 => /blog/ へリダイレクトする',
+				'home_url'            => 'https://example.com/blog',
+				'saved_url'           => '/',
+				'expected'            => '/blog/',
+				'expected_list_link'  => 'https://example.com/blog/',
+			),
+			array(
+				'test_condition_name' => 'サブディレクトリ設置で旧 &#038; を含む相対パスの場合 => ホームのパスを補い、生の & の遷移先へリダイレクトする',
+				'home_url'            => 'https://example.com/blog',
+				'saved_url'           => '/about/?a=1&#038;b=2',
+				'expected'            => '/blog/about/?a=1&b=2',
+				'expected_list_link'  => 'https://example.com/blog/about/?a=1&b=2',
+			),
+			array(
+				'test_condition_name' => 'ドメイン直下に設置（ホーム URL にパスなし）で相対パス /about/ が保存されている場合 => 従来どおり /about/ のままリダイレクトし、一覧リンクと同じ遷移先になる',
+				'home_url'            => 'https://example.com',
+				'saved_url'           => '/about/',
+				'expected'            => '/about/',
+				'expected_list_link'  => 'https://example.com/about/',
+			),
+			array(
+				'test_condition_name' => 'ドメイン直下に設置でホーム URL の末尾にスラッシュがある場合 => 従来どおり /about/ のままリダイレクトする（//about/ にならない）',
+				'home_url'            => 'https://example.com/',
+				'saved_url'           => '/about/',
+				'expected'            => '/about/',
+			),
+			array(
+				'test_condition_name' => 'サブディレクトリ設置で外部の絶対 URL が保存されている場合 => 変えずにリダイレクトする',
+				'home_url'            => 'https://example.com/blog',
+				'saved_url'           => 'https://external.example/about/',
+				'expected'            => 'https://external.example/about/',
+			),
+			array(
+				'test_condition_name' => 'サブディレクトリ設置でサイト内の絶対 URL が保存されている場合 => /blog を重ねずそのままリダイレクトする',
+				'home_url'            => 'https://example.com/blog',
+				'saved_url'           => 'https://example.com/blog/about/',
+				'expected'            => 'https://example.com/blog/about/',
+			),
+			array(
+				'test_condition_name' => 'サブディレクトリ設置でプロトコル相対 //host/path が保存されている場合 => 変えずにリダイレクトする',
+				'home_url'            => 'https://example.com/blog',
+				'saved_url'           => '//cdn.example/file.pdf',
+				'expected'            => '//cdn.example/file.pdf',
+			),
+			array(
+				'test_condition_name' => 'サブディレクトリ設置で mailto: が保存されている場合 => 変えずにリダイレクトする',
+				'home_url'            => 'https://example.com/blog',
+				'saved_url'           => 'mailto:info@example.com',
+				'expected'            => 'mailto:info@example.com',
+			),
+			array(
+				'test_condition_name' => 'サブディレクトリ設置で tel: が保存されている場合 => 変えずにリダイレクトする',
+				'home_url'            => 'https://example.com/blog',
+				'saved_url'           => 'tel:+81312345678',
+				'expected'            => 'tel:+81312345678',
+			),
+			array(
+				'test_condition_name' => 'サブディレクトリ設置で / 始まりでないクエリだけの値が保存されている場合 => 変えずにリダイレクトする',
+				'home_url'            => 'https://example.com/blog',
+				'saved_url'           => '?x=1',
+				'expected'            => '?x=1',
+			),
+			array(
+				'test_condition_name' => 'サブディレクトリ設置で / 始まりでないフラグメントだけの値が保存されている場合 => 変えずにリダイレクトする',
+				'home_url'            => 'https://example.com/blog',
+				'saved_url'           => '#section',
+				'expected'            => '#section',
+			),
 		);
 
 		/**
@@ -159,32 +259,77 @@ class rewriteTest extends WP_Ajax_UnitTestCase {
 			throw new RuntimeException( $location );
 		};
 
-		foreach ( $test_cases as $case ) {
-			// Open the post before saving the URL because go_to() fires the wp action, which runs redirection() with exit. / go_to() は exit を伴う redirection() を wp アクションで実行するため、URL を保存する前に投稿を開く.
-			delete_post_meta( $post_id, 'vk-ltc-link' );
-			$this->go_to( get_permalink( $post_id ) );
-			$GLOBALS['post'] = get_post( $post_id );
-			update_post_meta( $post_id, 'vk-ltc-link', $case['saved_url'] );
+		// Home URL of the current case, or false to leave the home URL option untouched. / 現在のケースのホーム URL（false の場合はホーム URL のオプションを変更しない）.
+		$home_override = false;
 
-			// Record the destination that redirection() sends, or null when it does not redirect. / redirection() の遷移先を記録する（リダイレクトしない場合は null）.
-			$actual = null;
-			add_filter( 'wp_redirect', $capture_redirect );
-			try {
-				$instance->redirection();
-			} catch ( RuntimeException $redirect ) {
-				$actual = $redirect->getMessage();
-			} finally {
-				remove_filter( 'wp_redirect', $capture_redirect );
+		/**
+		 * Return the home URL of the current case for the pre_option_home filter.
+		 * pre_option_home フィルター用に、現在のケースのホーム URL を返す。
+		 *
+		 * @return string|false Home URL, or false to use the stored option. / ホーム URL（false の場合は保存されているオプションを使う）。
+		 */
+		$override_home = function () use ( &$home_override ) {
+			return $home_override;
+		};
+
+		add_filter( 'pre_option_home', $override_home );
+		try {
+			foreach ( $test_cases as $case ) {
+				$home_override = false;
+				$via_wp_action = ! empty( $case['via_wp_action'] );
+
+				delete_post_meta( $post_id, 'vk-ltc-link' );
+				if ( ! $via_wp_action ) {
+					// Open the post before saving the URL because go_to() fires the wp action, which runs redirection() with exit. / go_to() は exit を伴う redirection() を wp アクションで実行するため、URL を保存する前に投稿を開く.
+					$this->go_to( $post_url );
+					$GLOBALS['post'] = get_post( $post_id );
+				}
+				update_post_meta( $post_id, 'vk-ltc-link', $case['saved_url'] );
+
+				// Switch the home URL only while redirection() runs. / redirection() を実行している間だけホーム URL を切り替える.
+				$home_override = isset( $case['home_url'] ) ? $case['home_url'] : false;
+
+				// Record the destination that redirection() sends, or null when it does not redirect. / redirection() の遷移先を記録する（リダイレクトしない場合は null）.
+				$actual = null;
+				add_filter( 'wp_redirect', $capture_redirect );
+				try {
+					if ( $via_wp_action ) {
+						// go_to() fires the wp action, so the plugin's own hook calls redirection() as in a real direct access. / go_to() が wp アクションを発火するため、実際の直接アクセスと同じくプラグイン自身のフックが redirection() を呼ぶ.
+						$this->go_to( $post_url );
+					} else {
+						$instance->redirection();
+					}
+				} catch ( RuntimeException $redirect ) {
+					$actual = $redirect->getMessage();
+				} finally {
+					remove_filter( 'wp_redirect', $capture_redirect );
+				}
+
+				$this->assertSame( $case['expected'], $actual, $case['test_condition_name'] );
+
+				// Check that the list link and the direct access lead to the same destination. / 一覧のリンクと直接アクセスが同じ遷移先になることを確認する.
+				if ( isset( $case['expected_list_link'] ) ) {
+					$list_link = html_entity_decode( $instance->rewrite_link_filter( $post_url, get_post( $post_id ) ), ENT_QUOTES, 'UTF-8' );
+					$this->assertSame( $case['expected_list_link'], $list_link, $case['test_condition_name'] . '（一覧リンク）' );
+
+					// A path starting with a single slash is resolved from the home URL's scheme and host, as a browser does. / 単一のスラッシュで始まるパスは、ブラウザと同じくホーム URL のスキームとホストを基準に解決する.
+					$resolved = $actual;
+					if ( 0 === strpos( $actual, '/' ) && 0 !== strpos( $actual, '//' ) ) {
+						$home_parts = wp_parse_url( home_url() );
+						$resolved   = $home_parts['scheme'] . '://' . $home_parts['host'] . ( isset( $home_parts['port'] ) ? ':' . $home_parts['port'] : '' ) . $actual;
+					}
+					$this->assertSame( $case['expected_list_link'], $resolved, $case['test_condition_name'] . '（直接アクセスの遷移先）' );
+				}
 			}
+		} finally {
+			remove_filter( 'pre_option_home', $override_home );
 
-			$this->assertSame( $case['expected'], $actual, $case['test_condition_name'] );
-		}
-
-		// Restore the global post. / グローバルの投稿を復元する.
-		if ( null === $original_post ) {
-			unset( $GLOBALS['post'] );
-		} else {
-			$GLOBALS['post'] = $original_post;
+			// Restore the global post. / グローバルの投稿を復元する.
+			if ( null === $original_post ) {
+				unset( $GLOBALS['post'] );
+			} else {
+				$GLOBALS['post'] = $original_post;
+			}
 		}
 
 		wp_delete_post( $post_id, true );

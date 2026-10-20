@@ -226,6 +226,9 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 		/**
 		 * redirection function
 		 * Redirect to the associated link when an user tries to access directly a post that has a link to redirect to
+		 * A relative path starting with a single slash is resolved from the path of the home URL, like rewrite_link().
+		 * 投稿へ直接アクセスされたとき、設定されたリンクへリダイレクトする。
+		 * 単一のスラッシュで始まる相対パスは、rewrite_link() と同じくホーム URL のパス部分を基準に解決する。
 		 *
 		 * @access public
 		 * @return void
@@ -240,7 +243,13 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 				// Specify ENT_QUOTES and UTF-8 explicitly because on PHP 8.0 or earlier the default flags ( ENT_COMPAT ) leave single quotes ( &#039; ) undecoded.
 				// PHP 8.0 以前はデフォルトフラグ（ ENT_COMPAT ）ではシングルクォート（ &#039; ）が復元されないため、ENT_QUOTES と UTF-8 を明示する。
 				if ( false != $redirect && $this->candidate_post_type() ) {
-					wp_redirect( html_entity_decode( esc_url( $redirect ), ENT_QUOTES, 'UTF-8' ) );
+					$destination = esc_url( $redirect );
+					// A relative path starting with a single slash needs the path of the home URL ( e.g. /blog ) like rewrite_link() does, or a site installed in a subdirectory is sent to the domain root. It stays relative so that nothing changes for a site installed in the domain root, and a protocol-relative URL ( //host/path ) is left as it is.
+					// 単一のスラッシュで始まる相対パスには rewrite_link() と同じくホーム URL のパス部分（例: /blog ）が必要で、無いとサブディレクトリ設置のサイトでドメイン直下へ飛ぶ。ドメイン直下に設置したサイトで何も変わらないよう相対のまま渡し、プロトコル相対 URL（ //host/path ）はそのままにする.
+					if ( 0 === strpos( $destination, '/' ) && 0 !== strpos( $destination, '//' ) ) {
+						$destination = untrailingslashit( (string) wp_parse_url( home_url(), PHP_URL_PATH ) ) . $destination;
+					}
+					wp_redirect( html_entity_decode( $destination, ENT_QUOTES, 'UTF-8' ) );
 					exit;
 				}
 			}
