@@ -34,9 +34,12 @@ class rewriteTest extends WP_Ajax_UnitTestCase {
 
 
 	/**
+	 * Test that rewrite_link_filter() returns equivalent HTML URLs for raw and legacy ampersands.
+	 * rewrite_link_filter() が生のアンパサンドと旧形式のアンパサンドで同等の HTML URL を返すことを確認する。
 	 *
+	 * @return void
 	 */
-	function test_rewrite() {
+	public function test_rewrite() {
 
 		print PHP_EOL;
 		print '------------------------------------' . PHP_EOL;
@@ -50,15 +53,33 @@ class rewriteTest extends WP_Ajax_UnitTestCase {
 
 		$test_array = array(
 			array(
-				'original' => get_permalink( $test_posts['post_id'] ),
-				'expected' => get_permalink( $test_posts['post_id'] ),
+				'test_condition_name' => 'リダイレクト URL がない場合 => 元のパーマリンクを返す',
+				'original'            => get_permalink( $test_posts['post_id'] ),
+				'expected'            => get_permalink( $test_posts['post_id'] ),
 			),
 			array(
-				'original'  => get_permalink( $test_posts['post_id'] ),
-				'post_meta' => array(
+				'test_condition_name' => '外部 URL が保存されている場合 => 外部 URL を返す',
+				'original'            => get_permalink( $test_posts['post_id'] ),
+				'post_meta'           => array(
 					'vk-ltc-link' => 'https://google.com',
 				),
-				'expected'  => 'https://google.com',
+				'expected'            => 'https://google.com',
+			),
+			array(
+				'test_condition_name' => '生の & を含む URL が保存されている場合 => HTML 用の &#038; を返す',
+				'original'            => get_permalink( $test_posts['post_id'] ),
+				'post_meta'           => array(
+					'vk-ltc-link' => 'https://example.com/?a=1&b=2',
+				),
+				'expected'            => 'https://example.com/?a=1&#038;b=2',
+			),
+			array(
+				'test_condition_name' => '旧 &#038; を含む URL が保存されている場合 => 生の & と同じ HTML URL を返す',
+				'original'            => get_permalink( $test_posts['post_id'] ),
+				'post_meta'           => array(
+					'vk-ltc-link' => 'https://example.com/?a=1&#038;b=2',
+				),
+				'expected'            => 'https://example.com/?a=1&#038;b=2',
 			),
 		);
 		$instance   = new VK_Link_Target_Controller();
@@ -73,10 +94,100 @@ class rewriteTest extends WP_Ajax_UnitTestCase {
 			print 'actual   :' . $actual . PHP_EOL;
 			print 'expected :' . $value['expected'] . PHP_EOL;
 
-			$this->assertEquals( $value['expected'], $actual );
+			$this->assertEquals( $value['expected'], $actual, $value['test_condition_name'] );
 		}
 
 		wp_delete_post( $test_posts['post_id'], true );
+	}
+
+	/**
+	 * Test that redirection() sends the same destination for raw and legacy ampersands.
+	 * redirection() が生のアンパサンドと旧形式のアンパサンドで同じ遷移先へリダイレクトすることを確認する。
+	 *
+	 * redirection() calls exit after wp_redirect(), so the wp_redirect filter captures the destination and aborts the call.
+	 * redirection() は wp_redirect() の後に exit するため、wp_redirect フィルターで遷移先を捕まえて処理を中断する。
+	 * The captured value is what wp_redirect() receives, before WordPress core's wp_sanitize_redirect() runs, so the actual Location can differ (e.g. a single quote is removed; existing core behavior, out of scope for this fix).
+	 * 捕まえるのは wp_redirect() に渡される値で、WordPress 本体の wp_sanitize_redirect() による整形の前のため、実際の Location とは異なりうる（例: シングルクォートは除去される。本体の既存の挙動で、この修正の対象外）。
+	 *
+	 * @return void
+	 */
+	public function test_redirection() {
+
+		$test_posts = self::create_test_posts();
+		$post_id    = $test_posts['post_id'];
+		$instance   = new VK_Link_Target_Controller();
+
+		// Preserve the global post that redirection() reads. / redirection() が参照するグローバルの投稿を退避する.
+		$original_post = isset( $GLOBALS['post'] ) ? $GLOBALS['post'] : null;
+
+		$test_cases = array(
+			array(
+				'test_condition_name' => '生の & を含む URL が保存されている場合 => 生の & の遷移先へリダイレクトする',
+				'saved_url'           => 'https://example.com/?a=1&b=2',
+				'expected'            => 'https://example.com/?a=1&b=2',
+			),
+			array(
+				'test_condition_name' => '旧 &#038; を含む URL が保存されている場合 => 生の & と同じ遷移先へリダイレクトする',
+				'saved_url'           => 'https://example.com/?a=1&#038;b=2',
+				'expected'            => 'https://example.com/?a=1&b=2',
+			),
+			array(
+				'test_condition_name' => '入れ子の %XX URL が保存されている場合 => %XX のまま遷移先になる',
+				'saved_url'           => 'https://outer.example/?url=https%3A%2F%2Finner.example%2Fa%3Fb%3D2%26c%3D3',
+				'expected'            => 'https://outer.example/?url=https%3A%2F%2Finner.example%2Fa%3Fb%3D2%26c%3D3',
+			),
+			array(
+				'test_condition_name' => 'シングルクォートを含む URL が保存されている場合 => wp_redirect() に渡す値はクォートを保持している（実際の Location からは WordPress 本体が後段で除去する）',
+				'saved_url'           => 'https://example.com/O\'Reilly',
+				'expected'            => 'https://example.com/O\'Reilly',
+			),
+			array(
+				'test_condition_name' => '空文字が保存されている場合 => リダイレクトしない',
+				'saved_url'           => '',
+				'expected'            => null,
+			),
+		);
+
+		/**
+		 * Abort redirection() by throwing the destination passed to wp_redirect().
+		 * wp_redirect() に渡された遷移先を例外で投げて redirection() を中断する。
+		 *
+		 * @param string $location Redirect destination. / リダイレクト先。
+		 * @throws RuntimeException Always thrown with the destination as its message. / 遷移先をメッセージにして必ず投げる。
+		 */
+		$capture_redirect = function ( $location ) {
+			throw new RuntimeException( $location );
+		};
+
+		foreach ( $test_cases as $case ) {
+			// Open the post before saving the URL because go_to() fires the wp action, which runs redirection() with exit. / go_to() は exit を伴う redirection() を wp アクションで実行するため、URL を保存する前に投稿を開く.
+			delete_post_meta( $post_id, 'vk-ltc-link' );
+			$this->go_to( get_permalink( $post_id ) );
+			$GLOBALS['post'] = get_post( $post_id );
+			update_post_meta( $post_id, 'vk-ltc-link', $case['saved_url'] );
+
+			// Record the destination that redirection() sends, or null when it does not redirect. / redirection() の遷移先を記録する（リダイレクトしない場合は null）.
+			$actual = null;
+			add_filter( 'wp_redirect', $capture_redirect );
+			try {
+				$instance->redirection();
+			} catch ( RuntimeException $redirect ) {
+				$actual = $redirect->getMessage();
+			} finally {
+				remove_filter( 'wp_redirect', $capture_redirect );
+			}
+
+			$this->assertSame( $case['expected'], $actual, $case['test_condition_name'] );
+		}
+
+		// Restore the global post. / グローバルの投稿を復元する.
+		if ( null === $original_post ) {
+			unset( $GLOBALS['post'] );
+		} else {
+			$GLOBALS['post'] = $original_post;
+		}
+
+		wp_delete_post( $post_id, true );
 	}
 
 	/**
@@ -96,7 +207,7 @@ class rewriteTest extends WP_Ajax_UnitTestCase {
 	 * Fires the wp_ajax_ids action for real to verify the actual JSON response.
 	 * wp_ajax_ids アクションを実際に発火させて実レスポンスを確認する。
 	 */
-	function test_ajax_rewrite_ids() {
+	public function test_ajax_rewrite_ids() {
 
 		$test_posts = self::create_test_posts();
 
@@ -105,22 +216,30 @@ class rewriteTest extends WP_Ajax_UnitTestCase {
 		$test_cases = array(
 			array(
 				'test_condition_name' => '複数クエリパラメータを含む URL の場合 => & がエンティティ化されずそのまま返る',
-				'url'                 => 'https://example.com/page.php?foo=1&bar=2',
+				'saved_url'           => 'https://example.com/page.php?foo=1&bar=2',
+				'expected'            => 'https://example.com/page.php?foo=1&bar=2',
+			),
+			array(
+				'test_condition_name' => '旧 &#038; を含む URL の場合 => 生の & と同じ URL が返る',
+				'saved_url'           => 'https://example.com/page.php?foo=1&#038;bar=2',
+				'expected'            => 'https://example.com/page.php?foo=1&bar=2',
 			),
 			array(
 				'test_condition_name' => 'シングルクォートを含む URL の場合 => \' がエンティティ化されずそのまま返る（PHP 8.0 以前の回帰テスト）',
-				'url'                 => 'https://example.com/page.php?q=O\'Reilly',
+				'saved_url'           => 'https://example.com/page.php?q=O\'Reilly',
+				'expected'            => 'https://example.com/page.php?q=O\'Reilly',
 			),
 			array(
 				'test_condition_name' => 'シングルクォートと & の両方を含む URL の場合 => どちらもエンティティ化されずそのまま返る',
-				'url'                 => 'https://example.com/page.php?q=O\'Reilly&x=1',
+				'saved_url'           => 'https://example.com/page.php?q=O\'Reilly&x=1',
+				'expected'            => 'https://example.com/page.php?q=O\'Reilly&x=1',
 			),
 		);
 
 		foreach ( $test_cases as $case ) {
 
 			// Save the URL to redirect to. / リダイレクト先 URL を保存する。
-			update_post_meta( $test_posts['post_id'], 'vk-ltc-link', $case['url'] );
+			update_post_meta( $test_posts['post_id'], 'vk-ltc-link', $case['saved_url'] );
 
 			// Reset the response buffer because the Ajax die handler appends to it.
 			// Ajax の die ハンドラはレスポンスを追記するため、実行前にバッファをリセットする。
@@ -138,7 +257,7 @@ class rewriteTest extends WP_Ajax_UnitTestCase {
 			$this->assertIsArray( $response, $case['test_condition_name'] );
 			$this->assertArrayHasKey( $test_posts['post_id'], $response, $case['test_condition_name'] );
 			// The URL must be returned exactly as saved. / URL が保存時のまま返ること。
-			$this->assertSame( $case['url'], $response[ $test_posts['post_id'] ]['re'], $case['test_condition_name'] );
+			$this->assertSame( $case['expected'], $response[ $test_posts['post_id'] ]['re'], $case['test_condition_name'] );
 			// No HTML entities may remain in the raw response. / 生レスポンスに HTML エンティティが残らないこと。
 			$this->assertStringNotContainsString( '&#038;', $this->_last_response, $case['test_condition_name'] );
 			$this->assertStringNotContainsString( '&#039;', $this->_last_response, $case['test_condition_name'] );

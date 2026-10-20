@@ -28,6 +28,35 @@ import { useEffect, useCallback } from '@wordpress/element';
 // この定数を使うこと。
 const LINK_FIELD_ID = 'vk-ltc-react-link';
 
+// Match only the two HTML entities produced by legacy classic-editor saves.
+// 旧クラシックエディタ保存で生成された 2 種類の HTML エンティティだけに一致させる。
+const LEGACY_URL_ENTITY_PATTERN = /&#0(?:38|39);/g;
+
+/**
+ * Replace one legacy URL entity with the character shown in an input field.
+ * 旧 URL エンティティ 1 件を入力欄へ表示する文字へ置換する。
+ *
+ * @param {string} entity Matched legacy entity. / 一致した旧エンティティ。
+ * @return {string} Decoded display character. / 表示用に復元した文字。
+ */
+const replaceLegacyUrlEntity = ( entity ) =>
+	'&#038;' === entity ? '&' : "'";
+
+/**
+ * Decode legacy URL entities for display without changing post meta.
+ * 投稿メタを変更せず、表示用に旧 URL エンティティを復元する。
+ *
+ * @param {unknown} link Stored redirect URL. / 保存されているリダイレクト URL。
+ * @return {string} Redirect URL for display. / 表示用のリダイレクト URL。
+ */
+const getDisplayLink = ( link ) => {
+	if ( typeof link !== 'string' || '' === link ) {
+		return '';
+	}
+
+	return link.replace( LEGACY_URL_ENTITY_PATTERN, replaceLegacyUrlEntity );
+};
+
 const VkLtcPanel = () => {
 	const { postType, candidatePostTypes } = useSelect( ( select ) => {
 		const editor = select( 'core/editor' );
@@ -46,6 +75,7 @@ const VkLtcPanel = () => {
 	}
 
 	const link = meta?.[ 'vk-ltc-link' ] ?? '';
+	const displayLink = getDisplayLink( link );
 	const target = meta?.[ 'vk-ltc-target' ];
 	const isTargetBlank = target === '1' || target === 1;
 
@@ -72,8 +102,8 @@ const VkLtcPanel = () => {
 			return;
 		}
 		window.vkLtcLinkMode = true;
-		window.wpLink.open( LINK_FIELD_ID, link, '' );
-	}, [ link ] );
+		window.wpLink.open( LINK_FIELD_ID, displayLink, '' );
+	}, [ displayLink ] );
 
 	// Intercept wp-link-submit click when opened from this panel.
 	// このパネルから開いた場合のwp-link-submitクリックをインターセプトする
@@ -155,7 +185,7 @@ const VkLtcPanel = () => {
 			<TextControl
 				id={ LINK_FIELD_ID }
 				label={ __( 'URL', 'vk-link-target-controller' ) }
-				value={ link }
+				value={ displayLink }
 				onChange={ ( value ) => updateMeta( 'vk-ltc-link', value ) }
 				placeholder="https://"
 				__nextHasNoMarginBottom

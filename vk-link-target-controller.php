@@ -429,6 +429,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 			$checked = $target > 0 ? 'checked="checked"' : '';
 
+			// Display the stored URL as is; urldecode() would change the destination on open-and-update. / 保存値をそのまま表示する。urldecode() すると開いて更新しただけで遷移先が変わる。
 			// display form
 			?>
 			<p>
@@ -437,7 +438,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 			</p>
 			<p>
 				<label style="display:inline-block;width:150px;" for="vk-ltc-link-field"><?php esc_html_e( 'URL', 'vk-link-target-controller' ); ?></label>
-				<input type="text" id="vk-ltc-link-field" name="vk-ltc-link-field" value="<?php echo esc_url( urldecode( $link ) ); ?>" size="35" />
+				<input type="text" id="vk-ltc-link-field" name="vk-ltc-link-field" value="<?php echo esc_url( $link ); ?>" size="35" />
 				<button type="button" class="vk-ltc-link-search-btn button button-default"><?php esc_html_e( 'Search internal link', 'vk-link-target-controller' ); ?></button>
 				<button id="media_vk-ltc-link-field" class="media_btn button button-default"><?php esc_html_e( 'File Link', 'vk-link-target-controller' ); ?></button>
 			</p>
@@ -513,10 +514,11 @@ jQuery(document).ready(function($){
 
 					// link field.
 					if ( isset( $_POST['vk-ltc-link-field'] ) ) {
-						// sanitize the user input.
-						$link = esc_url( $_POST['vk-ltc-link-field'] );
-
-						update_post_meta( $post_id, 'vk-ltc-link', esc_url( $link ) );
+						// Preserve encoded URL components while sanitizing the raw database value. / エンコード済み URL の構成要素を保持しつつ、DB 保存用の値をサニタイズする.
+						$link = wp_unslash( $_POST['vk-ltc-link-field'] );
+						if ( is_string( $link ) ) {
+							update_post_meta( $post_id, 'vk-ltc-link', esc_url_raw( $link ) );
+						}
 
 						/*
 						//check is link is allowed content
