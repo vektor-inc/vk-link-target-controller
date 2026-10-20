@@ -129,8 +129,7 @@ If VK Link Target Controller is deleted on a WordPress multisite network, its se
 * [ Bug Fix ] Fixed an issue in the classic editor where opening and updating a post could change a redirect URL containing percent-encoded components (such as `%3A`) or `+`. The URL field now displays the stored URL without decoding it.
 * [ Bug Fix ] Fixed an issue where `&` in redirect URLs saved in the classic editor was displayed as `&#038;` in the block editor panel.
 * [ Bug Fix ] Fixed an issue where the "View" link in the admin posts list pointed to the redirect URL instead of the post page for posts with a redirect URL set.
-* [ Bug Fix ] Fixed an issue on sites installed in a subdirectory (home URL with a path such as /blog) where opening a post whose redirect URL is a relative path (such as /about/) directly sent visitors to the domain root instead of the subdirectory.
-* [ Bug Fix ] Note for existing sites installed in a subdirectory: if a redirect URL was saved with the subdirectory path included (such as /blog/about/), change it to the form without the subdirectory (such as /about/) so that both the list links and direct access lead to the correct destination.
+* [ Bug Fix ] Fixed an issue on sites installed in a subdirectory (home URL with a path such as /blog) where opening a post whose redirect URL is a relative path (such as /about/) directly sent visitors to the domain root instead of the subdirectory. If you have saved a redirect URL with the subdirectory included (such as /blog/about/) on such a site, change it to the path from the site home (such as /about/); otherwise the post now redirects to /blog/blog/about/, the same destination the title link in post lists already pointed to.
 
 = 1.10.5 =
 * [ Bug Fix ] Fixed an issue where redirect URLs delivered via Ajax kept HTML-encoded ampersands ( &#038; ), breaking external URLs with multiple query parameters.
