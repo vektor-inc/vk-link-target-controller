@@ -27,13 +27,10 @@ jobs:
                     MYSQL_PASSWORD: wordpress
         steps:
             - uses: actions/checkout@v7
-            - name: Read .node-version
-              run: echo "{NODEVERSION}={$(cat .node-version)}" >> $GITHUB_OUTPUT
-              id: nodenv
-            - name: Setup Node.js (.node-version)
+            - name: Setup Node.js (from .node-version)
               uses: actions/setup-node@v7
               with:
-                  node-version: '${{ steps.nodenv.outputs.NODEVERSION }}'
+                  node-version-file: .node-version
             - name: Cache multiple paths
               uses: actions/cache@v6
               with:
@@ -93,13 +90,10 @@ jobs:
         # (this was a leftover copy from the php_unit job above it).
         steps:
             - uses: actions/checkout@v7
-            - name: Read .node-version
-              run: echo "{NODEVERSION}={$(cat .node-version)}" >> $GITHUB_OUTPUT
-              id: nodenv
-            - name: Setup Node.js (.node-version)
+            - name: Setup Node.js (from .node-version)
               uses: actions/setup-node@v7
               with:
-                  node-version: '${{ steps.nodenv.outputs.NODEVERSION }}'
+                  node-version-file: .node-version
             - name: Cache multiple paths
               uses: actions/cache@v6
               with:
