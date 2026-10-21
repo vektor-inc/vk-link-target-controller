@@ -24,14 +24,10 @@ jobs:
       - uses: actions/checkout@v7
 
       # Node のバージョンは php_unit_test.yml と同じく .node-version から読む
-      - name: Read .node-version
-        id: nodenv
-        run: echo "NODEVERSION=$(cat .node-version)" >> "$GITHUB_OUTPUT"
-
-      - name: Setup Node.js (.node-version)
+      - name: Setup Node.js (from .node-version)
         uses: actions/setup-node@v7
         with:
-          node-version: '${{ steps.nodenv.outputs.NODEVERSION }}'
+          node-version-file: .node-version
 
       - name: Setup PHP 7.4
         uses: shivammathur/setup-php@v2
