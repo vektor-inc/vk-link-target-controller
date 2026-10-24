@@ -40,6 +40,7 @@
 const fs = require( 'fs' );
 const path = require( 'path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
+const { disableWelcomeGuide } = require( '../helpers/disable-welcome-guide' );
 
 // Slug of the CPT registered by tests/e2e/mu-plugins/register-test-cpt.php.
 // tests/e2e/mu-plugins/register-test-cpt.php で登録しているCPTのスラッグ。
@@ -94,6 +95,13 @@ test.describe( 'Issue #226: 内部リンク検索ダイアログの開閉', () =
 				'build/index.asset.php not found. Run `npm run build:block` first. / build/index.asset.php が見つかりません。先に `npm run build:block` を実行してください。'
 			);
 		}
+
+		// Turn the "Welcome to the editor" guide off before any editor is
+		// opened, so it does not cover the editor on a freshly created
+		// environment (issue #238).
+		// 作りたての環境で「ようこそ」ガイドがエディターを覆わないよう、
+		// エディターを開く前にガイドをオフにしておく（issue #238）。
+		await disableWelcomeGuide( requestUtils );
 
 		// Create a published post that already has a redirect URL saved,
 		// through the REST API (the same path the editor uses to save).
