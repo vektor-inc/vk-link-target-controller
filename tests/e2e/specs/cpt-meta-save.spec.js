@@ -84,6 +84,7 @@
 const fs = require( 'fs' );
 const path = require( 'path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
+const { disableWelcomeGuide } = require( '../helpers/disable-welcome-guide' );
 
 // Slug of the CPT registered by tests/e2e/mu-plugins/register-test-cpt.php.
 // Keep both in sync — letting the value drift means the test can no longer
@@ -231,6 +232,13 @@ test.describe( 'VK Link Target Controller: CPTでのmeta保存（issue #140 回�
 	// あくまで「テストが作った投稿（コンテンツ）」をREST API経由で削除するだけで、
 	// DBそのものを作り直す操作（wp db reset 等）ではない。
 	test.beforeAll( async ( { requestUtils } ) => {
+		// Turn the "Welcome to the editor" guide off before any editor is
+		// opened, so it does not cover the editor on a freshly created
+		// environment (issue #238).
+		// 作りたての環境で「ようこそ」ガイドがエディターを覆わないよう、
+		// エディターを開く前にガイドをオフにしておく（issue #238）。
+		await disableWelcomeGuide( requestUtils );
+
 		await requestUtils.deleteAllPosts( TEST_CPT_SLUG );
 	} );
 
