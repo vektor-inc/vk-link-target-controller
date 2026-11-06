@@ -604,8 +604,11 @@ jQuery(document).ready(function($){
 		 */
 		function rewrite_link_filter( $orig_link, $post = 0 ) {
 			$modified_url = ''; // No need to esc_url(), it's done in rewrite_link().
-			if ( isset( $post->ID ) ) {
-				$modified_url = $this->rewrite_link( $post->ID );
+			// the_permalink() without an argument passes 0, so resolve it to the current post with get_post(); otherwise the redirect URL is not printed.
+			// 引数なしの the_permalink() は 0 を渡すため、get_post() で現在の投稿に解決する。解決しないとリダイレクト URL が出力されない。
+			$target_post = get_post( $post );
+			if ( $target_post ) {
+				$modified_url = $this->rewrite_link( $target_post->ID );
 			}
 
 			if ( empty( $modified_url ) ) {

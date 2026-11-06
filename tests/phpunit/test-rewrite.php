@@ -101,6 +101,121 @@ class rewriteTest extends WP_Ajax_UnitTestCase {
 	}
 
 	/**
+	 * Test that rewrite_link_filter() rewrites the link for each form of the $post argument of the the_permalink filter.
+	 * the_permalink フィルターの $post 引数の形ごとに、rewrite_link_filter() がリンクを書き換えることを確認する。
+	 *
+	 * @return void
+	 */
+	public function test_rewrite_link_filter() {
+		// Create a post with a redirect URL and a post without it.
+		// リダイレクト URL を設定した投稿と、設定していない投稿を作成する。
+		$redirect_url     = 'https://example.com/wp-content/uploads/test.pdf';
+		$linked_post_id   = self::factory()->post->create();
+		$unlinked_post_id = self::factory()->post->create();
+		update_post_meta( $linked_post_id, 'vk-ltc-link', $redirect_url );
+
+		$original_link = 'https://example.org/original/';
+		$test_array    = array(
+			array(
+				'test_condition_name' => '$post が 0 で現在の投稿にリダイレクト URL がある場合 => リダイレクト URL を返す',
+				'current_post_id'     => $linked_post_id,
+				'post_argument'       => 0,
+				'expected'            => $redirect_url,
+			),
+			array(
+				'test_condition_name' => '$post が投稿 ID の場合 => その投稿のリダイレクト URL を返す',
+				'current_post_id'     => 0,
+				'post_argument'       => $linked_post_id,
+				'expected'            => $redirect_url,
+			),
+			array(
+				'test_condition_name' => '$post が投稿オブジェクトの場合 => その投稿のリダイレクト URL を返す',
+				'current_post_id'     => 0,
+				'post_argument'       => get_post( $linked_post_id ),
+				'expected'            => $redirect_url,
+			),
+			array(
+				'test_condition_name' => '$post が 0 で現在の投稿にリダイレクト URL がない場合 => 現在の投稿のパーマリンクを返す',
+				'current_post_id'     => $unlinked_post_id,
+				'post_argument'       => 0,
+				'expected'            => get_permalink( $unlinked_post_id ),
+			),
+			array(
+				'test_condition_name' => '$post が 0 で現在の投稿がない場合 => 元のリンクを返す',
+				'current_post_id'     => 0,
+				'post_argument'       => 0,
+				'expected'            => $original_link,
+			),
+			array(
+				'test_condition_name' => '$post が存在しない投稿 ID の場合 => 元のリンクを返す',
+				'current_post_id'     => 0,
+				'post_argument'       => 999999,
+				'expected'            => $original_link,
+			),
+		);
+
+		$instance = new VK_Link_Target_Controller();
+		foreach ( $test_array as $value ) {
+			// Set the current post that WordPress resolves 0 to.
+			// WordPress が 0 から解決する現在の投稿を設定する。
+			$GLOBALS['post'] = $value['current_post_id'] ? get_post( $value['current_post_id'] ) : null;
+
+			$actual = $instance->rewrite_link_filter( $original_link, $value['post_argument'] );
+
+			$this->assertSame( $value['expected'], $actual, $value['test_condition_name'] );
+		}
+		unset( $GLOBALS['post'] );
+	}
+
+	/**
+	 * Test that the_permalink() without an argument prints the redirect URL in the post loop.
+	 * 投稿のループ内で、引数なしの the_permalink() がリダイレクト URL を出力することを確認する。
+	 *
+	 * @return void
+	 */
+	public function test_the_permalink() {
+		// Create posts in display order; a post without a redirect URL comes after one with it.
+		// 表示順に投稿を作成する。リダイレクト URL を設定した投稿の後に、設定していない投稿を置く。
+		$redirect_url     = 'https://example.com/wp-content/uploads/test.pdf';
+		$linked_post_id   = self::factory()->post->create();
+		$unlinked_post_id = self::factory()->post->create();
+		update_post_meta( $linked_post_id, 'vk-ltc-link', $redirect_url );
+
+		$test_array = array(
+			array(
+				'test_condition_name' => 'リダイレクト URL を設定した投稿 => リダイレクト URL を出力する',
+				'post_id'             => $linked_post_id,
+				'expected'            => $redirect_url,
+			),
+			array(
+				'test_condition_name' => 'リダイレクト URL を設定した投稿の後の、設定していない投稿 => その投稿のパーマリンクを出力する',
+				'post_id'             => $unlinked_post_id,
+				'expected'            => get_permalink( $unlinked_post_id ),
+			),
+		);
+
+		// Run the same loop as a theme template.
+		// テーマのテンプレートと同じループを実行する。
+		$query = new WP_Query(
+			array(
+				'post__in' => array( $linked_post_id, $unlinked_post_id ),
+				'orderby'  => 'post__in',
+			)
+		);
+		foreach ( $test_array as $value ) {
+			$query->the_post();
+
+			ob_start();
+			the_permalink();
+			$actual = ob_get_clean();
+
+			$this->assertSame( $value['post_id'], get_the_ID() );
+			$this->assertSame( $value['expected'], $actual, $value['test_condition_name'] );
+		}
+		wp_reset_postdata();
+	}
+
+	/**
 	 * Test that redirection() sends the expected destination for each saved URL and each home URL.
 	 * redirection() が、保存された URL とホーム URL の組み合わせごとに想定どおりの遷移先へリダイレクトすることを確認する。
 	 *
