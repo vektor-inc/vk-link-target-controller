@@ -130,6 +130,7 @@ If VK Link Target Controller is deleted on a WordPress multisite network, its se
 * [ Bug Fix ] Fixed an issue where `&` in redirect URLs saved in the classic editor was displayed as `&#038;` in the block editor panel.
 * [ Bug Fix ] Fixed an issue where the "View" link in the admin posts list pointed to the redirect URL instead of the post page for posts with a redirect URL set.
 * [ Bug Fix ] Fixed an issue on sites installed in a subdirectory (home URL with a path such as /blog) where opening a post whose redirect URL is a relative path (such as /about/) directly sent visitors to the domain root instead of the subdirectory. If you have saved a redirect URL with the subdirectory included (such as /blog/about/) on such a site, change it to the path from the site home (such as /about/); otherwise the post now redirects to /blog/blog/about/, the same destination the title link in post lists already pointed to.
+* [ Bug Fix ] Fixed an issue where `the_permalink()` called without an argument printed the post URL instead of the redirect URL, breaking theme features that read the link such as PDF icons.
 
 = 1.10.5 =
 * [ Bug Fix ] Fixed an issue where redirect URLs delivered via Ajax kept HTML-encoded ampersands ( &#038; ), breaking external URLs with multiple query parameters.
