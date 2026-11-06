@@ -4,7 +4,7 @@ Donate link:
 Tags: redirection,link,recent posts,list,page,post
 Requires at least: 5.3
 Tested up to: 7.1
-Stable tag: 1.10.5
+Stable tag: 1.10.6
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -123,6 +123,7 @@ If VK Link Target Controller is deleted on a WordPress multisite network, its se
 
 == Changelog ==
 
+= 1.10.6 =
 * [ Bug Fix ] Fixed an issue where deleting the plugin on a multisite network left post meta and settings behind on subsites other than the one where the deletion was performed.
 * [ Bug Fix ] Fixed an issue where the internal link search dialog opened from the redirect URL panel in the block editor could not be closed until the page was reloaded.
 * [ Bug Fix ] Fixed an issue where the "Search internal link" button in the redirect URL panel of the block editor was displayed in English on Japanese sites.
