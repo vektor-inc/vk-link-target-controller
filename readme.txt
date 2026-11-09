@@ -4,7 +4,7 @@ Donate link:
 Tags: redirection,link,recent posts,list,page,post
 Requires at least: 5.3
 Tested up to: 7.1
-Stable tag: 1.10.6
+Stable tag: 1.11.0
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -125,6 +125,7 @@ Warning: The link target URLs and open-in-a-new-window settings for posts on thi
 
 == Changelog ==
 
+= 1.11.0 =
 * [ Spec Change ] Plugin deletion now keeps data by default; an optional setting allows permanent data deletion per site.
 
 = 1.10.6 =
