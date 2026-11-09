@@ -130,7 +130,7 @@ class UninstallPreferenceTest extends WP_UnitTestCase {
 					ob_end_clean();
 				}
 				$this->assertSame( 1, preg_match( '/<input type="checkbox"[^>]+id="vk_ltc_delete_data_on_uninstall"[^>]*>/', $html, $matches ) );
-				$this->assertSame( (int) $case['checked'], preg_match( '/checked="checked"/', $matches[0] ), $case['test_condition_name'] );
+				$this->assertSame( (int) $case['checked'], preg_match( '/checked=(["\x27])checked\1/', $matches[0] ), $case['test_condition_name'] );
 				$this->assertStringContainsString( 'aria-describedby="vk-ltc-uninstall-description vk-ltc-uninstall-warning"', $matches[0] );
 				$this->assertStringContainsString( 'name="vk_ltc_delete_data_on_uninstall" value="0"', $html );
 				$document = new DOMDocument();
