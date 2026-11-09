@@ -370,7 +370,7 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 								<td>
 									<input type="hidden" name="vk_ltc_delete_data_on_uninstall" value="0" />
 									<label for="vk_ltc_delete_data_on_uninstall">
-										<input type="checkbox" name="vk_ltc_delete_data_on_uninstall" id="vk_ltc_delete_data_on_uninstall" value="1" aria-describedby="vk-ltc-uninstall-description" <?php checked( 1, get_option( 'vk_ltc_delete_data_on_uninstall', 0 ) ); ?> />
+										<input type="checkbox" name="vk_ltc_delete_data_on_uninstall" id="vk_ltc_delete_data_on_uninstall" value="1" aria-describedby="vk-ltc-uninstall-description vk-ltc-uninstall-warning" <?php checked( 1, get_option( 'vk_ltc_delete_data_on_uninstall', 0 ) ); ?> />
 										<?php esc_html_e( 'Delete data when the plugin is deleted', 'vk-link-target-controller' ); ?>
 									</label>
 									<p class="description" id="vk-ltc-uninstall-description">
@@ -380,9 +380,9 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 									<p class="description" id="vk-ltc-uninstall-warning">
 										<strong>
 											<?php esc_html_e( 'Warning: The link target URLs and open-in-a-new-window settings for posts on this site, and this plugin\'s settings, will be permanently deleted and cannot be restored.', 'vk-link-target-controller' ); ?>
-											<?php esc_html_e( 'Posts themselves and their content are not deleted.', 'vk-link-target-controller' ); ?>
-											<?php esc_html_e( 'This setting applies only to this site, including on multisite networks.', 'vk-link-target-controller' ); ?>
 										</strong>
+										<?php esc_html_e( 'Posts themselves and their content are not deleted.', 'vk-link-target-controller' ); ?>
+										<?php esc_html_e( 'This setting applies only to this site, including on multisite networks.', 'vk-link-target-controller' ); ?>
 									</p>
 								</td>
 							</tr>

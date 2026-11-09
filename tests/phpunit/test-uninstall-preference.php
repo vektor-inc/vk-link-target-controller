@@ -131,7 +131,7 @@ class UninstallPreferenceTest extends WP_UnitTestCase {
 				}
 				$this->assertSame( 1, preg_match( '/<input type="checkbox"[^>]+id="vk_ltc_delete_data_on_uninstall"[^>]*>/', $html, $matches ) );
 				$this->assertSame( (int) $case['checked'], preg_match( '/checked="checked"/', $matches[0] ), $case['test_condition_name'] );
-				$this->assertStringContainsString( 'aria-describedby="vk-ltc-uninstall-description"', $matches[0] );
+				$this->assertStringContainsString( 'aria-describedby="vk-ltc-uninstall-description vk-ltc-uninstall-warning"', $matches[0] );
 				$this->assertStringContainsString( 'name="vk_ltc_delete_data_on_uninstall" value="0"', $html );
 				$document = new DOMDocument();
 				$document->loadHTML( '<?xml encoding="UTF-8">' . $html );
@@ -152,8 +152,8 @@ class UninstallPreferenceTest extends WP_UnitTestCase {
 				$this->assertSame( 'vk-ltc-uninstall-warning', $descriptions->item( 1 )->getAttribute( 'id' ) );
 				$warning = $xpath->query( './strong', $descriptions->item( 1 ) );
 				$this->assertSame( 1, $warning->length );
-				$this->assertSame( "Warning: The link target URLs and open-in-a-new-window settings for posts on this site, and this plugin's settings, will be permanently deleted and cannot be restored. Posts themselves and their content are not deleted. This setting applies only to this site, including on multisite networks.", $xpath->evaluate( 'normalize-space(.)', $warning->item( 0 ) ) );
-				$this->assertSame( $xpath->evaluate( 'normalize-space(.)', $warning->item( 0 ) ), $xpath->evaluate( 'normalize-space(.)', $descriptions->item( 1 ) ) );
+				$this->assertSame( "Warning: The link target URLs and open-in-a-new-window settings for posts on this site, and this plugin's settings, will be permanently deleted and cannot be restored.", $xpath->evaluate( 'normalize-space(.)', $warning->item( 0 ) ) );
+				$this->assertSame( "Warning: The link target URLs and open-in-a-new-window settings for posts on this site, and this plugin's settings, will be permanently deleted and cannot be restored. Posts themselves and their content are not deleted. This setting applies only to this site, including on multisite networks.", $xpath->evaluate( 'normalize-space(.)', $descriptions->item( 1 ) ) );
 			}
 		} finally {
 			unregister_setting( 'vk-ltc-options', 'vk_ltc_delete_data_on_uninstall' );
