@@ -316,6 +316,16 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 					'vk_ltc_custom_post_types',
 					array( $this, 'sanitize_settings' )
 				); // create settings options in DB (use WordPress Settings API).
+
+				register_setting(
+					'vk-ltc-options',
+					'vk_ltc_delete_data_on_uninstall',
+					array(
+						'type'              => 'integer',
+						'default'           => 0,
+						'sanitize_callback' => array( $this, 'sanitize_delete_data_on_uninstall' ),
+					)
+				);
 			}
 		}
 
@@ -355,6 +365,19 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 									?>
 								</td>
 							</tr>
+							<tr>
+								<th scope="row"><?php esc_html_e( 'Plugin deletion', 'vk-link-target-controller' ); ?></th>
+								<td>
+									<input type="hidden" name="vk_ltc_delete_data_on_uninstall" value="0" />
+									<input type="checkbox" name="vk_ltc_delete_data_on_uninstall" id="vk_ltc_delete_data_on_uninstall" value="1" aria-describedby="vk-ltc-uninstall-description" <?php checked( 1, get_option( 'vk_ltc_delete_data_on_uninstall', 0 ) ); ?> />
+									<label for="vk_ltc_delete_data_on_uninstall"><?php esc_html_e( 'Delete data when the plugin is deleted', 'vk-link-target-controller' ); ?></label>
+									<p class="description" id="vk-ltc-uninstall-description">
+										<?php esc_html_e( 'Leave unchecked to keep your data when deleting the plugin (default).', 'vk-link-target-controller' ); ?>
+										<?php esc_html_e( 'Enabling this permanently deletes the link target URLs for all posts and related settings on this site when the plugin is deleted.', 'vk-link-target-controller' ); ?>
+										<?php esc_html_e( 'This cannot be undone.', 'vk-link-target-controller' ); ?>
+									</p>
+								</td>
+							</tr>
 						</table>
 						<?php submit_button(); ?>
 					</form>
@@ -362,6 +385,17 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 			</div>
 			<?php
+		}
+
+		/**
+		 * Normalize the uninstall preference to an explicit opt-in.
+		 * 削除設定を明示的な ON/OFF に正規化する。
+		 *
+		 * @param mixed $input Submitted preference.
+		 * @return int One when enabled, otherwise zero.
+		 */
+		public function sanitize_delete_data_on_uninstall( $input ) {
+			return in_array( $input, array( 1, '1', true ), true ) ? 1 : 0;
 		}
 
 		/**

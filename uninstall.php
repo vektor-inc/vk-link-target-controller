@@ -6,22 +6,10 @@
  * Fired when the plugin is deleted via the WordPress admin.
  * WordPress管理画面からプラグインを削除した際に実行される。
  *
- * Removes all plugin-specific data from the database:
- * データベースからプラグイン固有のデータを全て削除する:
- * - post meta: vk-ltc-link, vk-ltc-target
- * - option: vk_ltc_custom_post_types (and legacy key: custom-post-types)
- *
- * On multisite, this always removes the data from every site in the
- * network, regardless of whether the plugin was network activated.
- * This is because deleting a plugin on multisite requires super admin
- * privileges, and the plugin must already be deactivated (network-wide
- * or per site) before it can be deleted, so there is no reliable
- * network-activation flag left to branch on at uninstall time.
- * マルチサイトの場合、ネットワーク有効化の有無に関わらず、常にネットワーク内の
- * 全サイトからデータを削除する。マルチサイトでのプラグイン削除はスーパー管理者
- * 権限が必要で、削除前に必ず無効化（ネットワーク全体または各サイト単位）が
- * 済んでいる必要があるため、アンインストール実行時点で判定に使えるネットワーク
- * 有効化フラグが残っていないことによる。
+ * Deletes post meta and settings only on sites that explicitly opted in via
+ * vk_ltc_delete_data_on_uninstall. By default all data is retained.
+ * vk_ltc_delete_data_on_uninstall が ON のサイトのみ投稿メタと設定を削除する。
+ * 既定では全てのデータを保持する。
  *
  * @package vk-link-target-controller
  */
@@ -44,8 +32,8 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 // ないと、2回目の require で関数の再宣言による Fatal error になる。
 if ( ! function_exists( 'vk_ltc_uninstall_delete_site_data' ) ) {
 	/**
-	 * Delete all plugin-specific data (post meta and options) for the current site.
-	 * 現在のサイトにおけるプラグイン固有データ（投稿メタ・オプション）を全て削除する。
+	 * Delete plugin-specific data for the current site only when opted in.
+	 * 現在のサイトが削除を許可した場合のみプラグイン固有データを削除する。
 	 *
 	 * On multisite this is called once per site while switched into that site's
 	 * context via switch_to_blog(). On single site it is called once directly.
@@ -55,6 +43,12 @@ if ( ! function_exists( 'vk_ltc_uninstall_delete_site_data' ) ) {
 	 * @return void
 	 */
 	function vk_ltc_uninstall_delete_site_data() {
+		// Require explicit consent in the current site's context before deleting anything.
+		// サイトごとの明示的な許可を確認してから削除する.
+		if ( ! in_array( get_option( 'vk_ltc_delete_data_on_uninstall', 0 ), array( 1, '1', true ), true ) ) {
+			return;
+		}
+
 		// Delete all post meta entries created by this plugin.
 		// このプラグインが作成した全ての投稿メタを削除する。
 		// Uses delete_post_meta_by_key() to efficiently remove all rows
@@ -70,6 +64,7 @@ if ( ! function_exists( 'vk_ltc_uninstall_delete_site_data' ) ) {
 		// 新しいプレフィックス付きオプションは無条件で削除する。この名前は
 		// このプラグイン専用と分かるため、所有権の確認は不要。
 		delete_option( 'vk_ltc_custom_post_types' );
+		delete_option( 'vk_ltc_delete_data_on_uninstall' );
 
 		// The legacy option key `custom-post-types` has no plugin-specific
 		// prefix, so another plugin could plausibly be using the exact same
@@ -108,13 +103,13 @@ if ( ! function_exists( 'vk_ltc_uninstall_delete_site_data' ) ) {
 }
 
 if ( ! is_multisite() ) {
-	// Single site: delete data for the current (only) site as before.
-	// シングルサイト：これまでと同様、現在の（唯一の）サイトのデータを削除する。
+	// Single site: apply the current site's uninstall preference.
+	// シングルサイト：現在のサイトの削除設定を適用する。
 	vk_ltc_uninstall_delete_site_data();
 } else {
 	/**
-	 * Multisite: delete data from every site in the network.
-	 * マルチサイト：ネットワーク内の全サイトからデータを削除する。
+	 * Multisite: apply each site's uninstall preference.
+	 * マルチサイト：各サイトの削除設定を適用する。
 	 *
 	 * Sites are fetched in batches via get_sites() rather than a direct
 	 * query on $wpdb->blogs so that site enumeration is delegated to
@@ -123,8 +118,8 @@ if ( ! is_multisite() ) {
 	 * By default get_sites() does NOT filter out archived, spam, or
 	 * deleted-flagged sites (those args default to null, which means
 	 * "no filter" in WP_Site_Query) - it simply returns every site in
-	 * the network. That is intentional here: uninstall must remove this
-	 * plugin's data everywhere, so sites in any of those states are
+	 * the network. That is intentional here: uninstall must check each
+	 * site's preference, so sites in any of those states are
 	 * deliberately included rather than skipped.
 	 * get_sites() を使ってサイトIDをバッチ取得する（$wpdb->blogs への直接
 	 * クエリは使わない）。これは、対象を絞り込むためではなく、サイト一覧の
@@ -133,8 +128,8 @@ if ( ! is_multisite() ) {
 	 * get_sites() は既定では archived・spam・削除済みフラグの立ったサイトを
 	 * 除外しない（これらの引数は既定値が null で、WP_Site_Query 上は
 	 * 「絞り込みなし」を意味する）。つまりネットワーク内の全サイトがそのまま
-	 * 返る。アンインストールはこのプラグインのデータをどこにも残さず消す
-	 * ための処理なので、これらの状態のサイトもあえて除外せず削除対象に
+	 * 返る。アンインストールは各サイトの削除設定を確認する
+	 * 処理なので、これらの状態のサイトもあえて除外せず削除対象に
 	 * 含めている。
 	 *
 	 * Note on scope: "network" here is a loose description, not a literal

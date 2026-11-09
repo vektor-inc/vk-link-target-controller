@@ -121,3 +121,23 @@ msgstr ""
 #: src/index.js:170
 msgid "Remove"
 msgstr ""
+
+#: vk-link-target-controller.php
+msgid "Plugin deletion"
+msgstr ""
+
+#: vk-link-target-controller.php
+msgid "Delete data when the plugin is deleted"
+msgstr ""
+
+#: vk-link-target-controller.php
+msgid "Leave unchecked to keep your data when deleting the plugin (default)."
+msgstr ""
+
+#: vk-link-target-controller.php
+msgid "Enabling this permanently deletes the link target URLs for all posts and related settings on this site when the plugin is deleted."
+msgstr ""
+
+#: vk-link-target-controller.php
+msgid "This cannot be undone."
+msgstr ""

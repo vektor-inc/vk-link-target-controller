@@ -103,6 +103,7 @@ class UninstallMultisiteTest extends WP_UnitTestCase {
 	private function create_site_data( $blog_id, $with_plugin_data ) {
 		switch_to_blog( $blog_id );
 
+		update_option( 'vk_ltc_delete_data_on_uninstall', 1 );
 		$post_id = $this->factory->post->create();
 
 		if ( $with_plugin_data ) {
@@ -133,6 +134,7 @@ class UninstallMultisiteTest extends WP_UnitTestCase {
 		$this->assertFalse( metadata_exists( 'post', $post_id, 'vk-ltc-link' ), $message . " (blog {$blog_id} vk-ltc-link should be deleted)" );
 		$this->assertSame( '', get_post_meta( $post_id, 'vk-ltc-target', true ), $message . " (blog {$blog_id} vk-ltc-target)" );
 		$this->assertFalse( metadata_exists( 'post', $post_id, 'vk-ltc-target' ), $message . " (blog {$blog_id} vk-ltc-target should be deleted)" );
+		$this->assertFalse( get_option( 'vk_ltc_delete_data_on_uninstall', false ), $message );
 		$this->assertFalse( get_option( 'vk_ltc_custom_post_types', false ), $message . " (blog {$blog_id} vk_ltc_custom_post_types option)" );
 		$this->assertFalse( get_option( 'custom-post-types', false ), $message . " (blog {$blog_id} legacy custom-post-types option)" );
 

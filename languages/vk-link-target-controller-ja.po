@@ -131,3 +131,23 @@ msgstr "編集"
 
 #~ msgid "Download Biz Vektor free Wordpress theme for businesses"
 #~ msgstr "WordPress無料テーマ「BizVektor」をダウンロードする"
+
+#: vk-link-target-controller.php
+msgid "Plugin deletion"
+msgstr "プラグイン削除"
+
+#: vk-link-target-controller.php
+msgid "Delete data when the plugin is deleted"
+msgstr "プラグイン削除時にデータを削除する"
+
+#: vk-link-target-controller.php
+msgid "Leave unchecked to keep your data when deleting the plugin (default)."
+msgstr "データを保持する場合はチェックを外したままにしてください（既定）。"
+
+#: vk-link-target-controller.php
+msgid "Enabling this permanently deletes the link target URLs for all posts and related settings on this site when the plugin is deleted."
+msgstr "チェックを入れると、プラグイン削除時にこのサイトの全投稿のリンク先 URL と関連設定が完全に削除されます。"
+
+#: vk-link-target-controller.php
+msgid "This cannot be undone."
+msgstr "元に戻すことはできません。"
