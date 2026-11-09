@@ -86,51 +86,73 @@ class UninstallPreferenceTest extends WP_UnitTestCase {
 	public function test_create_settings_page() {
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		require_once ABSPATH . 'wp-admin/includes/template.php';
+		$original_user_id = get_current_user_id();
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
-		$controller = new VK_Link_Target_Controller();
-		$controller->create_settings_page();
-		$registered = get_registered_settings();
-		$this->assertSame( 'vk-ltc-options', $registered['vk_ltc_delete_data_on_uninstall']['group'] );
-		$this->assertSame( 0, $registered['vk_ltc_delete_data_on_uninstall']['default'] );
+		try {
+			$controller = new VK_Link_Target_Controller();
+			$controller->create_settings_page();
+			$registered = get_registered_settings();
+			$this->assertSame( 'vk-ltc-options', $registered['vk_ltc_delete_data_on_uninstall']['group'] );
+			$this->assertSame( 0, $registered['vk_ltc_delete_data_on_uninstall']['default'] );
 
-		// Exercise missing, enabled, and disabled states through the registered sanitizer.
-		// 登録されたサニタイズ処理を通して未保存・ON・OFF を検証する.
-		$test_cases = array(
-			array(
-				'test_condition_name' => '未保存 => 未チェック',
-				'input'               => null,
-				'checked'             => false,
-			),
-			array(
-				'test_condition_name' => 'ON を保存 => チェック',
-				'input'               => '1',
-				'checked'             => true,
-			),
-			array(
-				'test_condition_name' => 'OFF を保存 => 未チェック',
-				'input'               => '0',
-				'checked'             => false,
-			),
-		);
-		foreach ( $test_cases as $case ) {
-			if ( null === $case['input'] ) {
-				delete_option( 'vk_ltc_delete_data_on_uninstall' );
-				$this->assertSame( 0, get_option( 'vk_ltc_delete_data_on_uninstall' ) );
-			} else {
-				update_option( 'vk_ltc_delete_data_on_uninstall', $case['input'] );
-				$this->assertEquals( (int) $case['checked'], get_option( 'vk_ltc_delete_data_on_uninstall' ), $case['test_condition_name'] );
+			// Exercise missing, enabled, and disabled states through the registered sanitizer.
+			// 登録されたサニタイズ処理を通して未保存・ON・OFF を検証する.
+			$test_cases = array(
+				array(
+					'test_condition_name' => '未保存 => 未チェック',
+					'input'               => null,
+					'checked'             => false,
+				),
+				array(
+					'test_condition_name' => 'ON を保存 => チェック',
+					'input'               => '1',
+					'checked'             => true,
+				),
+				array(
+					'test_condition_name' => 'OFF を保存 => 未チェック',
+					'input'               => '0',
+					'checked'             => false,
+				),
+			);
+			foreach ( $test_cases as $case ) {
+				if ( null === $case['input'] ) {
+					delete_option( 'vk_ltc_delete_data_on_uninstall' );
+					$this->assertSame( 0, get_option( 'vk_ltc_delete_data_on_uninstall' ) );
+				} else {
+					update_option( 'vk_ltc_delete_data_on_uninstall', $case['input'] );
+					$this->assertEquals( (int) $case['checked'], get_option( 'vk_ltc_delete_data_on_uninstall' ), $case['test_condition_name'] );
+				}
+				ob_start();
+				try {
+					$controller->settings_page_html();
+					$html = ob_get_contents();
+				} finally {
+					ob_end_clean();
+				}
+				$this->assertSame( 1, preg_match( '/<input type="checkbox"[^>]+id="vk_ltc_delete_data_on_uninstall"[^>]*>/', $html, $matches ) );
+				$this->assertSame( (int) $case['checked'], preg_match( '/checked="checked"/', $matches[0] ), $case['test_condition_name'] );
+				$this->assertStringContainsString( 'aria-describedby="vk-ltc-uninstall-warning vk-ltc-uninstall-description"', $matches[0] );
+				$this->assertStringContainsString( 'name="vk_ltc_delete_data_on_uninstall" value="0"', $html );
+				$document = new DOMDocument();
+				$document->loadHTML( '<?xml encoding="UTF-8">' . $html );
+				$xpath = new DOMXPath( $document );
+				$this->assertSame( 'Data on plugin deletion', trim( $xpath->query( '//th[@scope="row"][following-sibling::td//input[@id="vk_ltc_delete_data_on_uninstall"]]' )->item( 0 )->textContent ) );
+				$this->assertSame( 'Delete data when the plugin is deleted', $xpath->query( '//label[@for="vk_ltc_delete_data_on_uninstall"]' )->item( 0 )->textContent );
+				$warning = $xpath->query( '//p[@id="vk-ltc-uninstall-warning"]/strong' );
+				$this->assertSame( 1, $warning->length );
+				$this->assertSame( 'Warning: Deleted data cannot be restored.', trim( $warning->item( 0 )->textContent ) );
+				$descriptions = $xpath->query( '//div[@id="vk-ltc-uninstall-description"]/p[@class="description"]' );
+				$this->assertSame( 4, $descriptions->length );
+				$this->assertSame( 'Unchecked by default: data is kept even when the plugin is deleted.', trim( $descriptions->item( 0 )->textContent ) );
+				$this->assertSame( 'Data is deleted only if you check this option, save the settings, and then delete the plugin.', trim( $descriptions->item( 1 )->textContent ) );
+				$this->assertSame( "Only the link target URLs and open-in-a-new-window settings for posts on this site, and this plugin's settings, are deleted. Posts and their content are not deleted.", trim( $descriptions->item( 2 )->textContent ) );
+				$this->assertSame( 'This setting applies only to this site, including on multisite networks.', trim( $descriptions->item( 3 )->textContent ) );
 			}
-			ob_start();
-			$controller->settings_page_html();
-			$html = ob_get_clean();
-			$this->assertSame( 1, preg_match( '/<input type="checkbox"[^>]+id="vk_ltc_delete_data_on_uninstall"[^>]*>/', $html, $matches ) );
-			$this->assertSame( (int) $case['checked'], preg_match( '/checked="checked"/', $matches[0] ), $case['test_condition_name'] );
-			$this->assertStringContainsString( 'aria-describedby="vk-ltc-uninstall-description"', $matches[0] );
-			$this->assertStringContainsString( 'name="vk_ltc_delete_data_on_uninstall" value="0"', $html );
+		} finally {
+			unregister_setting( 'vk-ltc-options', 'vk_ltc_delete_data_on_uninstall' );
+			unregister_setting( 'vk-ltc-options', 'vk_ltc_custom_post_types' );
+			wp_set_current_user( $original_user_id );
 		}
-		unregister_setting( 'vk-ltc-options', 'vk_ltc_delete_data_on_uninstall' );
-		unregister_setting( 'vk-ltc-options', 'vk_ltc_custom_post_types' );
-		wp_set_current_user( 0 );
 	}
 
 	/**
@@ -170,7 +192,7 @@ class UninstallPreferenceTest extends WP_UnitTestCase {
 			if ( is_multisite() ) {
 				switch_to_blog( $site_id );
 			}
-			$post_id = self::factory()->post->create();
+			$post_id = self::factory()->post->create( array( 'post_content' => 'Content to preserve.' ) );
 			update_post_meta( $post_id, 'vk-ltc-link', 'https://example.com/keep' );
 			update_post_meta( $post_id, 'vk-ltc-target', '1' );
 			update_post_meta( $post_id, 'unrelated-meta', 'keep' );
@@ -198,9 +220,12 @@ class UninstallPreferenceTest extends WP_UnitTestCase {
 			// Start from an OFF site to catch accidental use of the initiating site's option.
 			// OFF のサイトから実行し、起点サイトの設定を全体に適用する不具合を検知する.
 			switch_to_blog( $sites[1]['site_id'] );
-			require dirname( __DIR__, 2 ) . '/uninstall.php';
-			$this->assertSame( $sites[1]['site_id'], get_current_blog_id() );
-			restore_current_blog();
+			try {
+				require dirname( __DIR__, 2 ) . '/uninstall.php';
+				$this->assertSame( $sites[1]['site_id'], get_current_blog_id() );
+			} finally {
+				restore_current_blog();
+			}
 			foreach ( $sites as $site ) {
 				$this->assert_preference_result( $site['site_id'], $site['post_id'], $site['case'] );
 			}
@@ -223,6 +248,8 @@ class UninstallPreferenceTest extends WP_UnitTestCase {
 		}
 		try {
 			$message = $scenario['test_condition_name'];
+			$this->assertNotNull( get_post( $post_id ), $message );
+			$this->assertSame( 'Content to preserve.', get_post_field( 'post_content', $post_id ), $message );
 			$this->assertSame( ! $scenario['deleted'], metadata_exists( 'post', $post_id, 'vk-ltc-link' ), $message );
 			$this->assertSame( $scenario['deleted'] ? '' : 'https://example.com/keep', get_post_meta( $post_id, 'vk-ltc-link', true ), $message );
 			$this->assertSame( $scenario['deleted'] ? '' : '1', get_post_meta( $post_id, 'vk-ltc-target', true ), $message );

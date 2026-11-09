@@ -2,14 +2,14 @@
 # This file is distributed under the GPL2.
 msgid ""
 msgstr ""
-"Project-Id-Version: VK Link Target Controller 1.8.1\n"
+"Project-Id-Version: VK Link Target Controller 1.10.6\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/vk-link-target-controller\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-04-02T04:18:08+00:00\n"
+"POT-Creation-Date: 2026-11-09T03:20:24+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: vk-link-target-controller\n"
@@ -45,60 +45,98 @@ msgstr ""
 msgid "Setting"
 msgstr ""
 
-#: vk-link-target-controller.php:267
-#: vk-link-target-controller.php:293
+#: vk-link-target-controller.php:124
+msgid "Edit"
+msgstr ""
+
+#: vk-link-target-controller.php:307
+#: vk-link-target-controller.php:343
 msgctxt "settings page title"
 msgid "VK Link Target Controller"
 msgstr ""
 
-#: vk-link-target-controller.php:268
+#: vk-link-target-controller.php:308
 msgctxt "admin menu link label"
 msgid "Link Target Controller"
 msgstr ""
 
-#: vk-link-target-controller.php:301
+#: vk-link-target-controller.php:351
 msgid "Display on the following post types"
 msgstr ""
 
-#: vk-link-target-controller.php:374
-#: vk-link-target-controller.php:388
+#: vk-link-target-controller.php:369
+msgid "Data on plugin deletion"
+msgstr ""
+
+#: vk-link-target-controller.php:373
+msgid "Delete data when the plugin is deleted"
+msgstr ""
+
+#: vk-link-target-controller.php:375
+msgid "Warning: Deleted data cannot be restored."
+msgstr ""
+
+#: vk-link-target-controller.php:378
+msgid "Unchecked by default: data is kept even when the plugin is deleted."
+msgstr ""
+
+#: vk-link-target-controller.php:379
+msgid "Data is deleted only if you check this option, save the settings, and then delete the plugin."
+msgstr ""
+
+#: vk-link-target-controller.php:380
+msgid "Only the link target URLs and open-in-a-new-window settings for posts on this site, and this plugin's settings, are deleted. Posts and their content are not deleted."
+msgstr ""
+
+#: vk-link-target-controller.php:381
+msgid "This setting applies only to this site, including on multisite networks."
+msgstr ""
+
+#: vk-link-target-controller.php:453
+#: vk-link-target-controller.php:467
 #: build/index.js:1
-#: src/index.js:82
+#: src/index.js:175
 msgid "URL to redirect to"
 msgstr ""
 
-#: vk-link-target-controller.php:418
+#: vk-link-target-controller.php:498
 #: build/index.js:1
-#: src/index.js:86
+#: src/index.js:179
 msgid "If you enter an URL here your visitors will access that URL directly when they click on the title of this post in Recent Posts list."
 msgstr ""
 
-#: vk-link-target-controller.php:419
+#: vk-link-target-controller.php:499
 msgid "If you want to link to the file, please upload select the file from the \"File Link\" button."
 msgstr ""
 
-#: vk-link-target-controller.php:422
+#: vk-link-target-controller.php:502
 #: build/index.js:1
-#: src/index.js:157
+#: src/index.js:187
 msgid "URL"
 msgstr ""
 
-#: vk-link-target-controller.php:424
+#: vk-link-target-controller.php:504
 #: build/index.js:1
-#: src/index.js:173
+#: src/index.js:203
 msgid "Search internal link"
 msgstr ""
 
-#: vk-link-target-controller.php:425
+#: vk-link-target-controller.php:505
 #: build/index.js:1
-#: src/index.js:157
+#: src/index.js:209
 msgid "File Link"
 msgstr ""
 
-#: vk-link-target-controller.php:472
+#: vk-link-target-controller.php:552
 #: build/index.js:1
-#: src/index.js:182
+#: src/index.js:215
 msgid "Open the link in a separate window"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:155
+#: src/index.js:157
+msgid "Choose File"
 msgstr ""
 
 #: build/index.js:1
@@ -112,32 +150,6 @@ msgid "Set Link"
 msgstr ""
 
 #: build/index.js:1
-#: src/index.js:62
-#: src/index.js:64
-msgid "Choose File"
-msgstr ""
-
-#: build/index.js:1
 #: src/index.js:170
 msgid "Remove"
-msgstr ""
-
-#: vk-link-target-controller.php
-msgid "Plugin deletion"
-msgstr ""
-
-#: vk-link-target-controller.php
-msgid "Delete data when the plugin is deleted"
-msgstr ""
-
-#: vk-link-target-controller.php
-msgid "Leave unchecked to keep your data when deleting the plugin (default)."
-msgstr ""
-
-#: vk-link-target-controller.php
-msgid "Enabling this permanently deletes the link target URLs for all posts and related settings on this site when the plugin is deleted."
-msgstr ""
-
-#: vk-link-target-controller.php
-msgid "This cannot be undone."
 msgstr ""

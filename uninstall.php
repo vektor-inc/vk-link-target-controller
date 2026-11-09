@@ -66,35 +66,11 @@ if ( ! function_exists( 'vk_ltc_uninstall_delete_site_data' ) ) {
 		delete_option( 'vk_ltc_custom_post_types' );
 		delete_option( 'vk_ltc_delete_data_on_uninstall' );
 
-		// The legacy option key `custom-post-types` has no plugin-specific
-		// prefix, so another plugin could plausibly be using the exact same
-		// option name for something unrelated. On single site this was
-		// never a real risk in practice, because uninstall.php only ran
-		// against the one site an admin chose to delete the plugin from.
-		// On multisite this loop now runs the same delete on every site in
-		// the network, including sites that may never have had this plugin
-		// installed - so an unguarded delete_option() here would newly risk
-		// wiping another plugin's same-named option on those sites.
-		// Guard it by checking the stored value looks like what this plugin
-		// would have saved (an array of post type slugs - see
-		// VK_Link_Target_Controller::sanitize_settings()). This is not
-		// proof of ownership (another plugin could coincidentally also
-		// store an array under this name), but it is strictly safer than
-		// no check at all, and costs nothing since deleting a non-existent
-		// option is already a no-op.
-		// レガシーキー `custom-post-types` はこのプラグイン専用のプレフィックスが
-		// 無いため、他のプラグインが全く別の用途で同名のオプションキーを使って
-		// いる可能性がある。シングルサイトでは uninstall.php は管理者が削除を
-		// 選んだ1サイトに対してしか実行されなかったため、実質的なリスクには
-		// なっていなかった。マルチサイトでは同じ削除処理がネットワーク内の
-		// 全サイト（このプラグインを一度も導入していないサイトを含む）に対して
-		// 走るようになったため、無条件の delete_option() はそれらのサイトで
-		// 他プラグインの同名オプションを消してしまう新たなリスクになる。
-		// 保存値がこのプラグインが保存する形（投稿タイプスラッグの配列。
-		// VK_Link_Target_Controller::sanitize_settings() を参照）かどうかで
-		// 絞り込む。これは所有権の証明にはならない（他プラグインが偶然同名で
-		// 配列を保存している可能性は残る）が、ノーガードよりは確実に安全側で
-		// あり、存在しないオプションの削除はもともと no-op なのでコストも無い。
+		// Even with explicit consent, retain non-array legacy values: the unprefixed
+		// key may belong to another plugin. An array matches our historical format,
+		// but is not proof of ownership.
+		// 明示的な削除許可があっても、他プラグインが使う可能性のある配列以外の
+		// レガシー値は保持する。配列は旧形式と一致するが、所有権の証明ではない。
 		$legacy_option = get_option( 'custom-post-types', null );
 		if ( is_array( $legacy_option ) ) {
 			delete_option( 'custom-post-types' );
