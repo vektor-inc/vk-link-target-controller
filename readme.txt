@@ -110,9 +110,11 @@ get_post_class() returns a value that includes the post ID.
 For now the plugin is available in English and Japanese only.
 But we have a .pot file available so feel free to translate it in your language if you have some time.
 
-= What happens to my data if I delete the plugin on a multisite network? =
+= What happens to my data if I delete the plugin? =
 
-If VK Link Target Controller is deleted on a WordPress multisite network, its settings and the redirect URLs you've set on individual posts are removed from every site in the network, not only from the site where the deletion was performed. Back up any redirect settings you still need before deleting the plugin.
+Leave 'Delete data when the plugin is deleted' unchecked under Settings > Link Target Controller to keep your data (default). To delete your data, check this option, save the changes, and then delete the plugin.
+
+Warning: The link target URLs and open-in-a-new-window settings for posts on this site, and this plugin's settings, will be permanently deleted and cannot be restored. Posts themselves and their content are not deleted. This setting applies only to this site, including on multisite networks; each site's setting is respected independently.
 
 == Screenshots ==
 
@@ -122,6 +124,8 @@ If VK Link Target Controller is deleted on a WordPress multisite network, its se
 4. A relative url that refer to a page of your website: **note slash "/" at the beginning**.
 
 == Changelog ==
+
+* [ Spec Change ] Plugin deletion now keeps data by default; an optional setting allows permanent data deletion per site.
 
 = 1.10.6 =
 * [ Bug Fix ] Fixed an issue where deleting the plugin on a multisite network left post meta and settings behind on subsites other than the one where the deletion was performed.

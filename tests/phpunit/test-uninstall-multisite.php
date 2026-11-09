@@ -82,9 +82,8 @@ class UninstallMultisiteTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Create a post on the given site, optionally with plugin-specific post
-	 * meta and options set as well.
-	 * 指定したサイトに投稿を作成する。$with_plugin_data が true の場合は
+	 * Opt in to deletion and create a post, optionally with plugin data.
+	 * 指定したサイトで削除を許可して投稿を作成する。$with_plugin_data が true の場合は
 	 * プラグイン固有の投稿メタとオプションも合わせて設定する。
 	 *
 	 * A real post is always created (even when $with_plugin_data is false)
@@ -102,17 +101,19 @@ class UninstallMultisiteTest extends WP_UnitTestCase {
 	 */
 	private function create_site_data( $blog_id, $with_plugin_data ) {
 		switch_to_blog( $blog_id );
+		try {
+			update_option( 'vk_ltc_delete_data_on_uninstall', 1 );
+			$post_id = $this->factory->post->create();
 
-		$post_id = $this->factory->post->create();
-
-		if ( $with_plugin_data ) {
-			update_post_meta( $post_id, 'vk-ltc-link', 'https://example.com/site-' . $blog_id );
-			update_post_meta( $post_id, 'vk-ltc-target', '1' );
-			update_option( 'vk_ltc_custom_post_types', array( 'post', 'page' ) );
-			update_option( 'custom-post-types', array( 'post' ) );
+			if ( $with_plugin_data ) {
+				update_post_meta( $post_id, 'vk-ltc-link', 'https://example.com/site-' . $blog_id );
+				update_post_meta( $post_id, 'vk-ltc-target', '1' );
+				update_option( 'vk_ltc_custom_post_types', array( 'post', 'page' ) );
+				update_option( 'custom-post-types', array( 'post' ) );
+			}
+		} finally {
+			restore_current_blog();
 		}
-
-		restore_current_blog();
 
 		return $post_id;
 	}
@@ -128,15 +129,17 @@ class UninstallMultisiteTest extends WP_UnitTestCase {
 	 */
 	private function assert_site_data_deleted( $blog_id, $post_id, $message ) {
 		switch_to_blog( $blog_id );
-
-		$this->assertSame( '', get_post_meta( $post_id, 'vk-ltc-link', true ), $message . " (blog {$blog_id} vk-ltc-link)" );
-		$this->assertFalse( metadata_exists( 'post', $post_id, 'vk-ltc-link' ), $message . " (blog {$blog_id} vk-ltc-link should be deleted)" );
-		$this->assertSame( '', get_post_meta( $post_id, 'vk-ltc-target', true ), $message . " (blog {$blog_id} vk-ltc-target)" );
-		$this->assertFalse( metadata_exists( 'post', $post_id, 'vk-ltc-target' ), $message . " (blog {$blog_id} vk-ltc-target should be deleted)" );
-		$this->assertFalse( get_option( 'vk_ltc_custom_post_types', false ), $message . " (blog {$blog_id} vk_ltc_custom_post_types option)" );
-		$this->assertFalse( get_option( 'custom-post-types', false ), $message . " (blog {$blog_id} legacy custom-post-types option)" );
-
-		restore_current_blog();
+		try {
+			$this->assertSame( '', get_post_meta( $post_id, 'vk-ltc-link', true ), $message . " (blog {$blog_id} vk-ltc-link)" );
+			$this->assertFalse( metadata_exists( 'post', $post_id, 'vk-ltc-link' ), $message . " (blog {$blog_id} vk-ltc-link should be deleted)" );
+			$this->assertSame( '', get_post_meta( $post_id, 'vk-ltc-target', true ), $message . " (blog {$blog_id} vk-ltc-target)" );
+			$this->assertFalse( metadata_exists( 'post', $post_id, 'vk-ltc-target' ), $message . " (blog {$blog_id} vk-ltc-target should be deleted)" );
+			$this->assertFalse( get_option( 'vk_ltc_delete_data_on_uninstall', false ), $message );
+			$this->assertFalse( get_option( 'vk_ltc_custom_post_types', false ), $message . " (blog {$blog_id} vk_ltc_custom_post_types option)" );
+			$this->assertFalse( get_option( 'custom-post-types', false ), $message . " (blog {$blog_id} legacy custom-post-types option)" );
+		} finally {
+			restore_current_blog();
+		}
 	}
 
 	/**
@@ -254,73 +257,42 @@ class UninstallMultisiteTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test: a subsite that never had this plugin's data, but happens to
-	 * have a non-array value stored under the legacy option name
-	 * `custom-post-types` (as another plugin might, since that name has no
-	 * plugin-specific prefix) => uninstall must NOT delete that value on
-	 * that site. This pins down the actual reason
-	 * vk_ltc_uninstall_delete_site_data()'s is_array() guard exists:
-	 * without it, running uninstall network-wide would delete data that
-	 * never belonged to this plugin, on a site that never installed it.
-	 * The other uninstall tests only ever seed `custom-post-types` with
-	 * arrays, so they could not have caught a regression that removed or
-	 * weakened this guard.
-	 * テスト: このプラグインを一度も導入していないサブサイトに、レガシー
-	 * オプション名 custom-post-types で配列でない値が入っている場合（この
-	 * 名前にはプレフィックスが無いため、他プラグインが同名で使っている
-	 * 想定）=> アンインストールを実行してもその値は削除されない。これは
-	 * vk_ltc_uninstall_delete_site_data() の is_array() ガードが実際に
-	 * 存在する理由そのものを固定するテストである。ガードが無ければ、
-	 * ネットワーク全体でのアンインストール実行が、このプラグインを一度も
-	 * 導入していないサイト上の、このプラグインとは無関係なデータまで
-	 * 消してしまう。他のアンインストールテストは custom-post-types に
-	 * 配列しか投入していないため、このガードが失われる・弱まる regression
-	 * を検知できなかった。
+	 * Explicit consent must not bypass the non-array legacy option guard.
+	 * 明示的な削除許可があっても配列でないレガシー値は保持する。
 	 */
-	function test_uninstall_multisite_preserves_non_array_legacy_option_on_untouched_site() {
+	public function test_uninstall_multisite_preserves_non_array_legacy_option_with_consent() {
 		$main_blog_id = get_current_blog_id();
-
-		// Main site: seeded with real plugin data, to prove normal cleanup
-		// still works correctly alongside the untouched-site scenario below.
-		// メインサイト：実際のプラグインデータを投入し、以下の「導入していない
-		// サイト」のシナリオと同時に走っても通常の削除が問題なく動くことを
-		// 確認する。
 		$main_post_id = $this->create_site_data( $main_blog_id, true );
+		$subsite_id   = $this->factory->blog->create();
+		$post_id      = $this->create_site_data( $subsite_id, true );
 
-		// Subsite that never had this plugin installed: no post meta, no
-		// plugin-prefixed option - only a non-array value under the legacy
-		// option name, simulating another plugin's unrelated use of it.
-		// このプラグインを一度も導入していないサブサイト：投稿メタも新オプション
-		// も無く、レガシーオプション名にのみ配列でない値が入っている（他
-		// プラグインが無関係な用途で同名を使っている状態を想定）。
-		$untouched_blog_id = $this->factory->blog->create();
-		switch_to_blog( $untouched_blog_id );
-		$foreign_legacy_value = 'not-an-array-value-from-another-plugin';
-		update_option( 'custom-post-types', $foreign_legacy_value );
-		restore_current_blog();
+		// Both sites opt in; the subsite's legacy value simulates another plugin.
+		// 両サイトで削除を許可し、サブサイトのレガシー値だけ他プラグイン由来を想定する。
+		switch_to_blog( $subsite_id );
+		try {
+			$foreign_legacy_value = 'not-an-array-value-from-another-plugin';
+			update_option( 'custom-post-types', $foreign_legacy_value );
+			$this->assertSame( 1, (int) get_option( 'vk_ltc_delete_data_on_uninstall' ) );
+		} finally {
+			restore_current_blog();
+		}
 
-		// Define WP_UNINSTALL_PLUGIN if not already defined, then include uninstall.php.
-		// WP_UNINSTALL_PLUGIN が未定義の場合は定義し、uninstall.php を読み込む。
 		if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 			define( 'WP_UNINSTALL_PLUGIN', true );
 		}
 		require dirname( __DIR__, 2 ) . '/uninstall.php';
-
-		// The main site's real plugin data is still cleaned up as normal.
-		// メインサイトの実際のプラグインデータは通常どおり削除される。
+		$this->assertSame( $main_blog_id, get_current_blog_id() );
 		$this->assert_site_data_deleted( $main_blog_id, $main_post_id, 'メインサイトの実データ' );
 
-		// The untouched site's foreign-looking legacy value must survive
-		// completely unchanged: this is the guard's whole reason for existing.
-		// 「導入していないサイト」の他プラグイン由来に見えるレガシー値は、
-		// 一切変更されずに残らなければならない：これがガードの存在理由そのもの
-		// である。
-		switch_to_blog( $untouched_blog_id );
-		$this->assertSame(
-			$foreign_legacy_value,
-			get_option( 'custom-post-types', false ),
-			'このプラグインを導入していないサイトの custom-post-types（配列でない値）は削除されずに残る'
-		);
-		restore_current_blog();
+		switch_to_blog( $subsite_id );
+		try {
+			$this->assertSame( $foreign_legacy_value, get_option( 'custom-post-types' ), '削除を許可しても配列でないレガシー値は保持する' );
+			$this->assertFalse( metadata_exists( 'post', $post_id, 'vk-ltc-link' ) );
+			$this->assertFalse( metadata_exists( 'post', $post_id, 'vk-ltc-target' ) );
+			$this->assertFalse( get_option( 'vk_ltc_custom_post_types', false ) );
+			$this->assertFalse( get_option( 'vk_ltc_delete_data_on_uninstall', false ) );
+		} finally {
+			restore_current_blog();
+		}
 	}
 }

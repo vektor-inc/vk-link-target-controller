@@ -6,22 +6,10 @@
  * Fired when the plugin is deleted via the WordPress admin.
  * WordPress管理画面からプラグインを削除した際に実行される。
  *
- * Removes all plugin-specific data from the database:
- * データベースからプラグイン固有のデータを全て削除する:
- * - post meta: vk-ltc-link, vk-ltc-target
- * - option: vk_ltc_custom_post_types (and legacy key: custom-post-types)
- *
- * On multisite, this always removes the data from every site in the
- * network, regardless of whether the plugin was network activated.
- * This is because deleting a plugin on multisite requires super admin
- * privileges, and the plugin must already be deactivated (network-wide
- * or per site) before it can be deleted, so there is no reliable
- * network-activation flag left to branch on at uninstall time.
- * マルチサイトの場合、ネットワーク有効化の有無に関わらず、常にネットワーク内の
- * 全サイトからデータを削除する。マルチサイトでのプラグイン削除はスーパー管理者
- * 権限が必要で、削除前に必ず無効化（ネットワーク全体または各サイト単位）が
- * 済んでいる必要があるため、アンインストール実行時点で判定に使えるネットワーク
- * 有効化フラグが残っていないことによる。
+ * Deletes post meta and settings only on sites that explicitly opted in via
+ * vk_ltc_delete_data_on_uninstall. By default all data is retained.
+ * vk_ltc_delete_data_on_uninstall が ON のサイトのみ投稿メタと設定を削除する。
+ * 既定では全てのデータを保持する。
  *
  * @package vk-link-target-controller
  */
@@ -44,8 +32,8 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 // ないと、2回目の require で関数の再宣言による Fatal error になる。
 if ( ! function_exists( 'vk_ltc_uninstall_delete_site_data' ) ) {
 	/**
-	 * Delete all plugin-specific data (post meta and options) for the current site.
-	 * 現在のサイトにおけるプラグイン固有データ（投稿メタ・オプション）を全て削除する。
+	 * Delete plugin-specific data for the current site only when opted in.
+	 * 現在のサイトが削除を許可した場合のみプラグイン固有データを削除する。
 	 *
 	 * On multisite this is called once per site while switched into that site's
 	 * context via switch_to_blog(). On single site it is called once directly.
@@ -55,6 +43,12 @@ if ( ! function_exists( 'vk_ltc_uninstall_delete_site_data' ) ) {
 	 * @return void
 	 */
 	function vk_ltc_uninstall_delete_site_data() {
+		// Require explicit consent in the current site's context before deleting anything.
+		// サイトごとの明示的な許可を確認してから削除する.
+		if ( ! in_array( get_option( 'vk_ltc_delete_data_on_uninstall', 0 ), array( 1, '1', true ), true ) ) {
+			return;
+		}
+
 		// Delete all post meta entries created by this plugin.
 		// このプラグインが作成した全ての投稿メタを削除する。
 		// Uses delete_post_meta_by_key() to efficiently remove all rows
@@ -70,36 +64,13 @@ if ( ! function_exists( 'vk_ltc_uninstall_delete_site_data' ) ) {
 		// 新しいプレフィックス付きオプションは無条件で削除する。この名前は
 		// このプラグイン専用と分かるため、所有権の確認は不要。
 		delete_option( 'vk_ltc_custom_post_types' );
+		delete_option( 'vk_ltc_delete_data_on_uninstall' );
 
-		// The legacy option key `custom-post-types` has no plugin-specific
-		// prefix, so another plugin could plausibly be using the exact same
-		// option name for something unrelated. On single site this was
-		// never a real risk in practice, because uninstall.php only ran
-		// against the one site an admin chose to delete the plugin from.
-		// On multisite this loop now runs the same delete on every site in
-		// the network, including sites that may never have had this plugin
-		// installed - so an unguarded delete_option() here would newly risk
-		// wiping another plugin's same-named option on those sites.
-		// Guard it by checking the stored value looks like what this plugin
-		// would have saved (an array of post type slugs - see
-		// VK_Link_Target_Controller::sanitize_settings()). This is not
-		// proof of ownership (another plugin could coincidentally also
-		// store an array under this name), but it is strictly safer than
-		// no check at all, and costs nothing since deleting a non-existent
-		// option is already a no-op.
-		// レガシーキー `custom-post-types` はこのプラグイン専用のプレフィックスが
-		// 無いため、他のプラグインが全く別の用途で同名のオプションキーを使って
-		// いる可能性がある。シングルサイトでは uninstall.php は管理者が削除を
-		// 選んだ1サイトに対してしか実行されなかったため、実質的なリスクには
-		// なっていなかった。マルチサイトでは同じ削除処理がネットワーク内の
-		// 全サイト（このプラグインを一度も導入していないサイトを含む）に対して
-		// 走るようになったため、無条件の delete_option() はそれらのサイトで
-		// 他プラグインの同名オプションを消してしまう新たなリスクになる。
-		// 保存値がこのプラグインが保存する形（投稿タイプスラッグの配列。
-		// VK_Link_Target_Controller::sanitize_settings() を参照）かどうかで
-		// 絞り込む。これは所有権の証明にはならない（他プラグインが偶然同名で
-		// 配列を保存している可能性は残る）が、ノーガードよりは確実に安全側で
-		// あり、存在しないオプションの削除はもともと no-op なのでコストも無い。
+		// Even with explicit consent, retain non-array legacy values: the unprefixed
+		// key may belong to another plugin. An array matches our historical format,
+		// but is not proof of ownership.
+		// 明示的な削除許可があっても、他プラグインが使う可能性のある配列以外の
+		// レガシー値は保持する。配列は旧形式と一致するが、所有権の証明ではない。
 		$legacy_option = get_option( 'custom-post-types', null );
 		if ( is_array( $legacy_option ) ) {
 			delete_option( 'custom-post-types' );
@@ -108,13 +79,13 @@ if ( ! function_exists( 'vk_ltc_uninstall_delete_site_data' ) ) {
 }
 
 if ( ! is_multisite() ) {
-	// Single site: delete data for the current (only) site as before.
-	// シングルサイト：これまでと同様、現在の（唯一の）サイトのデータを削除する。
+	// Single site: apply the current site's uninstall preference.
+	// シングルサイト：現在のサイトの削除設定を適用する。
 	vk_ltc_uninstall_delete_site_data();
 } else {
 	/**
-	 * Multisite: delete data from every site in the network.
-	 * マルチサイト：ネットワーク内の全サイトからデータを削除する。
+	 * Multisite: apply each site's uninstall preference.
+	 * マルチサイト：各サイトの削除設定を適用する。
 	 *
 	 * Sites are fetched in batches via get_sites() rather than a direct
 	 * query on $wpdb->blogs so that site enumeration is delegated to
@@ -123,8 +94,8 @@ if ( ! is_multisite() ) {
 	 * By default get_sites() does NOT filter out archived, spam, or
 	 * deleted-flagged sites (those args default to null, which means
 	 * "no filter" in WP_Site_Query) - it simply returns every site in
-	 * the network. That is intentional here: uninstall must remove this
-	 * plugin's data everywhere, so sites in any of those states are
+	 * the network. That is intentional here: uninstall must check each
+	 * site's preference, so sites in any of those states are
 	 * deliberately included rather than skipped.
 	 * get_sites() を使ってサイトIDをバッチ取得する（$wpdb->blogs への直接
 	 * クエリは使わない）。これは、対象を絞り込むためではなく、サイト一覧の
@@ -133,8 +104,8 @@ if ( ! is_multisite() ) {
 	 * get_sites() は既定では archived・spam・削除済みフラグの立ったサイトを
 	 * 除外しない（これらの引数は既定値が null で、WP_Site_Query 上は
 	 * 「絞り込みなし」を意味する）。つまりネットワーク内の全サイトがそのまま
-	 * 返る。アンインストールはこのプラグインのデータをどこにも残さず消す
-	 * ための処理なので、これらの状態のサイトもあえて除外せず削除対象に
+	 * 返る。アンインストールは各サイトの削除設定を確認する
+	 * 処理なので、これらの状態のサイトもあえて除外せず削除対象に
 	 * 含めている。
 	 *
 	 * Note on scope: "network" here is a loose description, not a literal

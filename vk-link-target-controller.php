@@ -316,6 +316,16 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 					'vk_ltc_custom_post_types',
 					array( $this, 'sanitize_settings' )
 				); // create settings options in DB (use WordPress Settings API).
+
+				register_setting(
+					'vk-ltc-options',
+					'vk_ltc_delete_data_on_uninstall',
+					array(
+						'type'              => 'integer',
+						'default'           => 0,
+						'sanitize_callback' => array( $this, 'sanitize_delete_data_on_uninstall' ),
+					)
+				);
 			}
 		}
 
@@ -355,6 +365,27 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 									?>
 								</td>
 							</tr>
+							<tr>
+								<th scope="row"><?php esc_html_e( 'Data on plugin deletion', 'vk-link-target-controller' ); ?></th>
+								<td>
+									<input type="hidden" name="vk_ltc_delete_data_on_uninstall" value="0" />
+									<label for="vk_ltc_delete_data_on_uninstall">
+										<input type="checkbox" name="vk_ltc_delete_data_on_uninstall" id="vk_ltc_delete_data_on_uninstall" value="1" aria-describedby="vk-ltc-uninstall-description vk-ltc-uninstall-warning" <?php checked( 1, get_option( 'vk_ltc_delete_data_on_uninstall', 0 ) ); ?> />
+										<?php esc_html_e( 'Delete data when the plugin is deleted', 'vk-link-target-controller' ); ?>
+									</label>
+									<p class="description" id="vk-ltc-uninstall-description">
+										<?php esc_html_e( 'Leave this unchecked to keep your data (default).', 'vk-link-target-controller' ); ?>
+										<?php esc_html_e( 'To delete your data, check this option, save the changes, and then delete the plugin.', 'vk-link-target-controller' ); ?>
+									</p>
+									<p class="description" id="vk-ltc-uninstall-warning">
+										<strong>
+											<?php esc_html_e( 'Warning: The link target URLs and open-in-a-new-window settings for posts on this site, and this plugin\'s settings, will be permanently deleted and cannot be restored.', 'vk-link-target-controller' ); ?>
+										</strong>
+										<?php esc_html_e( 'Posts themselves and their content are not deleted.', 'vk-link-target-controller' ); ?>
+										<?php esc_html_e( 'This setting applies only to this site, including on multisite networks.', 'vk-link-target-controller' ); ?>
+									</p>
+								</td>
+							</tr>
 						</table>
 						<?php submit_button(); ?>
 					</form>
@@ -362,6 +393,17 @@ if ( ! class_exists( 'VK_Link_Target_Controller' ) ) {
 
 			</div>
 			<?php
+		}
+
+		/**
+		 * Normalize the uninstall preference to an explicit opt-in.
+		 * 削除設定を明示的な ON/OFF に正規化する。
+		 *
+		 * @param mixed $input Submitted preference.
+		 * @return int One when enabled, otherwise zero.
+		 */
+		public function sanitize_delete_data_on_uninstall( $input ) {
+			return in_array( $input, array( 1, '1', true ), true ) ? 1 : 0;
 		}
 
 		/**

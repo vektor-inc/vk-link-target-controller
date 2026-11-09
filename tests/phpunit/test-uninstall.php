@@ -111,6 +111,7 @@ class UninstallTest extends WP_UnitTestCase {
 		);
 
 		foreach ( $test_cases as $case ) {
+			update_option( 'vk_ltc_delete_data_on_uninstall', 1 );
 
 			// Set up conditions: post meta.
 			// 条件の設定：投稿メタ。
@@ -197,6 +198,8 @@ class UninstallTest extends WP_UnitTestCase {
 				get_option( 'custom-post-types', false ),
 				$case['test_condition_name'] . ' (legacy custom-post-types option)'
 			);
+
+			$this->assertFalse( get_option( 'vk_ltc_delete_data_on_uninstall', false ), $case['test_condition_name'] );
 
 			// Clean up for next iteration: delete any remaining meta and options.
 			// 次のイテレーションのためにクリーンアップ：残っているメタとオプションを削除する。
