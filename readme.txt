@@ -110,9 +110,11 @@ get_post_class() returns a value that includes the post ID.
 For now the plugin is available in English and Japanese only.
 But we have a .pot file available so feel free to translate it in your language if you have some time.
 
-= What happens to my data if I delete the plugin on a multisite network? =
+= What happens to my data if I delete the plugin? =
 
-Data is kept by default when the plugin is deleted. To permanently remove all post link target URLs and related settings, enable 'Delete data when the plugin is deleted' under Settings > Link Target Controller and save before deleting the plugin. This cannot be undone. On multisite, each site's setting is respected independently; only sites that enabled this option have their data removed.
+Leave 'Delete data when the plugin is deleted' unchecked under Settings > Link Target Controller to keep your data (default). To delete your data, check this option, save the changes, and then delete the plugin.
+
+Warning: The link target URLs and open-in-a-new-window settings for posts on this site, and this plugin's settings, will be permanently deleted and cannot be restored. Posts themselves and their content are not deleted. This setting applies only to this site, including on multisite networks; each site's setting is respected independently.
 
 == Screenshots ==
 

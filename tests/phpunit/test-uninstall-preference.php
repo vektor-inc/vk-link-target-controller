@@ -131,22 +131,29 @@ class UninstallPreferenceTest extends WP_UnitTestCase {
 				}
 				$this->assertSame( 1, preg_match( '/<input type="checkbox"[^>]+id="vk_ltc_delete_data_on_uninstall"[^>]*>/', $html, $matches ) );
 				$this->assertSame( (int) $case['checked'], preg_match( '/checked="checked"/', $matches[0] ), $case['test_condition_name'] );
-				$this->assertStringContainsString( 'aria-describedby="vk-ltc-uninstall-warning vk-ltc-uninstall-description"', $matches[0] );
+				$this->assertStringContainsString( 'aria-describedby="vk-ltc-uninstall-description"', $matches[0] );
 				$this->assertStringContainsString( 'name="vk_ltc_delete_data_on_uninstall" value="0"', $html );
 				$document = new DOMDocument();
 				$document->loadHTML( '<?xml encoding="UTF-8">' . $html );
 				$xpath = new DOMXPath( $document );
 				$this->assertSame( 'Data on plugin deletion', trim( $xpath->query( '//th[@scope="row"][following-sibling::td//input[@id="vk_ltc_delete_data_on_uninstall"]]' )->item( 0 )->textContent ) );
-				$this->assertSame( 'Delete data when the plugin is deleted', $xpath->query( '//label[@for="vk_ltc_delete_data_on_uninstall"]' )->item( 0 )->textContent );
-				$warning = $xpath->query( '//p[@id="vk-ltc-uninstall-warning"]/strong' );
+				$label = $xpath->query( '//label[@for="vk_ltc_delete_data_on_uninstall"]' );
+				$this->assertSame( 1, $label->length );
+				$this->assertSame( 'Delete data when the plugin is deleted', trim( $label->item( 0 )->textContent ) );
+				$this->assertSame( 1, $xpath->query( './input[@type="checkbox" and @id="vk_ltc_delete_data_on_uninstall"]', $label->item( 0 ) )->length );
+				// The hidden fallback must precede the checkbox so checked submissions win.
+				// チェック時の値を優先するため、hidden はチェックボックスより前に置く。
+				$this->assertSame( 1, $xpath->query( 'preceding-sibling::*[1][self::input[@type="hidden" and @name="vk_ltc_delete_data_on_uninstall" and @value="0"]]', $label->item( 0 ) )->length );
+				$this->assertSame( 0, $xpath->query( './/input[@type="hidden"]', $label->item( 0 ) )->length );
+				$descriptions = $xpath->query( '../p[@class="description"]', $label->item( 0 ) );
+				$this->assertSame( 2, $descriptions->length );
+				$this->assertSame( 'vk-ltc-uninstall-description', $descriptions->item( 0 )->getAttribute( 'id' ) );
+				$this->assertSame( 'Leave this unchecked to keep your data (default). To delete your data, check this option, save the changes, and then delete the plugin.', $xpath->evaluate( 'normalize-space(.)', $descriptions->item( 0 ) ) );
+				$this->assertSame( 'vk-ltc-uninstall-warning', $descriptions->item( 1 )->getAttribute( 'id' ) );
+				$warning = $xpath->query( './strong', $descriptions->item( 1 ) );
 				$this->assertSame( 1, $warning->length );
-				$this->assertSame( 'Warning: Deleted data cannot be restored.', trim( $warning->item( 0 )->textContent ) );
-				$descriptions = $xpath->query( '//div[@id="vk-ltc-uninstall-description"]/p[@class="description"]' );
-				$this->assertSame( 4, $descriptions->length );
-				$this->assertSame( 'Unchecked by default: data is kept even when the plugin is deleted.', trim( $descriptions->item( 0 )->textContent ) );
-				$this->assertSame( 'Data is deleted only if you check this option, save the settings, and then delete the plugin.', trim( $descriptions->item( 1 )->textContent ) );
-				$this->assertSame( "Only the link target URLs and open-in-a-new-window settings for posts on this site, and this plugin's settings, are deleted. Posts and their content are not deleted.", trim( $descriptions->item( 2 )->textContent ) );
-				$this->assertSame( 'This setting applies only to this site, including on multisite networks.', trim( $descriptions->item( 3 )->textContent ) );
+				$this->assertSame( "Warning: The link target URLs and open-in-a-new-window settings for posts on this site, and this plugin's settings, will be permanently deleted and cannot be restored. Posts themselves and their content are not deleted. This setting applies only to this site, including on multisite networks.", $xpath->evaluate( 'normalize-space(.)', $warning->item( 0 ) ) );
+				$this->assertSame( $xpath->evaluate( 'normalize-space(.)', $warning->item( 0 ) ), $xpath->evaluate( 'normalize-space(.)', $descriptions->item( 1 ) ) );
 			}
 		} finally {
 			unregister_setting( 'vk-ltc-options', 'vk_ltc_delete_data_on_uninstall' );

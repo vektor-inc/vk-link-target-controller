@@ -77,32 +77,27 @@ msgstr "次の投稿タイプの編集画面で表示する"
 msgid "Data on plugin deletion"
 msgstr "プラグイン削除時のデータ"
 
-#: vk-link-target-controller.php:373
+#: vk-link-target-controller.php:374
 msgid "Delete data when the plugin is deleted"
 msgstr "プラグイン削除時にデータを削除する"
 
-#: vk-link-target-controller.php:375
-msgid "Warning: Deleted data cannot be restored."
-msgstr "警告：削除したデータは元に戻せません。"
+#: vk-link-target-controller.php:382
+msgid "Warning: The link target URLs and open-in-a-new-window settings for posts on this site, and this plugin's settings, will be permanently deleted and cannot be restored."
+msgstr "警告：このサイトの投稿ごとのリンク先 URL・新しいウィンドウで開く設定・プラグイン設定が完全に削除され、復元できなくなります。"
+
+#: vk-link-target-controller.php:377
+msgid "Leave this unchecked to keep your data (default)."
+msgstr "データを残す場合はチェックを入れないでください（既定）。"
 
 #: vk-link-target-controller.php:378
-msgid "Unchecked by default: data is kept even when the plugin is deleted."
-msgstr "既定では未チェックで、プラグインを削除してもデータを保持します。"
+msgid "To delete your data, check this option, save the changes, and then delete the plugin."
+msgstr "データも削除する場合のみ、チェックして変更を保存してから、プラグインを削除してください。"
 
-#: vk-link-target-controller.php:379
-msgid ""
-"Data is deleted only if you check this option, save the settings, and then "
-"delete the plugin."
-msgstr "チェックを入れて設定を保存してからプラグインを削除した場合にのみ、データを削除します。"
+#: vk-link-target-controller.php:383
+msgid "Posts themselves and their content are not deleted."
+msgstr "投稿そのものや投稿本文は削除しません。"
 
-#: vk-link-target-controller.php:380
-msgid ""
-"Only the link target URLs and open-in-a-new-window settings for posts on "
-"this site, and this plugin's settings, are deleted. Posts and their content "
-"are not deleted."
-msgstr "削除するのは、このサイトの投稿ごとのリンク先 URL・新しいウィンドウで開く設定と、このプラグインの設定だけです。投稿そのものや投稿本文は削除しません。"
-
-#: vk-link-target-controller.php:381
+#: vk-link-target-controller.php:384
 msgid ""
 "This setting applies only to this site, including on multisite networks."
 msgstr "マルチサイトの場合も、この設定はこのサイトだけに適用されます。"

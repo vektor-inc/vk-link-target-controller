@@ -68,27 +68,27 @@ msgstr ""
 msgid "Data on plugin deletion"
 msgstr ""
 
-#: vk-link-target-controller.php:373
+#: vk-link-target-controller.php:374
 msgid "Delete data when the plugin is deleted"
 msgstr ""
 
-#: vk-link-target-controller.php:375
-msgid "Warning: Deleted data cannot be restored."
+#: vk-link-target-controller.php:382
+msgid "Warning: The link target URLs and open-in-a-new-window settings for posts on this site, and this plugin's settings, will be permanently deleted and cannot be restored."
+msgstr ""
+
+#: vk-link-target-controller.php:377
+msgid "Leave this unchecked to keep your data (default)."
 msgstr ""
 
 #: vk-link-target-controller.php:378
-msgid "Unchecked by default: data is kept even when the plugin is deleted."
+msgid "To delete your data, check this option, save the changes, and then delete the plugin."
 msgstr ""
 
-#: vk-link-target-controller.php:379
-msgid "Data is deleted only if you check this option, save the settings, and then delete the plugin."
+#: vk-link-target-controller.php:383
+msgid "Posts themselves and their content are not deleted."
 msgstr ""
 
-#: vk-link-target-controller.php:380
-msgid "Only the link target URLs and open-in-a-new-window settings for posts on this site, and this plugin's settings, are deleted. Posts and their content are not deleted."
-msgstr ""
-
-#: vk-link-target-controller.php:381
+#: vk-link-target-controller.php:384
 msgid "This setting applies only to this site, including on multisite networks."
 msgstr ""
 
