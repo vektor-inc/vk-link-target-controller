@@ -125,6 +125,8 @@ Warning: The link target URLs and open-in-a-new-window settings for posts on thi
 
 == Changelog ==
 
+* [ Security Fix ] Updated vektor-inc/vk-admin from 0.8.1 to 0.8.3 so that the logo, menu, news lists and banners on the settings page and dashboard are sanitized before output.
+
 = 1.11.0 =
 * [ Spec Change ] Plugin deletion now keeps data by default; an optional setting allows permanent data deletion per site.
 
